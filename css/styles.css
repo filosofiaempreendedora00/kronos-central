@@ -884,17 +884,19 @@ body::before {
   height: calc(100vh - 84px); min-height: 540px;
 }
 
-/* feixe de luz — atmosfera de oráculo (gradiente puro, sem bordas) */
+/* feixe de luz — atmosfera de oráculo, ocupando a tela inteira (full-bleed).
+   Fixed: como são filhos de #delfosView (display:none fora da sala), só
+   aparecem dentro da Delfos, mas sem ficar presos à coluna central. */
 .delfos__light {
-  position: absolute; inset: 0;
+  position: fixed; inset: 0;
   background:
-    radial-gradient(44% 40% at 66% -4%, rgba(180,152,116,0.34), rgba(180,152,116,0.10) 40%, transparent 72%),
-    radial-gradient(70% 55% at 50% 30%, rgba(168,144,112,0.07), transparent 70%),
-    linear-gradient(202deg, rgba(168,144,112,0.10) 0%, rgba(168,144,112,0.03) 32%, transparent 56%);
+    radial-gradient(50% 45% at 62% -6%, rgba(180,152,116,0.34), rgba(180,152,116,0.10) 42%, transparent 75%),
+    radial-gradient(80% 60% at 50% 26%, rgba(168,144,112,0.06), transparent 72%),
+    linear-gradient(202deg, rgba(168,144,112,0.09) 0%, rgba(168,144,112,0.03) 34%, transparent 58%);
   pointer-events: none; z-index: 0;
 }
-/* poeira decantando */
-.delfos__dust { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+/* poeira decantando — tela inteira */
+.delfos__dust { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; }
 
 .delfos > *:not(.delfos__light):not(.delfos__dust) { position: relative; z-index: 1; }
 
