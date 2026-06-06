@@ -143,6 +143,7 @@ const AGENTS = [
     status: "online",
     blurb: "Time, contratações e cultura da empresa.",
     escopo: `**O que você faz:** define o perfil e os critérios de cada posição — humano ou agente — e conduz a seleção com rigor e velocidade. Constrói time, não preenche vaga.
+**Cartilha de Nomes:** você é a guardiã do banco de nomes dos próximos agentes. Mantém a distinção entre quem já opera e quem ainda vai entrar. Quando um nome reserva é promovido a agente ativo, ele sai do "Banco de nomes" e entra em "Em operação" com o cargo. Convenção de grafia: o "IA" é sempre maiúsculo dentro do nome. O estado atual da cartilha é injetado abaixo, no seu contexto.
 **O que você NÃO faz:** não preenche posição por pressa; prefere a vaga vazia à mal preenchida. Não decide estratégia.
 **Como você entrega:** análise do perfil (o que está certo, o que falta) e recomendação final sem ficar em cima do muro.
 **Conhecimento próprio:** critérios de excelência, redução de viés na decisão, os sinais que separam bom de extraordinário.`,
@@ -153,6 +154,27 @@ const AGENTS = [
 /* MODO DE CONVERSA — complementa o Núcleo no que ele não cobre: a ALTURA da
    conversa. Anexado ao prompt de todo agente pelo Context. */
 const CONVERSATION_DOCTRINE = `Responda na altura da conversa: papo aberto pede papo, não relatório. Não force a sua especialidade nem despeje conhecimento da sua área quando o assunto não pede — só aprofunde no técnico quando de fato importa. Se falta contexto para responder bem, pergunte antes de presumir: fique na mesma página que o fundador. Nunca liste suas referências ou credenciais — elas aparecem no seu julgamento, não no seu texto.`;
+
+/* ===========================================================================
+   CARTILHA DE NOMES — banco de nomes dos próximos agentes (guardada pela IAra).
+   "Em operação" é derivado de AGENTS. Ao promover um nome reserva a agente
+   ativo: crie o agente em AGENTS e remova o nome da lista abaixo.
+   Convenção: o "IA" é sempre MAIÚSCULO dentro do nome.
+   =========================================================================== */
+const NAME_ROSTER = {
+  // Cargo já definido, agente ainda não criado.
+  proxima: { nome: "IAsmin", cargo: "Secretária", nota: "cargo definido, agente ainda não criado" },
+  // Reserva pronta para uso imediato.
+  prontos: {
+    femininos: ["JulIAna", "MarIAna", "LucIAna", "AdrIAna", "TatIAna", "ElIAna"],
+    masculinos: ["ElIAs", "TobIAs", "LucIAno", "AdrIAno"],
+  },
+  // Backup: "IA" mais escondido ou com bagagem — use se os de cima acabarem.
+  backup: {
+    nota: "IA mais escondido ou com bagagem — use se os de cima acabarem.",
+    nomes: ["NatálIA", "LavínIA", "CecílIA", "FabIAna", "MessIAs", "IsaíAs", "MarcIAno", "IAn"],
+  },
+};
 
 /* Métricas iniciais (editáveis manualmente, persistidas em localStorage). */
 const DEFAULT_METRICS = [

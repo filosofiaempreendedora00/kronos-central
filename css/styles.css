@@ -1239,6 +1239,35 @@ body::before {
   color: var(--areia); padding-bottom: 2px;
 }
 
+/* Cartilha de Nomes */
+.cart-sec { margin-bottom: 28px; }
+.cart-sec__h {
+  font-family: var(--font-title); font-size: 20px; font-weight: 600; color: var(--branco);
+  margin: 0 0 12px; display: flex; align-items: center; gap: 10px;
+}
+.cart-sec__count {
+  font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--areia);
+  background: var(--areia-12); border-radius: 999px; padding: 2px 9px;
+}
+.cart-sub { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--areia); margin: 14px 0 8px; }
+.cart-note { font-size: 12.5px; font-weight: 300; color: rgba(245,239,230,0.55); margin: 10px 0 0; font-style: italic; }
+.namechips { display: flex; flex-wrap: wrap; gap: 9px; }
+.namechip {
+  display: inline-flex; flex-direction: column; gap: 1px; padding: 8px 14px;
+  border-radius: 10px; font-size: 14px; line-height: 1.1;
+  border: 1px solid var(--areia-22); color: var(--creme);
+}
+.namechip__sub { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--areia); font-weight: 600; margin-top: 2px; }
+/* em operação — preenchido (forte) */
+.namechip--op { background: var(--areia); color: var(--onix); border-color: var(--areia); }
+.namechip--op .namechip__sub { color: rgba(21,12,6,0.62); }
+/* próxima a entrar — tracejado */
+.namechip--next { border-style: dashed; border-color: var(--areia-40); background: rgba(168,144,112,0.06); }
+/* banco — contorno */
+.namechip--bank { color: var(--areia); background: transparent; }
+/* backup — bem discreto */
+.namechip--backup { color: rgba(168,144,112,0.6); border-color: var(--areia-12); }
+
 /* ============================== RESPONSIVO ============================== */
 @media (max-width: 640px) {
   /* iOS dá zoom automático em campo com fonte < 16px ao focar — o que
