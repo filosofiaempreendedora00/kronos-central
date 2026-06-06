@@ -76,6 +76,7 @@ function createWindow(loadUrl) {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: false, // permite o preload usar 'os' p/ detectar o IP Tailscale
     },
   });
 
