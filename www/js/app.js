@@ -200,6 +200,8 @@ function init() {
 
   Chat.bind();
   Delfos.bind();
+  CostsView.bind();
+  CostsView.renderMini();
 }
 
 // Exposto para outros módulos (ex.: chat pede a chave da API)

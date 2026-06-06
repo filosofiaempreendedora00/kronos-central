@@ -44,6 +44,7 @@ const Delfos = (() => {
     document.getElementById("delfosView").hidden = false;
     renderTable();
     renderMessages();
+    updateMeetingCost();
     setTimeout(() => document.getElementById("delfosInput")?.focus(), 50);
     requestAnimationFrame(startDust);
   }
@@ -205,10 +206,31 @@ const Delfos = (() => {
           <span class="dmsg__avatar">${m.initials}</span>
           <span class="dmsg__name">${m.name}</span>
         </div>
-        <div class="dmsg__bubble"></div>`;
+        <div class="dmsg__bubble"></div>
+        <div class="dmsg__cost" hidden></div>`;
     }
     wrap.querySelector(".dmsg__bubble").textContent = m.content;
+    if (!isUser && m.costUSD != null) setCostLabel(wrap.querySelector(".dmsg__cost"), m.costUSD, m.outTok);
     return wrap;
+  }
+
+  function setCostLabel(el, costUSD, outTok) {
+    if (!el) return;
+    el.hidden = false;
+    el.textContent =
+      `≈ ${Cost.usd(costUSD)} · ${Cost.brl(costUSD)}` + (outTok ? ` · ${Cost.tok(outTok)} tok` : "");
+  }
+
+  function updateMeetingCost() {
+    const el = document.getElementById("delfosMeetingCost");
+    if (!el) return;
+    const total = thread.reduce((a, m) => a + (m.costUSD || 0), 0);
+    if (total > 0) {
+      el.hidden = false;
+      el.textContent = `Reunião ≈ ${Cost.usd(total)} · ${Cost.brl(total)}`;
+    } else {
+      el.hidden = true;
+    }
   }
 
   function scrollToBottom() {
@@ -272,7 +294,7 @@ Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 fra
 
       let acc = "";
       try {
-        await streamMessage({
+        const result = await streamMessage({
           system: meetingSystem(agent, present),
           messages: [{ role: "user", content: `${transcriptText()}\n\nAgora responda como ${agent.name} (${agent.role}).` }],
           signal: abortCtrl.signal,
@@ -283,8 +305,11 @@ Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 fra
             scrollToBottom();
           },
         });
-        thread.push({ speaker: agent.id, name: agent.name, initials: agent.initials, content: acc });
+        thread.push({ speaker: agent.id, name: agent.name, initials: agent.initials, content: acc, costUSD: result.costUSD, outTok: result.usage.output });
         saveThread();
+        setCostLabel(bubbleWrap.querySelector(".dmsg__cost"), result.costUSD, result.usage.output);
+        updateMeetingCost();
+        Cost.log({ context: "delfos", agentId: agent.id, agentName: agent.name, usage: result.usage, costUSD: result.costUSD });
       } catch (err) {
         if (err.name === "AbortError") {
           if (acc) {
@@ -336,6 +361,7 @@ Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 fra
     thread = [];
     saveThread();
     renderMessages();
+    updateMeetingCost();
   }
 
   // Encerrar = limpa a reunião E volta ao dashboard

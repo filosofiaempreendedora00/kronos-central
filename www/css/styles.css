@@ -843,25 +843,6 @@ body::before {
   overflow: hidden;
   transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
-/* vórtice da marca — espiral decorativa no canto direito */
-.delfos-banner__vortex {
-  position: absolute;
-  right: -56px; top: 50%;
-  transform: translateY(-50%);
-  width: 280px; height: 280px;
-  color: var(--areia);
-  opacity: 0.5;
-  pointer-events: none;
-  z-index: 0;
-  -webkit-mask-image: radial-gradient(circle at 56% 50%, #000 26%, transparent 70%);
-  mask-image: radial-gradient(circle at 56% 50%, #000 26%, transparent 70%);
-  transition: opacity 0.3s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1);
-}
-.delfos-banner__vortex svg { width: 100%; height: 100%; display: block; }
-.delfos-banner:hover .delfos-banner__vortex {
-  opacity: 0.75;
-  transform: translateY(-50%) rotate(8deg);
-}
 .delfos-banner:hover { border-color: var(--areia); transform: translateY(-2px); }
 
 .delfos-banner__mark { color: var(--areia); display: grid; place-items: center; flex-shrink: 0; position: relative; z-index: 1; }
@@ -1017,6 +998,76 @@ body::before {
 
 .delfos__composer { padding-top: 16px; border-top: 1px solid var(--areia-22); }
 
+/* chip de custo da reunião no header */
+.delfos__cost {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.02em; color: var(--areia);
+  border: 1px solid var(--areia-22); border-radius: 999px; padding: 5px 12px; white-space: nowrap;
+}
+
+/* ============================== CUSTO POR MENSAGEM ============================== */
+.msg__cost, .dmsg__cost {
+  font-size: 10.5px; font-weight: 400; letter-spacing: 0.02em; color: var(--areia);
+  opacity: 0.7; padding: 0 6px;
+}
+.msg--user .msg__cost { display: none; } /* só nas respostas do agente */
+.cost-sub { font-size: 11px; font-weight: 300; color: var(--areia); margin-top: 2px; }
+
+/* ============================== VIEW DE CUSTOS ============================== */
+#costsView[hidden] { display: none; }
+.costs { display: flex; flex-direction: column; height: calc(100vh - 84px); min-height: 540px; }
+.costs__scroll {
+  flex: 1; overflow-y: auto; padding: 26px 2px 10px;
+  scrollbar-width: thin; scrollbar-color: var(--areia-40) transparent;
+}
+.costs__scroll::-webkit-scrollbar { width: 8px; }
+.costs__scroll::-webkit-scrollbar-thumb { background: var(--areia-22); border-radius: 8px; }
+.costs__inner { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 38px; }
+
+/* cards de período */
+.cost-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--gap); }
+.cost-card {
+  background: var(--sepia); border: 1px solid var(--areia-22); border-radius: var(--radius);
+  padding: 22px; display: flex; flex-direction: column; gap: 5px;
+}
+.cost-card__label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--areia); }
+.cost-card__value { font-family: var(--font-title); font-weight: 600; font-size: 32px; line-height: 1; color: var(--branco); }
+.cost-card__brl { font-size: 13px; font-weight: 400; color: var(--areia); }
+.cost-card__meta { font-size: 11px; font-weight: 300; color: rgba(245,239,230,0.5); margin-top: 4px; }
+
+/* seções */
+.cost-section { display: flex; flex-direction: column; gap: 14px; }
+.cost-section__title {
+  font-family: var(--font-title); font-weight: 600; font-size: 19px; color: var(--branco); margin: 0;
+  padding-bottom: 10px; border-bottom: 1px solid var(--areia-12);
+}
+.cost-list { display: flex; flex-direction: column; }
+.cost-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 4px; border-bottom: 1px solid var(--areia-12);
+}
+.cost-row__name { flex: 1; font-size: 14px; font-weight: 500; color: var(--creme); }
+.cost-row__meta { font-size: 11.5px; font-weight: 300; color: var(--areia); }
+.cost-row__val { font-family: var(--font-title); font-weight: 600; font-size: 17px; color: var(--branco); min-width: 96px; text-align: right; }
+.cost-empty { font-size: 13px; font-weight: 300; color: var(--areia); font-style: italic; margin: 4px 0; }
+
+/* mini-gráfico de 14 dias */
+.cost-bars { display: flex; flex-direction: column; gap: 7px; }
+.cost-bar { display: flex; align-items: center; gap: 12px; }
+.cost-bar__day { width: 44px; flex-shrink: 0; font-size: 11px; font-weight: 300; color: var(--areia); }
+.cost-bar__track { flex: 1; height: 8px; background: var(--areia-12); border-radius: 999px; overflow: hidden; }
+.cost-bar__fill { display: block; height: 100%; background: var(--areia); border-radius: 999px; }
+.cost-bar__val { width: 92px; flex-shrink: 0; text-align: right; font-size: 11.5px; font-weight: 400; color: var(--areia); }
+
+/* config */
+.cost-rate { display: flex; align-items: center; justify-content: space-between; gap: 14px; max-width: 320px; }
+.cost-rate span { font-size: 13px; color: var(--creme); }
+.cost-rate input {
+  width: 110px; background: var(--creme); border: 1px solid var(--areia-40); border-radius: 8px;
+  color: var(--onix); font-family: var(--font-body); font-size: 14px; padding: 9px 12px;
+}
+.cost-rate input:focus { outline: 2px solid var(--areia); outline-offset: 1px; }
+.cost-note { font-size: 11.5px; font-weight: 300; line-height: 1.6; color: rgba(245,239,230,0.5); margin: 0; max-width: 560px; }
+
 /* ============================== RESPONSIVO ============================== */
 @media (max-width: 640px) {
   .app { padding: 22px 18px 30px; }
@@ -1049,6 +1100,16 @@ body::before {
   .delfos__head { gap: 10px 14px; flex-wrap: wrap; justify-content: space-between; }
   .delfos__brand { order: 3; flex: 1 1 100%; }
   .delfos__title-h { font-size: 23px; }
+  .delfos__cost { order: 4; flex: 1 1 100%; text-align: center; }
+
+  /* custos */
+  .costs { height: calc(100vh - 60px); }
+  .cost-cards { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cost-card { padding: 16px; }
+  .cost-card__value { font-size: 26px; }
+  .cost-row__meta { display: none; }
+  .cost-bar__day { width: 38px; }
+  .cost-bar__val { width: 78px; }
 
   /* participantes empilhados no mobile */
   .delfos__roster { flex-direction: column; gap: 14px; }
