@@ -14,6 +14,11 @@ const ICON = path.join(__dirname, "..", "build", "icon.png");
 const WWW = path.join(__dirname, "..", "www");
 const PORT = 4599;
 
+// Versão hospedada (GitHub Pages): sempre atualizada. O app do Mac carrega
+// daqui quando há internet — assim todo deploy aparece sem precisar rebuildar.
+// Sem internet, cai para a cópia local embutida (servidor abaixo / arquivo).
+const HOSTED_URL = "https://filosofiaempreendedora00.github.io/kronos-central/";
+
 app.setName("KRONOS Central");
 
 const MIME = {
@@ -80,12 +85,32 @@ function createWindow(loadUrl) {
     },
   });
 
-  if (loadUrl) win.loadURL(loadUrl);
-  else win.loadFile(path.join(WWW, "index.html")); // fallback
+  // Carrega a cópia local embutida (offline / fallback).
+  const loadLocal = () => {
+    if (loadUrl) win.loadURL(loadUrl);
+    else win.loadFile(path.join(WWW, "index.html"));
+  };
 
-  // Links externos (modo Easy → claude.ai) abrem no navegador padrão
+  // Online: carrega a versão hospedada (sempre a mais nova).
+  win.loadURL(HOSTED_URL);
+
+  // Se o carregamento do hospedado falhar (sem internet, Pages fora do ar),
+  // cai para a cópia local. Ignora -3 (ABORTED, normal em redirecionamentos).
+  let usedFallback = false;
+  win.webContents.on("did-fail-load", (_e, errorCode, _desc, validatedURL, isMainFrame) => {
+    if (!isMainFrame || errorCode === -3 || usedFallback) return;
+    if (validatedURL && validatedURL.startsWith("https://filosofiaempreendedora00.github.io")) {
+      usedFallback = true;
+      loadLocal();
+    }
+  });
+
+  // Links externos (modo Easy → claude.ai) abrem no navegador padrão.
+  // O próprio app (hospedado ou local) navega dentro da janela.
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//.test(url) && !url.startsWith(`http://localhost:${PORT}`)) {
+    const interno =
+      url.startsWith(HOSTED_URL) || url.startsWith(`http://localhost:${PORT}`);
+    if (/^https?:\/\//.test(url) && !interno) {
       shell.openExternal(url);
       return { action: "deny" };
     }
