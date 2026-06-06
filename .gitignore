@@ -32,3 +32,6 @@ ios/DerivedData/
 # Não versionar segredos (a chave da API fica só no localStorage do navegador)
 .env
 .env.local
+
+# Pasta de entrega dos materiais (canônico vive em www/contexto/)
+contextos md/

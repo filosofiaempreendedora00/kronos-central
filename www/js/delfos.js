@@ -256,7 +256,7 @@ const Delfos = (() => {
   function meetingSystem(agent, present) {
     const others = present.filter((p) => p.id !== agent.id).map((p) => p.name);
     const mesa = others.length ? `Também estão à mesa: ${others.join(", ")}. ` : "";
-    return `${agent.systemPrompt}
+    return `${Context.systemFor(agent)}
 
 ---
 CONTEXTO DA REUNIÃO — DELFOS
@@ -293,6 +293,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     setBusy(true);
     renderTable(); // desabilita seats durante a rodada
     abortCtrl = new AbortController();
+    await Context.ready(); // Núcleo + Briefing prontos antes da rodada
 
     for (const agent of present) {
       const bubbleWrap = messageEl({ speaker: agent.id, name: agent.name, initials: agent.initials, content: "" });
