@@ -41,12 +41,17 @@ const Chat = (() => {
   }
 
   /* ------------------------------- Abrir --------------------------------- */
-  function open(agentId) {
+  function open(agentId, forceMode) {
     const agent = AGENTS.find((a) => a.id === agentId);
     if (!agent) return;
 
     currentAgent = agent;
-    currentMode = getMode(agent.id);
+    if (forceMode === "easy" || forceMode === "hard") {
+      currentMode = forceMode;
+      localStorage.setItem(modeKey(agent.id), forceMode);
+    } else {
+      currentMode = getMode(agent.id);
+    }
     history = loadHistory(agent.id);
 
     document.getElementById("chatAvatar").textContent = agent.initials;

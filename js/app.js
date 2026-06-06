@@ -23,9 +23,10 @@ function renderAgents() {
   grid.innerHTML = "";
 
   AGENTS.forEach((agent) => {
-    const card = document.createElement("button");
+    const card = document.createElement("div");
     card.className = "agent-card";
-    card.type = "button";
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
     card.setAttribute("data-agent", agent.id);
     card.setAttribute("aria-label", `Conversar com ${agent.name}`);
 
@@ -42,21 +43,55 @@ function renderAgents() {
         <p class="agent-card__blurb">${agent.blurb}</p>
       </div>
       <div class="agent-card__foot">
-        <span class="agent-card__cta">Abrir conversa</span>
-        <svg class="agent-card__arrow" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-          <line x1="5" y1="12" x2="18" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          <polyline points="13,7 18,12 13,17" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <span class="agent-card__cta">
+          Abrir conversa
+          <svg class="agent-card__arrow" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <line x1="5" y1="12" x2="18" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <polyline points="13,7 18,12 13,17" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <button class="agent-card__easy" type="button" data-easy="${agent.id}" title="Abrir no Claude (modo Easy) — sem custo">
+          Easy
+          <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
+            <path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
     `;
 
+    // clique no card → conversa (modo salvo do agente)
     card.addEventListener("click", () => openAgent(agent.id));
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openAgent(agent.id); }
+    });
+
+    // clique no atalho Easy → vai direto pro Claude, sem entrar no agente
+    card.querySelector(".agent-card__easy").addEventListener("click", (e) => {
+      e.stopPropagation();
+      openEasyDirect(agent.id);
+    });
+
     grid.appendChild(card);
   });
 }
 
 function openAgent(id) {
   Chat.open(id);
+}
+
+/* Link do modo Easy de um agente (override do localStorage tem prioridade). */
+function easyUrlFor(id) {
+  const saved = localStorage.getItem(`kronos.easyUrl.${id}`);
+  if (saved != null && saved.trim() !== "") return saved.trim();
+  const a = AGENTS.find((x) => x.id === id);
+  return (a?.easyUrl || "").trim();
+}
+
+/* Atalho do card: abre o Claude direto, ou entra no modo Easy se ainda não houver link. */
+function openEasyDirect(id) {
+  const url = easyUrlFor(id);
+  if (url) window.open(url, "_blank", "noopener");
+  else Chat.open(id, "easy"); // sem link salvo → entra no modo Easy para configurar
 }
 
 /* ------------------------------ Métricas (Bloco 2) ------------------------ */

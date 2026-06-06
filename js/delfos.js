@@ -54,24 +54,35 @@ const Delfos = (() => {
   /* ------------------------------ Mesa ----------------------------------- */
   function renderTable() {
     const el = document.getElementById("delfosTable");
-    const tokens = AGENTS.map((a) => {
+    const seated = roster.length;
+
+    const chairs = AGENTS.map((a) => {
       const active = roster.includes(a.id);
       return `
-        <button class="seat ${active ? "seat--active" : ""}" data-id="${a.id}" type="button" ${busy ? "disabled" : ""}>
-          <span class="seat__avatar">${a.initials}</span>
-          <span class="seat__name">${a.name}</span>
+        <button class="chair ${active ? "chair--active" : "chair--empty"}" data-id="${a.id}" type="button" ${busy ? "disabled" : ""}
+          title="${active ? "Sair da mesa" : "Sentar à mesa"}" aria-pressed="${active}">
+          <span class="chair__fig">
+            <span class="chair__avatar">${a.initials}</span>
+            <span class="chair__furniture">${chairSVG()}</span>
+          </span>
+          <span class="chair__name">${a.name}</span>
         </button>`;
     }).join("");
 
     el.innerHTML = `
-      <span class="seat seat--you" title="Você preside a mesa">
-        <span class="seat__avatar seat__avatar--you">VC</span>
-        <span class="seat__name">Você</span>
-      </span>
-      ${tokens}`;
+      <div class="chair chair--head" title="Você preside a mesa">
+        <span class="chair__fig">
+          <span class="chair__avatar chair__avatar--you">VC</span>
+          <span class="chair__furniture chair__furniture--head">${chairSVG()}</span>
+        </span>
+        <span class="chair__name">Você</span>
+      </div>
+      <span class="delfos__table-div" aria-hidden="true"></span>
+      ${chairs}
+      <span class="delfos__table-count">${seated} ${seated === 1 ? "membro" : "membros"} à mesa</span>`;
 
     if (!busy) {
-      el.querySelectorAll(".seat[data-id]").forEach((btn) => {
+      el.querySelectorAll(".chair[data-id]").forEach((btn) => {
         btn.addEventListener("click", () => toggleSeat(btn.dataset.id));
       });
     }
@@ -251,6 +262,12 @@ Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 fra
     renderMessages();
   }
 
+  // Encerrar = limpa a reunião E volta ao dashboard
+  function endMeeting() {
+    clear();
+    close();
+  }
+
   function autoGrow(el) {
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 160) + "px";
@@ -259,7 +276,7 @@ Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 fra
   /* ------------------------------- Bind ---------------------------------- */
   function bind() {
     document.getElementById("delfosBackBtn").addEventListener("click", close);
-    document.getElementById("delfosClearBtn").addEventListener("click", clear);
+    document.getElementById("delfosClearBtn").addEventListener("click", endMeeting);
     document.getElementById("delfosSendBtn").addEventListener("click", send);
 
     const input = document.getElementById("delfosInput");
@@ -272,8 +289,19 @@ Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 fra
     });
   }
 
-  return { open, close, clear, bind };
+  return { open, close, clear, endMeeting, bind };
 })();
+
+/* Cadeira (vista frontal) — assento da mesa Delfos. */
+function chairSVG() {
+  return `
+    <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true">
+      <rect x="11" y="3" width="18" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <rect x="7.5" y="19" width="25" height="4.6" rx="2.3" fill="currentColor"/>
+      <line x1="11" y1="23.5" x2="11" y2="37" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="29" y1="23.5" x2="29" y2="37" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>`;
+}
 
 /* Frontão de templo grego — marca da sala Delfos. */
 function pedimentSVG(size) {
