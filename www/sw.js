@@ -1,18 +1,18 @@
 /* ===========================================================================
    KRONOS CENTRAL — Service Worker
-   Deixa o PWA "sempre vivo": guarda o app-shell (HTML/CSS/JS/ícones) em cache,
-   então a Central abre instantânea — mesmo com 5G ruim ou momentaneamente
-   offline. As chamadas à API da Anthropic NUNCA são cacheadas (sempre rede).
+   Objetivo: PWA "sempre vivo" E sempre atualizado.
 
-   Estratégia para arquivos do próprio app (mesma origem, GET):
-   stale-while-revalidate — serve o cache na hora e atualiza em segundo plano,
-   garantindo abertura rápida sem travar em versão velha.
+   Estratégia para arquivos do próprio app (mesma origem, GET): NETWORK-FIRST.
+   - Online: busca sempre a versão mais nova na rede (então todo deploy aparece
+     na hora, sem rebuild). Atualiza o cache em segundo plano.
+   - Offline / rede caiu: cai para o cache (app abre mesmo sem internet).
+   As chamadas à API da Anthropic NUNCA passam por aqui (sempre rede direta).
    =========================================================================== */
 
-const CACHE = "kronos-v1";
+const CACHE = "kronos-v2";
 
-// Caminhos relativos ao escopo do SW — funcionam tanto em localhost (Electron)
-// quanto na subpasta do GitHub Pages (/kronos-central/).
+// Caminhos relativos ao escopo — funcionam em localhost (Electron) e na
+// subpasta do GitHub Pages (/kronos-central/).
 const PRECACHE = [
   "./",
   "./index.html",
@@ -39,8 +39,8 @@ const PRECACHE = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then((c) =>
-      // addAll falha se um único item falhar; usamos add individual tolerante.
-      Promise.allSettled(PRECACHE.map((u) => c.add(u)))
+      // cache:"reload" => ignora o cache HTTP e baixa o arquivo realmente novo.
+      Promise.allSettled(PRECACHE.map((u) => c.add(new Request(u, { cache: "reload" }))))
     ).then(() => self.skipWaiting())
   );
 });
@@ -56,24 +56,22 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
 
-  // Só tratamos GET de mesma origem. Tudo o mais (API da Anthropic, fontes,
-  // POST de streaming) passa direto pela rede — jamais cacheado.
+  // Só tratamos GET de mesma origem. API da Anthropic, fontes e POST passam
+  // direto pela rede — jamais por aqui.
   if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) {
     return;
   }
 
+  // network-first: versão nova quando online; cache como rede de segurança.
   event.respondWith(
-    caches.open(CACHE).then(async (cache) => {
-      const cached = await cache.match(req);
-      const network = fetch(req)
-        .then((res) => {
-          if (res && res.status === 200 && res.type === "basic") cache.put(req, res.clone());
-          return res;
-        })
-        .catch(() => null);
-
-      // stale-while-revalidate: cache imediato + atualização em segundo plano.
-      return cached || network || fetch(req);
-    })
+    fetch(req)
+      .then((res) => {
+        if (res && res.status === 200 && res.type === "basic") {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
+        }
+        return res;
+      })
+      .catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html")))
   );
 });
