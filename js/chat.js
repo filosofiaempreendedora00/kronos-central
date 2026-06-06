@@ -153,18 +153,29 @@ const Chat = (() => {
       return;
     }
 
-    history.forEach((m) => box.appendChild(messageEl(m.role, m.content)));
+    history.forEach((m) => box.appendChild(messageEl(m.role, m.content, m)));
     scrollToBottom();
   }
 
-  function messageEl(role, content) {
+  function messageEl(role, content, meta) {
     const wrap = document.createElement("div");
     wrap.className = `msg msg--${role}`;
     wrap.innerHTML = `
       <div class="msg__role">${role === "user" ? "Você" : currentAgent.name}</div>
-      <div class="msg__bubble"></div>`;
+      <div class="msg__bubble"></div>
+      <div class="msg__cost" hidden></div>`;
     wrap.querySelector(".msg__bubble").textContent = content;
+    if (role === "assistant" && meta && meta.costUSD != null) {
+      setCostLabel(wrap.querySelector(".msg__cost"), meta.costUSD, meta.outTok);
+    }
     return wrap;
+  }
+
+  function setCostLabel(el, costUSD, outTok) {
+    el.hidden = false;
+    el.textContent =
+      `≈ ${Cost.usd(costUSD)} · ${Cost.brl(costUSD)}` +
+      (outTok ? ` · ${Cost.tok(outTok)} tok` : "");
   }
 
   function scrollToBottom() {
@@ -209,7 +220,7 @@ const Chat = (() => {
     let acc = "";
 
     try {
-      await streamMessage({
+      const result = await streamMessage({
         system: currentAgent.systemPrompt,
         messages: history.map((m) => ({ role: m.role, content: m.content })),
         signal: abortCtrl.signal,
@@ -221,8 +232,13 @@ const Chat = (() => {
         },
       });
 
-      history.push({ role: "assistant", content: acc });
+      const costUSD = result.costUSD;
+      const outTok = result.usage.output;
+      history.push({ role: "assistant", content: acc, costUSD, outTok, inTok: result.usage.input });
       saveHistory();
+      setCostLabel(assistantEl.querySelector(".msg__cost"), costUSD, outTok);
+      Cost.log({ context: "chat", agentId: currentAgent.id, agentName: currentAgent.name, usage: result.usage, costUSD });
+      scrollToBottom();
     } catch (err) {
       if (err.name === "AbortError") {
         bubble.textContent = acc || "(interrompido)";
