@@ -843,21 +843,28 @@ body::before {
   overflow: hidden;
   transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
-/* fileira de "colunas" decorativas ao fundo */
-.delfos-banner::after {
-  content: "";
+/* vórtice da marca — espiral decorativa no canto direito */
+.delfos-banner__vortex {
   position: absolute;
-  right: -1px; top: 0; bottom: 0;
-  width: 220px;
-  background-image: repeating-linear-gradient(90deg, var(--areia-12) 0 1px, transparent 1px 22px);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 70%);
-  mask-image: linear-gradient(90deg, transparent, #000 70%);
-  opacity: 0.4;
+  right: -56px; top: 50%;
+  transform: translateY(-50%);
+  width: 280px; height: 280px;
+  color: var(--areia);
+  opacity: 0.5;
   pointer-events: none;
+  z-index: 0;
+  -webkit-mask-image: radial-gradient(circle at 56% 50%, #000 26%, transparent 70%);
+  mask-image: radial-gradient(circle at 56% 50%, #000 26%, transparent 70%);
+  transition: opacity 0.3s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+.delfos-banner__vortex svg { width: 100%; height: 100%; display: block; }
+.delfos-banner:hover .delfos-banner__vortex {
+  opacity: 0.75;
+  transform: translateY(-50%) rotate(8deg);
 }
 .delfos-banner:hover { border-color: var(--areia); transform: translateY(-2px); }
 
-.delfos-banner__mark { color: var(--areia); display: grid; place-items: center; flex-shrink: 0; }
+.delfos-banner__mark { color: var(--areia); display: grid; place-items: center; flex-shrink: 0; position: relative; z-index: 1; }
 .delfos-banner__text { display: flex; flex-direction: column; gap: 3px; flex: 1; z-index: 1; }
 .delfos-banner__eyebrow {
   font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--areia);
