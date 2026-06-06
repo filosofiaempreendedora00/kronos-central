@@ -65,7 +65,7 @@ const NucleoView = (() => {
       cardHtml("briefing", `Camada 2 · você atualiza${date ? ` · ${date}` : ""}`, "Briefing Vivo",
         "O cenário atual da empresa. Todos os agentes leem por cima do Núcleo.");
     const agentes = AGENTS.map((a) =>
-      cardHtml(`agent:${a.id}`, a.role, a.name, a.blurb || "Prompt-escopo do agente.")
+      cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}`, a.nome || a.name, a.blurb || "Prompt-escopo do agente.")
     ).join("");
     hub.innerHTML =
       `<div class="lib-group"><span class="lib-group__label">Fundamentos</span>${fundamentos}</div>` +
@@ -96,7 +96,7 @@ const NucleoView = (() => {
     } else if (which && which.startsWith("agent:")) {
       const a = AGENTS.find((x) => x.id === which.slice(6));
       if (!a) return;
-      title = a.name; sub = `prompt-escopo · ${a.role}`; raw = a.escopo || "_Sem escopo definido._";
+      title = a.nome || a.name; sub = `${a.name} · prompt-escopo`; raw = a.escopo || "_Sem escopo definido._";
     } else { return; }
 
     showOnly("nucleoDocView");

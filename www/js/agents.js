@@ -15,6 +15,7 @@
 const AGENTS = [
   {
     id: "ceo",
+    nome: "TIAgo",
     name: "CEO",
     role: "Estratégia & Visão",
     initials: "CE",
@@ -28,6 +29,7 @@ const AGENTS = [
   },
   {
     id: "coo",
+    nome: "MatIAs",
     name: "COO",
     role: "Operações & Execução",
     initials: "CO",
@@ -41,6 +43,7 @@ const AGENTS = [
   },
   {
     id: "cfo",
+    nome: "FabIAno",
     name: "CFO",
     role: "Finanças & Capital",
     initials: "CF",
@@ -54,6 +57,7 @@ const AGENTS = [
   },
   {
     id: "cro",
+    nome: "DamIAno",
     name: "CRO Expert",
     role: "Otimização de Conversão",
     initials: "CR",
@@ -81,6 +85,7 @@ const AGENTS = [
   },
   {
     id: "prompt-engineer",
+    nome: "IAgo",
     name: "Engenheiro de Prompt",
     role: "IA & Automação",
     initials: "EP",
@@ -131,6 +136,7 @@ const AGENTS = [
   },
   {
     id: "head-rh",
+    nome: "IAra",
     name: "Head de RH",
     role: "Pessoas & Cultura",
     initials: "RH",

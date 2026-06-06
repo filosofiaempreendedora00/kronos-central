@@ -165,16 +165,16 @@ const Delfos = (() => {
       present.innerHTML = started
         ? `<span class="present__label">Na mesa</span>` +
           `<span class="present__av present__av--you" title="Você">VC</span>` +
-          inRoom.map((a) => `<span class="present__av" title="${a.name}">${a.initials}</span>`).join("")
+          inRoom.map((a) => `<span class="present__av" title="${(a.nome || a.name)} — ${a.name}">${a.initials}</span>`).join("")
         : "";
     }
     const bench = AGENTS.filter((a) => !roster.includes(a.id));
 
     const member = (a, zone) => `
       <button class="member member--${zone}" data-id="${a.id}" type="button" ${busy ? "disabled" : ""}
-        title="${zone === "in" ? "Remover da sala" : "Trazer para a sala"}" aria-pressed="${zone === "in"}">
+        title="${(a.nome || a.name)} (${a.name}) — ${zone === "in" ? "remover da sala" : "trazer para a sala"}" aria-pressed="${zone === "in"}">
         <span class="member__avatar">${a.initials}</span>
-        <span class="member__name">${a.name}</span>
+        <span class="member__name">${a.nome || a.name}</span>
       </button>`;
 
     el.innerHTML = `
@@ -290,13 +290,14 @@ const Delfos = (() => {
   }
 
   function meetingSystem(agent, present) {
-    const others = present.filter((p) => p.id !== agent.id).map((p) => p.name);
+    const nameOf = (p) => (p.nome ? `${p.nome} (${p.name})` : p.name);
+    const others = present.filter((p) => p.id !== agent.id).map(nameOf);
     const mesa = others.length ? `Também estão à mesa: ${others.join(", ")}. ` : "";
     return `${Context.systemFor(agent)}
 
 ---
 CONTEXTO DA REUNIÃO — DELFOS
-Você está numa mesa-redonda chamada Delfos com o Fundador da KRONOS e outros membros do conselho. ${mesa}Você participa como ${agent.name} (${agent.role}).
+Você está numa mesa-redonda chamada Delfos com o Fundador da KRONOS e outros membros do conselho. ${mesa}Seu nome é ${agent.nome || agent.name} e você participa como ${agent.name} (${agent.role}).
 Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 frases. Você pode concordar, discordar ou complementar o que já foi dito, mas agregue valor: não repita o que outro já falou.
 Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. Se não toca, contribua como um bom conselheiro contribuiria: uma observação afiada, uma pergunta que destrava a discussão, ou um apoio/discordância com motivo — não fabrique um ângulo da sua disciplina só pra marcar presença. Se você sinceramente não tem nada relevante a agregar agora, diga isso em uma linha e passe a palavra, em vez de encher linguiça. Não narre que está numa reunião; apenas contribua.`;
   }
@@ -315,8 +316,10 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     }
 
     // Protocolo de silêncio: o Engenheiro de Prompt observa em silêncio e só
-    // responde quando o fundador o chama pelo nome.
-    const addressedEngineer = /\bengenheiro\b/i.test(text);
+    // responde quando o fundador o chama pelo nome (próprio ou cargo).
+    const eng = AGENTS.find((a) => a.id === "prompt-engineer");
+    const engNames = [eng && eng.nome, "engenheiro"].filter(Boolean).join("|");
+    const addressedEngineer = new RegExp(`\\b(${engNames})\\b`, "i").test(text);
     const speakers = present.filter((a) => a.id !== "prompt-engineer" || addressedEngineer);
     if (speakers.length === 0) {
       setHint("O Engenheiro de Prompt observa em silêncio — chame-o pelo nome para ele responder.");
@@ -342,7 +345,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     await Context.ready(); // Núcleo + Briefing prontos antes da rodada
 
     for (const agent of speakers) {
-      const bubbleWrap = messageEl({ speaker: agent.id, name: agent.name, initials: agent.initials, content: "" });
+      const bubbleWrap = messageEl({ speaker: agent.id, name: agent.nome || agent.name, initials: agent.initials, content: "" });
       bubbleWrap.classList.add("dmsg--streaming");
       const bubble = bubbleWrap.querySelector(".dmsg__bubble");
       bubble.innerHTML = `<span class="typing"><span></span><span></span><span></span></span>`;
@@ -353,7 +356,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
       try {
         const result = await streamMessage({
           system: meetingSystem(agent, present),
-          messages: [{ role: "user", content: `${transcriptText()}\n\nAgora responda como ${agent.name} (${agent.role}).` }],
+          messages: [{ role: "user", content: `${transcriptText()}\n\nAgora responda como ${agent.nome || agent.name} (${agent.name} — ${agent.role}).` }],
           signal: abortCtrl.signal,
           onText: (chunk) => {
             if (acc === "") bubble.textContent = "";
@@ -362,7 +365,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
             scrollToBottom();
           },
         });
-        thread.push({ speaker: agent.id, name: agent.name, initials: agent.initials, content: acc, costUSD: result.costUSD, outTok: result.usage.output });
+        thread.push({ speaker: agent.id, name: agent.nome || agent.name, initials: agent.initials, content: acc, costUSD: result.costUSD, outTok: result.usage.output });
         saveThread();
         setCostLabel(bubbleWrap.querySelector(".dmsg__cost"), result.costUSD, result.usage.output);
         updateMeetingCost();
@@ -371,7 +374,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
         if (err.name === "AbortError") {
           if (acc) {
             bubble.textContent = acc;
-            thread.push({ speaker: agent.id, name: agent.name, initials: agent.initials, content: acc });
+            thread.push({ speaker: agent.id, name: agent.nome || agent.name, initials: agent.initials, content: acc });
             saveThread();
           } else {
             bubbleWrap.remove();
