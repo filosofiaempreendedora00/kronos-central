@@ -14,6 +14,7 @@ os.makedirs(ICONS, exist_ok=True)
 os.makedirs(BUILD, exist_ok=True)
 
 ONIX = (21, 12, 6, 255)  # #150C06
+TEX_PATH = os.path.join(ROOT, "www", "assets", "areia-onix.png")  # textura de areia sobre ônix
 
 # símbolo, recortado na bounding box do que não é transparente
 sym = Image.open(SRC).convert("RGBA")
@@ -21,26 +22,37 @@ bbox = sym.getbbox()
 if bbox:
     sym = sym.crop(bbox)
 
+# textura de fundo (areia ônix)
+TEX = Image.open(TEX_PATH).convert("RGBA")
+
 def fit(sym_img, box):
     w, h = sym_img.size
     s = min(box / w, box / h)
     return sym_img.resize((max(1, int(w * s)), max(1, int(h * s))), Image.LANCZOS)
 
+def tex_square(size):
+    """Recorte central quadrado da textura, redimensionado para 'size'."""
+    w, h = TEX.size
+    s = min(w, h)
+    left, top = (w - s) // 2, (h - s) // 2
+    return TEX.crop((left, top, left + s, top + s)).resize((size, size), Image.LANCZOS)
+
 def square_icon(size, sym_scale=0.58):
-    canvas = Image.new("RGBA", (size, size), ONIX)
+    canvas = tex_square(size).copy()
     s = fit(sym, int(size * sym_scale))
     canvas.alpha_composite(s, ((size - s.width) // 2, (size - s.height) // 2))
     return canvas
 
 def rounded_icon(size, sym_scale=0.50, margin_ratio=0.10, radius_ratio=0.225):
-    """Estilo macOS: conteúdo arredondado com margem transparente."""
+    """Estilo macOS: textura arredondada com margem transparente."""
     canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     margin = int(size * margin_ratio)
     inner = size - 2 * margin
     radius = int(inner * radius_ratio)
-    plate = Image.new("RGBA", (inner, inner), (0, 0, 0, 0))
-    d = ImageDraw.Draw(plate)
-    d.rounded_rectangle([0, 0, inner - 1, inner - 1], radius=radius, fill=ONIX)
+    plate = tex_square(inner).copy()
+    mask = Image.new("L", (inner, inner), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, inner - 1, inner - 1], radius=radius, fill=255)
+    plate.putalpha(mask)
     s = fit(sym, int(inner * sym_scale))
     plate.alpha_composite(s, ((inner - s.width) // 2, (inner - s.height) // 2))
     canvas.alpha_composite(plate, (margin, margin))
