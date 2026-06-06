@@ -79,6 +79,8 @@ body::before {
 
 .brand { display: flex; align-items: center; gap: 16px; }
 
+.brand__logo { height: 30px; width: auto; display: block; }
+
 .brand__mark {
   color: var(--areia);
   display: grid;
@@ -1288,6 +1290,7 @@ body::before {
   /* topbar compacta */
   .topbar { gap: 10px; padding-bottom: 22px; }
   .brand { gap: 11px; }
+  .brand__logo { height: 26px; }
   .brand__title { font-size: 23px; letter-spacing: 0.08em; }
   .brand__subtitle { display: none; }
   .topbar__right { gap: 10px; }
