@@ -160,26 +160,21 @@ function escapeAttr(s) {
 }
 
 /* ------------------------------- Boot ------------------------------------ */
-/* Ajusta a altura à área visível acima do teclado (iOS). Sem isso, ao focar o
-   campo o iOS rola a página e empurra o header (setinha de voltar) pra fora. */
+/* Mede a altura REAL visível (acima do teclado, descontando barras do iOS) e
+   expõe em --app-h. No mobile, o .app usa essa altura: com o corpo travado, a
+   tela inteira cabe sempre na área visível — sem "saltar" e sem rolar a página.
+   Só ouvimos 'resize' (teclado abre/fecha, barra some) — nada de forçar scroll. */
 function fitViewportToKeyboard() {
   const vv = window.visualViewport;
-  if (!vv) return;
   const root = document.documentElement;
   let raf = 0;
   const apply = () => {
-    // Guarda contra 0/indefinido (senão a altura colapsa); sem valor válido,
-    // o CSS cai no fallback 100dvh.
-    const h = vv.height;
-    if (h && h > 0) root.style.setProperty("--vvh", Math.round(h) + "px");
-    // Nas telas cheias (dashboard escondido), mantém o topo fixo p/ a setinha
-    // não sumir. No dashboard, não mexe no scroll.
-    const dash = document.getElementById("dashboardView");
-    if (dash && dash.hidden) window.scrollTo(0, 0);
+    const h = vv ? vv.height : window.innerHeight;
+    if (h && h > 0) root.style.setProperty("--app-h", Math.round(h) + "px");
   };
   const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(apply); };
-  vv.addEventListener("resize", schedule);
-  vv.addEventListener("scroll", schedule);
+  if (vv) vv.addEventListener("resize", schedule);
+  window.addEventListener("orientationchange", () => setTimeout(apply, 250));
   apply();
 }
 
