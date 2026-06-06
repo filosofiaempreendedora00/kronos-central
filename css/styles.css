@@ -913,6 +913,8 @@ body::before {
   display: flex; align-items: stretch; gap: 18px;
   padding: 16px 0; border-bottom: 1px solid var(--areia-12);
 }
+/* some durante a reunião (.delfos__roster é flex → precisa da regra explícita) */
+.delfos__roster[hidden] { display: none; }
 .roster__zone { display: flex; flex-direction: column; gap: 11px; }
 .roster__zone--room { flex: 1; min-width: 0; }
 .roster__zone--bench {
@@ -1189,6 +1191,10 @@ body::before {
 
 /* ============================== RESPONSIVO ============================== */
 @media (max-width: 640px) {
+  /* iOS dá zoom automático em campo com fonte < 16px ao focar — o que
+     "desconfigura" a tela. 16px elimina esse zoom. */
+  .composer__input, .field__input, #apiKeyInput { font-size: 16px; }
+
   /* padding menor + respeita notch/ilha e o indicador de home do iPhone.
      As telas cheias usam --pad-top/--pad-bottom no calc da altura, então
      já cabem certinho sem passar da tela. */
