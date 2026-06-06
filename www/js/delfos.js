@@ -131,6 +131,9 @@ const Delfos = (() => {
      Clicar move o membro entre as duas zonas. */
   function renderTable() {
     const el = document.getElementById("delfosRoster");
+    // A escolha de quem está na sala acontece só ANTES da reunião começar.
+    // Com a conversa em andamento, o roster some para não atrapalhar o texto.
+    el.hidden = thread.length > 0;
     const inRoom = AGENTS.filter((a) => roster.includes(a.id));
     const bench = AGENTS.filter((a) => !roster.includes(a.id));
 
@@ -372,6 +375,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     thread = [];
     saveThread();
     renderMessages();
+    renderTable(); // reabre a seleção de participantes p/ a próxima reunião
     updateMeetingCost();
   }
 
