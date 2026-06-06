@@ -45,6 +45,8 @@ const Delfos = (() => {
     renderTable();
     renderMessages();
     updateMeetingCost();
+    stick = true;
+    scrollToBottom(true);
     setTimeout(() => document.getElementById("delfosInput")?.focus(), 50);
     requestAnimationFrame(startDust);
   }
@@ -233,9 +235,16 @@ const Delfos = (() => {
     }
   }
 
-  function scrollToBottom() {
+  // "Stick to bottom": só auto-rola se o usuário já estiver perto do fim.
+  let stick = true;
+  function isNearBottom(sc, threshold = 140) {
+    return sc.scrollHeight - sc.scrollTop - sc.clientHeight < threshold;
+  }
+  function scrollToBottom(force) {
     const sc = document.getElementById("delfosScroll");
-    sc.scrollTop = sc.scrollHeight;
+    if (!sc) return;
+    if (force) stick = true;
+    if (stick) sc.scrollTop = sc.scrollHeight;
   }
 
   /* --------------------------- Enquadramento ----------------------------- */
@@ -252,7 +261,8 @@ const Delfos = (() => {
 ---
 CONTEXTO DA REUNIÃO — DELFOS
 Você está numa mesa-redonda chamada Delfos com o Fundador da KRONOS e outros membros do conselho. ${mesa}Você participa como ${agent.name} (${agent.role}).
-Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 frases. Você pode concordar, discordar ou complementar o que já foi dito, mas agregue valor: não repita o que outro já falou. Não narre que está numa reunião; apenas contribua com sua posição.`;
+Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 frases. Você pode concordar, discordar ou complementar o que já foi dito, mas agregue valor: não repita o que outro já falou.
+Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. Se não toca, contribua como um bom conselheiro contribuiria: uma observação afiada, uma pergunta que destrava a discussão, ou um apoio/discordância com motivo — não fabrique um ângulo da sua disciplina só pra marcar presença. Se você sinceramente não tem nada relevante a agregar agora, diga isso em uma linha e passe a palavra, em vez de encher linguiça. Não narre que está numa reunião; apenas contribua.`;
   }
 
   /* ------------------------------ Enviar --------------------------------- */
@@ -277,7 +287,7 @@ Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 fra
     input.value = "";
     autoGrow(input);
     saveThread();
-    scrollToBottom();
+    scrollToBottom(true);
 
     busy = true;
     setBusy(true);
@@ -380,6 +390,9 @@ Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 fra
     document.getElementById("delfosBackBtn").addEventListener("click", close);
     document.getElementById("delfosClearBtn").addEventListener("click", endMeeting);
     document.getElementById("delfosSendBtn").addEventListener("click", send);
+
+    const sc = document.getElementById("delfosScroll");
+    if (sc) sc.addEventListener("scroll", () => { stick = isNearBottom(sc); }, { passive: true });
 
     const input = document.getElementById("delfosInput");
     input.addEventListener("input", () => autoGrow(input));
