@@ -49,6 +49,7 @@
 
         <div class="topbar__right">
           <span class="clock" id="liveClock">--:--</span>
+          <button class="btn-ghost" id="nucleoBtn" title="Núcleo e Briefing Vivo — o que os agentes sabem">Núcleo</button>
           <button class="btn-ghost" id="settingsBtn" title="Configurar chave da API">Configurar</button>
         </div>
       </header>
@@ -323,15 +324,54 @@
         </div>
       </div>
     </div>
+
+    <!-- ===================== NÚCLEO (Núcleo + Briefing Vivo) ============== -->
+    <div id="nucleoView" class="settings" hidden>
+      <header class="chat__head">
+        <button class="chat__back" id="nucleoBackBtn" aria-label="Voltar ao dashboard">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <polyline points="14,6 8,12 14,18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+        <div class="chat__identity">
+          <div class="chat__id-text">
+            <h2 class="chat__name">Núcleo</h2>
+            <span class="chat__role">o que todos os agentes sabem</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="settings__scroll">
+        <div class="settings__inner">
+          <section class="settings__section">
+            <h3 class="settings__title">Núcleo Central</h3>
+            <p class="settings__desc">O DNA comum a todo agente da KRONOS — identidade, missão, tom, léxico e comportamento. Muda raramente.</p>
+            <div class="doc" id="nucleoDoc"></div>
+          </section>
+
+          <section class="settings__section">
+            <h3 class="settings__title">
+              Briefing Vivo
+              <span class="doc__meta" id="briefingMeta"></span>
+            </h3>
+            <p class="settings__desc">O cenário atual da empresa, que você atualiza. Todos os agentes leem por cima do Núcleo. Edite <code>www/contexto/briefing.md</code> — no próximo deploy, todos enxergam o novo cenário.</p>
+            <div class="doc" id="briefingDoc"></div>
+          </section>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="js/vendor/qrcode.js"></script>
   <script src="js/agents.js"></script>
+  <script src="js/context.js"></script>
   <script src="js/api.js"></script>
   <script src="js/cost.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/delfos.js"></script>
   <script src="js/costs-view.js"></script>
+  <script src="js/nucleo-view.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/app.js"></script>
 

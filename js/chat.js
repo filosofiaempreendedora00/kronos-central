@@ -230,8 +230,9 @@ const Chat = (() => {
     let acc = "";
 
     try {
+      await Context.ready(); // garante Núcleo + Briefing carregados
       const result = await streamMessage({
-        system: currentAgent.systemPrompt,
+        system: Context.systemFor(currentAgent),
         messages: history.map((m) => ({ role: m.role, content: m.content })),
         signal: abortCtrl.signal,
         onText: (chunk) => {

@@ -1125,6 +1125,41 @@ body::before {
 }
 .settings__pairwarn code { background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 4px; }
 
+/* ===================== DOCUMENTOS (tela Núcleo) ====================== */
+.doc__meta {
+  font-family: var(--font-body); font-weight: 300; font-size: 12px;
+  letter-spacing: 0.04em; color: var(--areia); margin-left: 10px;
+}
+.doc {
+  font-size: 14.5px; line-height: 1.65; color: rgba(245,239,230,0.86);
+  border: 1px solid var(--areia-12); border-radius: var(--radius);
+  background: rgba(168,144,112,0.04); padding: 22px 24px;
+}
+.doc h2, .doc h3, .doc h4 {
+  font-family: var(--font-title); color: var(--branco); margin: 22px 0 8px;
+  font-weight: 600; line-height: 1.2;
+}
+.doc h2 { font-size: 24px; }
+.doc h3 { font-size: 19px; letter-spacing: 0.02em; }
+.doc h4 { font-size: 16px; color: var(--creme); }
+.doc > :first-child { margin-top: 0; }
+.doc p { margin: 0 0 12px; }
+.doc strong { color: var(--creme); font-weight: 600; }
+.doc em { color: var(--areia); font-style: italic; }
+.doc ul { margin: 0 0 14px; padding-left: 20px; }
+.doc li { margin: 0 0 6px; }
+.doc li::marker { color: var(--areia); }
+.doc hr { border: none; border-top: 1px solid var(--areia-12); margin: 20px 0; }
+.doc code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px;
+  background: var(--areia-12); color: var(--creme); padding: 2px 7px; border-radius: 6px;
+}
+.doc blockquote {
+  margin: 0 0 14px; padding: 4px 16px; border-left: 2px solid var(--areia-40);
+  color: var(--areia); font-style: italic;
+}
+.doc blockquote p { margin: 0 0 6px; font-size: 13px; line-height: 1.55; }
+
 /* ============================== RESPONSIVO ============================== */
 @media (max-width: 640px) {
   /* padding menor + respeita notch/ilha e o indicador de home do iPhone.

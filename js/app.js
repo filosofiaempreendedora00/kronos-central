@@ -161,6 +161,7 @@ function escapeAttr(s) {
 
 /* ------------------------------- Boot ------------------------------------ */
 function init() {
+  Context.load(); // carrega Núcleo + Briefing (alimenta todos os agentes)
   renderAgents();
   renderMetrics();
   tickClock();
@@ -176,10 +177,11 @@ function init() {
   Delfos.bind();
   CostsView.bind();
   CostsView.renderMini();
+  NucleoView.bind();
   Settings.bind();
 }
 
 // Exposto para outros módulos (ex.: chat/delfos pedem a chave da API)
-window.App = { openSettings: () => Settings.open() };
+window.App = { openSettings: () => Settings.open(), openNucleo: () => NucleoView.open() };
 
 document.addEventListener("DOMContentLoaded", init);
