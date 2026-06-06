@@ -1108,6 +1108,16 @@ body::before {
 .settings__url { flex: 1; font-size: 13.5px; color: var(--areia); text-decoration: none; word-break: break-all; }
 .settings__url:hover { color: var(--creme); text-decoration: underline; }
 
+.settings__pair { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; color: var(--areia); cursor: pointer; margin-top: 4px; }
+.settings__pair input { margin-top: 2px; accent-color: var(--areia); width: 15px; height: 15px; flex-shrink: 0; }
+.settings__pair input:disabled { opacity: 0.4; }
+.settings__pairwarn {
+  font-size: 11.5px; line-height: 1.55; color: #e9c9bf; margin: 0;
+  background: rgba(120,40,30,0.18); border: 1px solid rgba(180,90,70,0.4);
+  border-radius: 8px; padding: 9px 11px;
+}
+.settings__pairwarn code { background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 4px; }
+
 /* ============================== RESPONSIVO ============================== */
 @media (max-width: 640px) {
   .app { padding: 22px 18px 30px; }
