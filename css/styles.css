@@ -56,8 +56,13 @@ body::before {
   z-index: 1;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 36px 40px 48px;
-  min-height: 100vh;
+  /* padding exposto como variáveis: as telas cheias (chat/delfos/custos/config)
+     descontam exatamente esse valor da altura, então cabem na tela sem sobra. */
+  --pad-top: 36px;
+  --pad-bottom: 48px;
+  padding: var(--pad-top) 40px var(--pad-bottom);
+  min-height: 100vh;       /* fallback navegadores antigos */
+  min-height: 100dvh;      /* altura REAL visível (corrige iOS Safari) */
   display: flex;
   flex-direction: column;
 }
@@ -481,7 +486,8 @@ body::before {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 84px);
-  min-height: 520px;
+  height: calc(100dvh - var(--pad-top) - var(--pad-bottom));
+  min-height: 0;
 }
 
 .chat__head {
@@ -869,7 +875,8 @@ body::before {
 .delfos {
   position: relative;
   display: flex; flex-direction: column;
-  height: calc(100vh - 84px); min-height: 540px;
+  height: calc(100vh - 84px);
+  height: calc(100dvh - var(--pad-top) - var(--pad-bottom)); min-height: 0;
 }
 
 /* feixe de luz — atmosfera de oráculo, ocupando a tela inteira (full-bleed).
@@ -1014,7 +1021,7 @@ body::before {
 
 /* ============================== VIEW DE CUSTOS ============================== */
 #costsView[hidden] { display: none; }
-.costs { display: flex; flex-direction: column; height: calc(100vh - 84px); min-height: 540px; }
+.costs { display: flex; flex-direction: column; height: calc(100vh - 84px); height: calc(100dvh - var(--pad-top) - var(--pad-bottom)); min-height: 0; }
 .costs__scroll {
   flex: 1; overflow-y: auto; padding: 26px 2px 10px;
   scrollbar-width: thin; scrollbar-color: var(--areia-40) transparent;
@@ -1070,7 +1077,7 @@ body::before {
 
 /* ============================== CONFIGURAÇÕES ============================== */
 #settingsView[hidden] { display: none; }
-.settings { display: flex; flex-direction: column; height: calc(100vh - 84px); min-height: 540px; }
+.settings { display: flex; flex-direction: column; height: calc(100vh - 84px); height: calc(100dvh - var(--pad-top) - var(--pad-bottom)); min-height: 0; }
 .settings__scroll {
   flex: 1; overflow-y: auto; padding: 26px 2px 10px;
   scrollbar-width: thin; scrollbar-color: var(--areia-40) transparent;
@@ -1120,7 +1127,15 @@ body::before {
 
 /* ============================== RESPONSIVO ============================== */
 @media (max-width: 640px) {
-  .app { padding: 22px 18px 30px; }
+  /* padding menor + respeita notch/ilha e o indicador de home do iPhone.
+     As telas cheias usam --pad-top/--pad-bottom no calc da altura, então
+     já cabem certinho sem passar da tela. */
+  .app {
+    --pad-top: calc(20px + env(safe-area-inset-top));
+    --pad-bottom: calc(20px + env(safe-area-inset-bottom));
+    padding: var(--pad-top) calc(18px + env(safe-area-inset-right))
+             var(--pad-bottom) calc(18px + env(safe-area-inset-left));
+  }
   .content { padding-top: 30px; gap: 44px; }
 
   /* topbar compacta */
@@ -1136,7 +1151,6 @@ body::before {
   .block__hint { display: none; }
   .agents-grid, .metrics-grid { grid-template-columns: 1fr; }
   /* chat: header em 2 linhas (identidade em cima, ações embaixo) */
-  .chat { height: calc(100vh - 60px); }
   .chat__head { gap: 12px 14px; flex-wrap: wrap; padding-bottom: 16px; }
   .chat__back { padding: 4px 2px; }
   .chat__back span { display: none; }
@@ -1146,19 +1160,16 @@ body::before {
   .msg__bubble { max-width: 92%; }
 
   /* delfos: header em 2 linhas */
-  .delfos { height: calc(100vh - 60px); }
   .delfos__head { gap: 10px 14px; flex-wrap: wrap; justify-content: space-between; }
   .delfos__brand { order: 3; flex: 1 1 100%; }
   .delfos__title-h { font-size: 23px; }
   .delfos__cost { order: 4; flex: 1 1 100%; text-align: center; }
 
   /* configurações */
-  .settings { height: calc(100vh - 60px); }
   .settings__keyrow { flex-direction: column; }
   .settings__qr { width: 160px; height: 160px; }
 
   /* custos */
-  .costs { height: calc(100vh - 60px); }
   .cost-cards { grid-template-columns: 1fr 1fr; gap: 14px; }
   .cost-card { padding: 16px; }
   .cost-card__value { font-size: 26px; }
