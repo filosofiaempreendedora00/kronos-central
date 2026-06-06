@@ -1189,7 +1189,7 @@ body::before {
 .doc p { margin: 0 0 12px; }
 .doc strong { color: var(--creme); font-weight: 600; }
 .doc em { color: var(--areia); font-style: italic; }
-.doc ul { margin: 0 0 14px; padding-left: 20px; }
+.doc ul, .doc ol { margin: 0 0 14px; padding-left: 20px; }
 .doc li { margin: 0 0 6px; }
 .doc li::marker { color: var(--areia); }
 .doc hr { border: none; border-top: 1px solid var(--areia-12); margin: 20px 0; }
@@ -1229,6 +1229,13 @@ body::before {
 .nucleo-card__desc { font-size: 14px; font-weight: 300; line-height: 1.6; color: rgba(245,239,230,0.74); max-width: 560px; }
 .nucleo-card__cta { margin-top: 8px; font-size: 13.5px; letter-spacing: 0.04em; color: var(--areia); }
 .nucleo-card:hover .nucleo-card__cta { color: var(--creme); }
+
+/* Biblioteca de prompts — grupos */
+.lib-group { display: flex; flex-direction: column; gap: 14px; }
+.lib-group__label {
+  font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--areia); padding-bottom: 2px;
+}
 
 /* ============================== RESPONSIVO ============================== */
 @media (max-width: 640px) {
