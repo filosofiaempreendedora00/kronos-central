@@ -44,6 +44,23 @@
       </header>
 
       <main class="content">
+        <!-- ACESSO — DELFOS (sala de reuniões) -->
+        <button class="delfos-banner" id="delfosEnter" type="button">
+          <span class="delfos-banner__mark" id="delfosBannerMark" aria-hidden="true"></span>
+          <span class="delfos-banner__text">
+            <span class="delfos-banner__eyebrow">Sala de Reuniões</span>
+            <span class="delfos-banner__title">Delfos</span>
+            <span class="delfos-banner__desc">Reúna o conselho numa mesa-redonda — você e os agentes pensando juntos.</span>
+          </span>
+          <span class="delfos-banner__cta">
+            Entrar
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <line x1="5" y1="12" x2="18" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <polyline points="13,7 18,12 13,17" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </button>
+
         <!-- BLOCO 1 — AGENTES -->
         <section class="block">
           <div class="block__head">
@@ -144,6 +161,49 @@
         <p class="composer__hint" id="composerHint">Enter envia · Shift+Enter quebra linha</p>
       </div>
     </div>
+
+    <!-- ===================================================================
+         VIEW: DELFOS (sala de reuniões)
+         =================================================================== -->
+    <div id="delfosView" class="delfos" hidden>
+      <header class="delfos__head">
+        <button class="chat__back" id="delfosBackBtn" aria-label="Voltar ao dashboard">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <polyline points="14,6 8,12 14,18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+
+        <div class="delfos__brand">
+          <span class="delfos__brand-mark" id="delfosHeadMark" aria-hidden="true"></span>
+          <div class="delfos__brand-text">
+            <h2 class="delfos__title-h">DELFOS</h2>
+            <span class="delfos__sub">Mesa-redonda do conselho</span>
+          </div>
+        </div>
+
+        <button class="btn-ghost btn-ghost--sm" id="delfosClearBtn">Encerrar reunião</button>
+      </header>
+
+      <div class="delfos__table" id="delfosTable"></div>
+
+      <div class="delfos__scroll" id="delfosScroll">
+        <div class="delfos__messages" id="delfosMessages"></div>
+      </div>
+
+      <div class="delfos__composer">
+        <div class="composer">
+          <textarea id="delfosInput" class="composer__input" rows="1" placeholder="Abra a reunião com um tópico ou pergunta…"></textarea>
+          <button class="composer__send" id="delfosSendBtn" aria-label="Enviar">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <line x1="5" y1="12" x2="18" y2="12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <polyline points="13,7 18,12 13,17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <p class="composer__hint" id="delfosHint">Enter envia · Shift+Enter quebra linha · cada membro presente responde em sequência</p>
+      </div>
+    </div>
   </div>
 
   <!-- ======================= MODAL: CONFIGURAR API ======================= -->
@@ -166,6 +226,7 @@
   <script src="js/agents.js"></script>
   <script src="js/api.js"></script>
   <script src="js/chat.js"></script>
+  <script src="js/delfos.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

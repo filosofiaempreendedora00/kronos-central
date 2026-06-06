@@ -159,7 +159,13 @@ function init() {
     if (e.key === "Escape") closeSettings();
   });
 
+  // Delfos (sala de reuniões)
+  document.getElementById("delfosBannerMark").innerHTML = pedimentSVG(40);
+  document.getElementById("delfosHeadMark").innerHTML = pedimentSVG(30);
+  document.getElementById("delfosEnter").addEventListener("click", () => Delfos.open());
+
   Chat.bind();
+  Delfos.bind();
 }
 
 // Exposto para outros módulos (ex.: chat pede a chave da API)
