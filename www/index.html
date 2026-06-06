@@ -331,5 +331,14 @@
   <script src="js/costs-view.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/app.js"></script>
+
+  <!-- PWA: mantém a Central "sempre viva" (abre instantânea, aguenta 5G ruim) -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
