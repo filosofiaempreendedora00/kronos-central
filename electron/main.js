@@ -8,6 +8,9 @@ const path = require("path");
 
 const ICON = path.join(__dirname, "..", "build", "icon.png");
 
+// Nome do app (afeta menu/Sobre/notificações; no .app empacotado vem do productName)
+app.setName("KRONOS Central");
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
@@ -38,6 +41,11 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  app.setAboutPanelOptions({
+    applicationName: "KRONOS Central",
+    applicationVersion: app.getVersion(),
+    copyright: "KRONOS",
+  });
   // Ícone no Dock (macOS) durante o desenvolvimento
   if (process.platform === "darwin" && app.dock) {
     try { app.dock.setIcon(ICON); } catch (_) {}
