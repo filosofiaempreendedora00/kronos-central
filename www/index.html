@@ -325,7 +325,7 @@
       </div>
     </div>
 
-    <!-- ===================== NÚCLEO (Núcleo + Briefing Vivo) ============== -->
+    <!-- ===================== NÚCLEO — hub (dois ambientes) =============== -->
     <div id="nucleoView" class="settings" hidden>
       <header class="chat__head">
         <button class="chat__back" id="nucleoBackBtn" aria-label="Voltar ao dashboard">
@@ -343,21 +343,44 @@
       </header>
 
       <div class="settings__scroll">
-        <div class="settings__inner">
-          <section class="settings__section">
-            <h3 class="settings__title">Núcleo Central</h3>
-            <p class="settings__desc">O DNA comum a todo agente da KRONOS — identidade, missão, tom, léxico e comportamento. Muda raramente.</p>
-            <div class="doc" id="nucleoDoc"></div>
-          </section>
+        <div class="settings__inner nucleo-hub">
+          <button class="nucleo-card" data-doc="nucleo" type="button">
+            <span class="nucleo-card__kicker">Camada 1 · muda raramente</span>
+            <span class="nucleo-card__title">Núcleo Central</span>
+            <span class="nucleo-card__desc">O DNA comum a todo agente da KRONOS — identidade, missão, tom, léxico e comportamento.</span>
+            <span class="nucleo-card__cta">Abrir <span aria-hidden="true">→</span></span>
+          </button>
 
-          <section class="settings__section">
-            <h3 class="settings__title">
-              Briefing Vivo
-              <span class="doc__meta" id="briefingMeta"></span>
-            </h3>
-            <p class="settings__desc">O cenário atual da empresa, que você atualiza. Todos os agentes leem por cima do Núcleo. Edite <code>www/contexto/briefing.md</code> — no próximo deploy, todos enxergam o novo cenário.</p>
-            <div class="doc" id="briefingDoc"></div>
-          </section>
+          <button class="nucleo-card" data-doc="briefing" type="button">
+            <span class="nucleo-card__kicker">Camada 2 · você atualiza <span id="briefingMeta" class="doc__meta"></span></span>
+            <span class="nucleo-card__title">Briefing Vivo</span>
+            <span class="nucleo-card__desc">O cenário atual da empresa. Todos os agentes leem por cima do Núcleo.</span>
+            <span class="nucleo-card__cta">Abrir <span aria-hidden="true">→</span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== NÚCLEO — leitor de um documento =========== -->
+    <div id="nucleoDocView" class="settings" hidden>
+      <header class="chat__head">
+        <button class="chat__back" id="nucleoDocBackBtn" aria-label="Voltar ao Núcleo">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <polyline points="14,6 8,12 14,18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Núcleo</span>
+        </button>
+        <div class="chat__identity">
+          <div class="chat__id-text">
+            <h2 class="chat__name" id="nucleoDocTitle">—</h2>
+            <span class="chat__role" id="nucleoDocSub"></span>
+          </div>
+        </div>
+      </header>
+
+      <div class="settings__scroll">
+        <div class="settings__inner">
+          <div class="doc" id="docBody"></div>
         </div>
       </div>
     </div>

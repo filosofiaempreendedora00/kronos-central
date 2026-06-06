@@ -39,41 +39,65 @@ const NucleoView = (() => {
     return html;
   }
 
-  /* ------------------------------ Render -------------------------------- */
-  function render() {
-    document.getElementById("nucleoDoc").innerHTML =
-      mdToHtml(Context.rawNucleo() || "_Material ainda não carregado._");
-    document.getElementById("briefingDoc").innerHTML =
-      mdToHtml(Context.rawBriefing() || "_Material ainda não carregado._");
+  const DOCS = {
+    nucleo: {
+      title: "Núcleo Central",
+      sub: "o DNA comum a todos os agentes",
+      raw: () => Context.rawNucleo(),
+    },
+    briefing: {
+      title: "Briefing Vivo",
+      sub: "o cenário atual — edite www/contexto/briefing.md",
+      raw: () => Context.rawBriefing(),
+    },
+  };
+
+  const ALL_VIEWS = ["dashboardView", "chatView", "delfosView", "costsView", "settingsView", "nucleoView", "nucleoDocView"];
+  function showOnly(id) {
+    ALL_VIEWS.forEach((v) => { const e = document.getElementById(v); if (e) e.hidden = (v !== id); });
+    window.scrollTo(0, 0); // evita o header (botão voltar) ficar fora da tela
+  }
+
+  /* ------------------------------- Hub ---------------------------------- */
+  async function openHub() {
+    showOnly("nucleoView");
+    await Context.ready();
     const d = Context.briefingDate();
     const meta = document.getElementById("briefingMeta");
-    if (meta) meta.textContent = d ? `atualizado em ${d}` : "";
+    if (meta) meta.textContent = d ? `· atualizado em ${d}` : "";
   }
 
-  /* ------------------------------ Abrir --------------------------------- */
-  async function open() {
-    ["dashboardView", "chatView", "delfosView", "costsView", "settingsView"].forEach((id) => {
-      const e = document.getElementById(id);
-      if (e) e.hidden = true;
-    });
-    document.getElementById("nucleoView").hidden = false;
-    render();
-    await Context.ready(); // se ainda não carregou, busca e re-renderiza
-    render();
+  /* --------------------------- Leitor de doc ---------------------------- */
+  async function openDoc(which) {
+    const doc = DOCS[which];
+    if (!doc) return;
+    showOnly("nucleoDocView");
+    document.getElementById("nucleoDocTitle").textContent = doc.title;
+    document.getElementById("nucleoDocSub").textContent = doc.sub;
+    const body = document.getElementById("docBody");
+    const paint = () => { body.innerHTML = mdToHtml(doc.raw() || "_Material ainda não carregado._"); };
+    paint();
+    await Context.ready();
+    paint();
+    const sc = document.querySelector("#nucleoDocView .settings__scroll");
+    if (sc) sc.scrollTop = 0;
   }
 
-  function close() {
-    document.getElementById("nucleoView").hidden = true;
-    document.getElementById("dashboardView").hidden = false;
-  }
+  function toDashboard() { showOnly("dashboardView"); }
 
   function bind() {
-    document.getElementById("nucleoBtn").addEventListener("click", open);
-    document.getElementById("nucleoBackBtn").addEventListener("click", close);
+    document.getElementById("nucleoBtn").addEventListener("click", openHub);
+    document.getElementById("nucleoBackBtn").addEventListener("click", toDashboard);
+    document.getElementById("nucleoDocBackBtn").addEventListener("click", openHub);
+    document.querySelectorAll(".nucleo-card").forEach((c) =>
+      c.addEventListener("click", () => openDoc(c.dataset.doc))
+    );
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !document.getElementById("nucleoView").hidden) close();
+      if (e.key !== "Escape") return;
+      if (!document.getElementById("nucleoDocView").hidden) openHub();
+      else if (!document.getElementById("nucleoView").hidden) toDashboard();
     });
   }
 
-  return { open, close, bind };
+  return { open: openHub, openDoc, bind };
 })();

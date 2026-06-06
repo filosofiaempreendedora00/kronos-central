@@ -1160,6 +1160,33 @@ body::before {
 }
 .doc blockquote p { margin: 0 0 6px; font-size: 13px; line-height: 1.55; }
 
+/* Telas do Núcleo são .settings (display:flex) → precisam ocultar no [hidden]. */
+#nucleoView[hidden], #nucleoDocView[hidden] { display: none; }
+
+/* Hub do Núcleo: dois ambientes em cards */
+.nucleo-hub { gap: 20px; }
+.nucleo-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  text-align: left; width: 100%; cursor: pointer;
+  padding: 26px 26px 22px;
+  background:
+    linear-gradient(rgba(21,12,6,0.55), rgba(21,12,6,0.72)),
+    url("../assets/areia-sepia.png");
+  background-size: cover; background-position: center;
+  border: 1px solid var(--areia-22); border-radius: var(--radius);
+  color: var(--creme); font-family: var(--font-body);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+.nucleo-card:hover { border-color: var(--areia-40); transform: translateY(-2px); }
+.nucleo-card__kicker {
+  font-size: 11px; font-weight: 400; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--areia);
+}
+.nucleo-card__title { font-family: var(--font-title); font-weight: 600; font-size: 27px; color: var(--branco); line-height: 1.1; }
+.nucleo-card__desc { font-size: 14px; font-weight: 300; line-height: 1.6; color: rgba(245,239,230,0.74); max-width: 560px; }
+.nucleo-card__cta { margin-top: 8px; font-size: 13.5px; letter-spacing: 0.04em; color: var(--areia); }
+.nucleo-card:hover .nucleo-card__cta { color: var(--creme); }
+
 /* ============================== RESPONSIVO ============================== */
 @media (max-width: 640px) {
   /* padding menor + respeita notch/ilha e o indicador de home do iPhone.
