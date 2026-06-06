@@ -204,6 +204,7 @@
         </div>
 
         <span class="delfos__cost" id="delfosMeetingCost" hidden></span>
+        <button class="btn-ghost btn-ghost--sm" id="delfosHistoryBtn">Histórico</button>
         <button class="btn-ghost btn-ghost--sm" id="delfosClearBtn">Encerrar reunião</button>
       </header>
 
@@ -225,6 +226,28 @@
           </button>
         </div>
         <p class="composer__hint" id="delfosHint">Enter envia · Shift+Enter quebra linha · cada membro presente responde em sequência</p>
+      </div>
+    </div>
+
+    <!-- ===================== DELFOS — histórico de reuniões ============== -->
+    <div id="delfosHistoryView" class="settings" hidden>
+      <header class="chat__head">
+        <button class="chat__back" id="delfosHistBackBtn" aria-label="Voltar">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <polyline points="14,6 8,12 14,18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Voltar</span>
+        </button>
+        <div class="chat__identity">
+          <div class="chat__id-text">
+            <h2 class="chat__name" id="delfosHistTitle">Histórico</h2>
+            <span class="chat__role" id="delfosHistSub">últimas reuniões (até 10)</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="settings__scroll">
+        <div class="settings__inner" id="delfosHistoryBody"></div>
       </div>
     </div>
 

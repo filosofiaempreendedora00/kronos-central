@@ -937,6 +937,25 @@ body::before {
 }
 .present__av:first-of-type { margin-left: 0; }
 .present__av--you { background: var(--areia); color: var(--onix); }
+
+/* Histórico de reuniões (usa .settings → precisa ocultar no [hidden]) */
+#delfosHistoryView[hidden] { display: none; }
+.hist-list { display: flex; flex-direction: column; gap: 14px; }
+.hist-card {
+  display: flex; flex-direction: column; gap: 9px; width: 100%; text-align: left; cursor: pointer;
+  padding: 16px 18px; border: 1px solid var(--areia-22); border-radius: var(--radius);
+  background: rgba(168,144,112,0.05); color: var(--creme); font-family: var(--font-body);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+.hist-card:hover { border-color: var(--areia-40); transform: translateY(-2px); }
+.hist-card__top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.hist-card__date { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--areia); }
+.hist-card__cost { font-size: 12px; color: var(--areia); }
+.hist-card__title { font-family: var(--font-title); font-size: 19px; font-weight: 600; color: var(--branco); line-height: 1.25; }
+.hist-card__foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.hist-card__avs { display: flex; }
+.hist-card__count { font-size: 12px; color: var(--areia); white-space: nowrap; }
+.delfos__messages--read { padding-top: 4px; }
 .roster__zone { display: flex; flex-direction: column; gap: 11px; }
 .roster__zone--room { flex: 1; min-width: 0; }
 .roster__zone--bench {

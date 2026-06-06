@@ -9,6 +9,8 @@
 const Delfos = (() => {
   const KEY_THREAD = "kronos.delfos.thread";
   const KEY_ROSTER = "kronos.delfos.roster";
+  const KEY_HISTORY = "kronos.delfos.history";
+  const HISTORY_MAX = 10;
 
   let thread = [];     // [{speaker:'user'|agentId, name, initials, content}]
   let roster = [];     // ids dos agentes sentados à mesa
@@ -35,6 +37,25 @@ const Delfos = (() => {
     return AGENTS.map((a) => a.id); // padrão: todos à mesa
   }
   function saveRoster() { localStorage.setItem(KEY_ROSTER, JSON.stringify(roster)); }
+
+  /* ----------------------- Histórico de reuniões ------------------------- */
+  /* Guarda as últimas 10 reuniões no aparelho (localStorage). É só registro —
+     reuniões antigas NUNCA são enviadas à API, então não geram custo. */
+  function loadHistoryList() {
+    try { const s = JSON.parse(localStorage.getItem(KEY_HISTORY)); if (Array.isArray(s)) return s; } catch (_) {}
+    return [];
+  }
+  function archiveCurrent() {
+    if (!thread.length) return;
+    const firstUser = thread.find((m) => m.speaker === "user");
+    const title = (firstUser ? firstUser.content : "Reunião").replace(/\s+/g, " ").trim().slice(0, 90);
+    const participants = [...new Set(thread.filter((m) => m.speaker !== "user").map((m) => m.speaker))];
+    const cost = thread.reduce((a, m) => a + (m.costUSD || 0), 0);
+    const entry = { ts: Date.now(), title, participants, cost, thread: thread.slice() };
+    const list = loadHistoryList();
+    list.unshift(entry);
+    localStorage.setItem(KEY_HISTORY, JSON.stringify(list.slice(0, HISTORY_MAX)));
+  }
 
   /* ------------------------------- Abrir --------------------------------- */
   function open() {
@@ -391,10 +412,86 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     updateMeetingCost();
   }
 
-  // Encerrar = limpa a reunião E volta ao dashboard
+  // Encerrar = arquiva no histórico, limpa a reunião e volta ao dashboard
   function endMeeting() {
+    archiveCurrent();
     clear();
     close();
+  }
+
+  /* --------------------- Tela: Histórico de reuniões --------------------- */
+  let histMode = "list"; // 'list' | 'read'
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function fmtDate(ts) {
+    try {
+      const d = new Date(ts);
+      return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) +
+        " · " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    } catch (_) { return ""; }
+  }
+  function avatarsHtml(ids) {
+    return (ids || []).map((id) => {
+      const a = AGENTS.find((x) => x.id === id);
+      return a ? `<span class="present__av" title="${a.name}">${a.initials}</span>` : "";
+    }).join("");
+  }
+  function openHistory() {
+    stopDust();
+    document.getElementById("delfosView").hidden = true;
+    document.getElementById("delfosHistoryView").hidden = false;
+    renderHistoryList();
+  }
+  function closeHistory() {
+    document.getElementById("delfosHistoryView").hidden = true;
+    document.getElementById("delfosView").hidden = false;
+    requestAnimationFrame(startDust);
+  }
+  function renderHistoryList() {
+    histMode = "list";
+    document.getElementById("delfosHistTitle").textContent = "Histórico";
+    document.getElementById("delfosHistSub").textContent = "últimas reuniões (até 10)";
+    const body = document.getElementById("delfosHistoryBody");
+    const list = loadHistoryList();
+    if (!list.length) {
+      body.innerHTML = `<p class="settings__desc">Nenhuma reunião arquivada ainda. Quando você encerrar uma reunião, ela aparece aqui.</p>`;
+      return;
+    }
+    body.innerHTML = `<div class="hist-list">` + list.map((e, i) => `
+      <button class="hist-card" data-i="${i}" type="button">
+        <span class="hist-card__top">
+          <span class="hist-card__date">${fmtDate(e.ts)}</span>
+          ${e.cost > 0 ? `<span class="hist-card__cost">≈ ${Cost.usd(e.cost)}</span>` : ""}
+        </span>
+        <span class="hist-card__title">${escapeHtml(e.title || "Reunião")}</span>
+        <span class="hist-card__foot">
+          <span class="hist-card__avs">${avatarsHtml(e.participants)}</span>
+          <span class="hist-card__count">${e.thread.length} msgs · abrir →</span>
+        </span>
+      </button>`).join("") + `</div>`;
+    body.querySelectorAll(".hist-card").forEach((c) =>
+      c.addEventListener("click", () => openHistoryItem(+c.dataset.i))
+    );
+  }
+  function openHistoryItem(i) {
+    const e = loadHistoryList()[i];
+    if (!e) return;
+    histMode = "read";
+    document.getElementById("delfosHistTitle").textContent = e.title || "Reunião";
+    document.getElementById("delfosHistSub").textContent = fmtDate(e.ts) + " · somente leitura";
+    const body = document.getElementById("delfosHistoryBody");
+    body.innerHTML = "";
+    const wrap = document.createElement("div");
+    wrap.className = "delfos__messages delfos__messages--read";
+    e.thread.forEach((m) => wrap.appendChild(messageEl(m)));
+    body.appendChild(wrap);
+    const sc = document.querySelector("#delfosHistoryView .settings__scroll");
+    if (sc) sc.scrollTop = 0;
+  }
+  function histBack() {
+    if (histMode === "read") renderHistoryList();
+    else closeHistory();
   }
 
   function autoGrow(el) {
@@ -407,6 +504,8 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     document.getElementById("delfosBackBtn").addEventListener("click", close);
     document.getElementById("delfosClearBtn").addEventListener("click", endMeeting);
     document.getElementById("delfosSendBtn").addEventListener("click", send);
+    document.getElementById("delfosHistoryBtn").addEventListener("click", openHistory);
+    document.getElementById("delfosHistBackBtn").addEventListener("click", histBack);
 
     const sc = document.getElementById("delfosScroll");
     if (sc) {
@@ -424,7 +523,9 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && busy) abortCtrl?.abort();
+      if (e.key !== "Escape") return;
+      if (!document.getElementById("delfosHistoryView").hidden) { histBack(); return; }
+      if (busy) abortCtrl?.abort();
     });
   }
 
