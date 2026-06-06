@@ -313,6 +313,16 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
       setHint("Selecione ao menos um membro para a mesa.");
       return;
     }
+
+    // Protocolo de silêncio: o Engenheiro de Prompt observa em silêncio e só
+    // responde quando o fundador o chama pelo nome.
+    const addressedEngineer = /\bengenheiro\b/i.test(text);
+    const speakers = present.filter((a) => a.id !== "prompt-engineer" || addressedEngineer);
+    if (speakers.length === 0) {
+      setHint("O Engenheiro de Prompt observa em silêncio — chame-o pelo nome para ele responder.");
+      return;
+    }
+
     if (!getApiKey()) { App.openSettings(); return; }
 
     if (thread.length === 0) document.getElementById("delfosMessages").innerHTML = "";
@@ -331,7 +341,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     abortCtrl = new AbortController();
     await Context.ready(); // Núcleo + Briefing prontos antes da rodada
 
-    for (const agent of present) {
+    for (const agent of speakers) {
       const bubbleWrap = messageEl({ speaker: agent.id, name: agent.name, initials: agent.initials, content: "" });
       bubbleWrap.classList.add("dmsg--streaming");
       const bubble = bubbleWrap.querySelector(".dmsg__bubble");

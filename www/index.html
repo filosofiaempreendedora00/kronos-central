@@ -49,7 +49,7 @@
 
         <div class="topbar__right">
           <span class="clock" id="liveClock">--:--</span>
-          <button class="btn-ghost" id="nucleoBtn" title="Núcleo e Briefing Vivo — o que os agentes sabem">Núcleo</button>
+          <button class="btn-ghost" id="nucleoBtn" title="Biblioteca de prompts — Núcleo, Briefing e o escopo de cada agente">Biblioteca</button>
           <button class="btn-ghost" id="settingsBtn" title="Configurar chave da API">Configurar</button>
         </div>
       </header>
@@ -349,7 +349,7 @@
       </div>
     </div>
 
-    <!-- ===================== NÚCLEO — hub (dois ambientes) =============== -->
+    <!-- ===================== BIBLIOTECA DE PROMPTS — hub ================= -->
     <div id="nucleoView" class="settings" hidden>
       <header class="chat__head">
         <button class="chat__back" id="nucleoBackBtn" aria-label="Voltar ao dashboard">
@@ -360,28 +360,14 @@
         </button>
         <div class="chat__identity">
           <div class="chat__id-text">
-            <h2 class="chat__name">Núcleo</h2>
-            <span class="chat__role">o que todos os agentes sabem</span>
+            <h2 class="chat__name">Biblioteca de prompts</h2>
+            <span class="chat__role">núcleo, briefing e o escopo de cada agente</span>
           </div>
         </div>
       </header>
 
       <div class="settings__scroll">
-        <div class="settings__inner nucleo-hub">
-          <button class="nucleo-card" data-doc="nucleo" type="button">
-            <span class="nucleo-card__kicker">Camada 1 · muda raramente</span>
-            <span class="nucleo-card__title">Núcleo Central</span>
-            <span class="nucleo-card__desc">O DNA comum a todo agente da KRONOS — identidade, missão, tom, léxico e comportamento.</span>
-            <span class="nucleo-card__cta">Abrir <span aria-hidden="true">→</span></span>
-          </button>
-
-          <button class="nucleo-card" data-doc="briefing" type="button">
-            <span class="nucleo-card__kicker">Camada 2 · você atualiza <span id="briefingMeta" class="doc__meta"></span></span>
-            <span class="nucleo-card__title">Briefing Vivo</span>
-            <span class="nucleo-card__desc">O cenário atual da empresa. Todos os agentes leem por cima do Núcleo.</span>
-            <span class="nucleo-card__cta">Abrir <span aria-hidden="true">→</span></span>
-          </button>
-        </div>
+        <div class="settings__inner" id="libHub"></div>
       </div>
     </div>
 
