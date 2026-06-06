@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@capacitor/core": "^7.6.6",
-    "@capacitor/ios": "^7.6.6"
+    "@capacitor/ios": "^7.6.6",
+    "qrcode-generator": "^2.0.4"
   }
 }

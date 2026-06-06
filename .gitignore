@@ -4,6 +4,9 @@
 # Texturas-fonte (as usadas pelo app estão em www/assets)
 Texturas/
 
+# Config local de acesso mobile (host Tailscale do PC)
+www/mobile-config.json
+
 # Dependências e builds
 node_modules/
 dist/
