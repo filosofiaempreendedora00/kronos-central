@@ -1,7 +1,7 @@
 {
   "name": "kronos-central",
   "version": "1.0.0",
-  "description": "KRONOS CENTRAL — central de operação e agentes de IA da KRONOS (desktop Mac via Electron, web e iOS via Capacitor).",
+  "description": "KRONOS CENTRAL — central de operação e agentes de IA da KRONOS (web, desktop Mac via Electron, iOS via Capacitor).",
   "author": "KRONOS",
   "license": "UNLICENSED",
   "private": true,
@@ -9,8 +9,11 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "web": "python3 -m http.server 4599",
-    "dist:mac": "electron-builder --mac"
+    "web": "python3 -m http.server 4599 --directory www",
+    "dist:mac": "electron-builder --mac",
+    "ios:add": "cap add ios",
+    "ios:sync": "cap sync ios",
+    "ios:open": "cap open ios"
   },
   "build": {
     "appId": "com.kronos.central",
@@ -19,10 +22,7 @@
       "output": "dist"
     },
     "files": [
-      "index.html",
-      "css/**/*",
-      "js/**/*",
-      "assets/**/*",
+      "www/**/*",
       "electron/**/*"
     ],
     "mac": {
@@ -34,6 +34,11 @@
     }
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.6.6",
     "electron": "^42.3.3"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.6.6",
+    "@capacitor/ios": "^7.6.6"
   }
 }

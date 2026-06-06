@@ -1,0 +1,9 @@
+{
+  "appId": "com.kronos.central",
+  "appName": "KRONOS Central",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#150C06"
+  }
+}

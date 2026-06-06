@@ -21,7 +21,7 @@ function createWindow() {
     },
   });
 
-  win.loadFile(path.join(__dirname, "..", "index.html"));
+  win.loadFile(path.join(__dirname, "..", "www", "index.html"));
 
   // Links externos (modo Easy → claude.ai) abrem no navegador padrão,
   // não dentro do app.

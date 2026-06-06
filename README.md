@@ -23,13 +23,20 @@ O **mesmo** código web roda em três alvos:
 
 ```
 Central/
-├── index.html          # dashboard + chat (SPA de 2 views)
-├── css/styles.css      # identidade visual
-└── js/
-    ├── agents.js       # definição dos 5 agentes (prompts + links Easy)
-    ├── api.js          # cliente da API da Anthropic (streaming SSE)
-    ├── chat.js         # chat individual + switcher de modos
-    └── app.js          # dashboard, métricas, boot
+├── www/                    # APP WEB (servido aos 3 alvos)
+│   ├── index.html          # dashboard + chat + Delfos (SPA)
+│   ├── css/styles.css      # identidade visual
+│   └── js/
+│       ├── agents.js       # os 5 agentes (prompts + links Easy)
+│       ├── api.js          # cliente da API da Anthropic (streaming SSE)
+│       ├── chat.js         # chat individual + switcher Easy/Hard
+│       ├── delfos.js       # sala de reuniões (sessão colaborativa)
+│       └── app.js          # dashboard, métricas, boot
+├── electron/               # APP MAC
+│   ├── main.js             # janela nativa
+│   └── preload.js
+├── capacitor.config.json   # APP iOS (Capacitor) → webDir: www
+└── package.json
 ```
 
 ## Rodar localmente
@@ -51,6 +58,28 @@ npm start        # abre a janela nativa do KRONOS Central
 npm install --save-dev electron-builder   # primeira vez
 npm run dist:mac                          # gera em dist/
 ```
+
+### App iOS (Capacitor) — pré-requisitos: Xcode + CocoaPods
+As dependências do Capacitor já estão instaladas e o `capacitor.config.json`
+aponta para `www/`. Falta só o que exige o Xcode completo (App Store):
+
+```bash
+# 1. Instalar Xcode (App Store) e o CocoaPods
+sudo gem install cocoapods            # ou: brew install cocoapods
+xcode-select --install                # se necessário
+
+# 2. Gerar o projeto iOS nativo (cria a pasta ios/)
+npm run ios:add                       # = cap add ios
+
+# 3. Copiar o web app para o projeto iOS sempre que mudar o www/
+npm run ios:sync                      # = cap sync ios
+
+# 4. Abrir no Xcode para rodar no simulador ou em device
+npm run ios:open                      # = cap open ios
+```
+
+No Xcode: defina o *Team* de desenvolvedor e o *bundle id* (`com.kronos.central`)
+para rodar em iPhone real.
 
 Em qualquer alvo: clique em **Configurar** e cole sua chave `sk-ant-...` (modo Hard).
 
