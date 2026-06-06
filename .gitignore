@@ -1,6 +1,9 @@
 # macOS
 .DS_Store
 
+# Texturas-fonte (as usadas pelo app estão em www/assets)
+Texturas/
+
 # Dependências e builds
 node_modules/
 dist/

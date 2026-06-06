@@ -193,7 +193,10 @@ body::before {
 
 .agent-card {
   text-align: left;
-  background: var(--sepia);
+  background-color: var(--sepia);
+  background-image: url("../assets/areia-sepia.png");
+  background-size: cover;
+  background-position: center;
   border: 1px solid var(--areia-22);
   border-radius: var(--radius);
   padding: 22px 22px 18px;
@@ -204,23 +207,33 @@ body::before {
   min-height: 210px;
   color: inherit;
   font-family: inherit;
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
 }
+/* escurecimento sutil para a textura não competir com o texto */
+.agent-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(21,12,6,0.28), rgba(21,12,6,0.52));
+  pointer-events: none;
+}
+/* brilho da areia ao passar o mouse */
 .agent-card::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(168,144,112,0.06), transparent 40%);
+  background: linear-gradient(180deg, rgba(168,144,112,0.12), transparent 45%);
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
 }
+.agent-card > * { position: relative; z-index: 1; }
 .agent-card:hover {
   transform: translateY(-3px);
   border-color: var(--areia-40);
-  background: var(--sepia-soft);
+  box-shadow: 0 12px 30px -16px rgba(0,0,0,0.6);
 }
 .agent-card:hover::after { opacity: 1; }
 
@@ -864,82 +877,89 @@ body::before {
 
 /* ============================== DELFOS — SALA ============================== */
 #delfosView[hidden] { display: none; }
-.delfos { display: flex; flex-direction: column; height: calc(100vh - 84px); min-height: 540px; }
+.delfos {
+  position: relative;
+  display: flex; flex-direction: column;
+  height: calc(100vh - 84px); min-height: 540px;
+}
+
+/* feixe de luz — atmosfera de oráculo */
+.delfos__light {
+  position: absolute; inset: 0;
+  background-image: url("../assets/feixe-luz.jpg");
+  background-size: cover; background-position: center top;
+  opacity: 0.45;
+  -webkit-mask-image: radial-gradient(130% 75% at 72% -5%, #000 0%, transparent 72%);
+  mask-image: radial-gradient(130% 75% at 72% -5%, #000 0%, transparent 72%);
+  pointer-events: none; z-index: 0;
+}
+.delfos > *:not(.delfos__light) { position: relative; z-index: 1; }
 
 .delfos__head {
-  display: flex; align-items: center; gap: 24px;
-  padding-bottom: 20px; border-bottom: 1px solid var(--areia-22);
+  display: flex; align-items: center; gap: 18px;
+  padding-bottom: 18px; border-bottom: 1px solid var(--areia-22);
 }
-.delfos__brand { display: flex; align-items: center; gap: 14px; flex: 1; justify-content: center; }
-.delfos__brand-mark { color: var(--areia); display: grid; place-items: center; }
-.delfos__brand-text { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.delfos__brand { display: flex; flex-direction: column; gap: 2px; margin-left: 2px; flex: 1; }
 .delfos__title-h {
-  font-family: var(--font-title); font-weight: 600; font-size: 26px; letter-spacing: 0.28em;
-  margin: 0; color: var(--branco); padding-left: 0.28em;
+  font-family: var(--font-title); font-weight: 600; font-size: 27px; letter-spacing: 0.02em;
+  margin: 0; color: var(--branco); line-height: 1;
 }
 .delfos__sub {
-  font-size: 11px; font-weight: 300; letter-spacing: 0.14em; text-transform: uppercase; color: var(--areia);
+  font-size: 11px; font-weight: 300; letter-spacing: 0.16em; text-transform: uppercase; color: var(--areia);
 }
 
-/* mesa — cadeiras */
-.delfos__table {
-  display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: flex-end;
-  padding: 16px 0 18px; border-bottom: 1px solid var(--areia-12);
+/* participantes — "Na sala" × "Fora" (banco/cemitério, num canto) */
+.delfos__roster {
+  display: flex; align-items: stretch; gap: 18px;
+  padding: 16px 0; border-bottom: 1px solid var(--areia-12);
 }
-.delfos__table-div { width: 1px; align-self: stretch; background: var(--areia-22); margin: 4px 6px; }
-.delfos__table-count {
-  margin-left: auto; align-self: center;
-  font-size: 11px; font-weight: 300; letter-spacing: 0.06em; text-transform: uppercase; color: var(--areia);
+.roster__zone { display: flex; flex-direction: column; gap: 11px; }
+.roster__zone--room { flex: 1; min-width: 0; }
+.roster__zone--bench {
+  flex-shrink: 0; max-width: 44%;
+  padding-left: 18px; border-left: 1px dashed var(--areia-22);
 }
+.roster__label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--areia);
+}
+.roster__label--muted { color: var(--areia-40); }
+.roster__count {
+  display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; background: var(--areia); color: var(--onix);
+  font-size: 10px; font-weight: 600; letter-spacing: 0;
+}
+.roster__members { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.roster__hint { font-size: 11.5px; font-weight: 300; font-style: italic; color: var(--areia-40); }
 
-.chair {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  background: transparent; border: none; cursor: pointer; padding: 4px 2px 0;
-  font-family: var(--font-body); transition: transform 0.16s ease;
+.member {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--sepia); border: 1px solid var(--areia-22); border-radius: 999px;
+  padding: 5px 14px 5px 5px; cursor: pointer; font-family: var(--font-body);
+  transition: border-color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+  animation: memberIn 0.22s ease;
 }
-.chair:disabled { cursor: default; }
-.chair:not(:disabled):hover { transform: translateY(-2px); }
+.member:not([disabled]):hover { border-color: var(--areia-40); transform: translateY(-1px); }
+.member[disabled] { cursor: default; }
+.member__avatar {
+  width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
+  background: var(--onix); border: 1px solid var(--areia-40); color: var(--areia);
+  font-family: var(--font-title); font-weight: 600; font-size: 12px;
+}
+.member__name { font-size: 12.5px; font-weight: 500; color: var(--creme); white-space: nowrap; }
 
-.chair__fig { position: relative; width: 54px; height: 56px; }
-.chair__furniture {
-  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
-  width: 40px; height: 40px; display: block; color: var(--areia-40);
-  transition: color 0.16s ease;
-}
-.chair__avatar {
-  position: absolute; left: 50%; top: 0; transform: translateX(-50%);
-  width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
-  background: transparent; border: 1.5px solid var(--areia-22); color: var(--areia);
-  font-family: var(--font-title); font-weight: 600; font-size: 12px; z-index: 1;
-  transition: all 0.16s ease;
-}
+/* na sala (ativo) */
+.member--in .member__avatar { background: var(--areia); color: var(--onix); border-color: var(--areia); }
+/* você — preside, não removível */
+.member--you { cursor: default; border-color: var(--areia); border-style: dashed; background: transparent; }
+.member--you .member__avatar--you { background: var(--areia); color: var(--onix); border-color: var(--areia); }
+/* fora (banco) — menor e apagado, como peça capturada */
+.member--out { opacity: 0.5; padding: 4px 12px 4px 4px; }
+.member--out .member__avatar { width: 24px; height: 24px; font-size: 11px; }
+.member--out .member__name { font-size: 11.5px; color: var(--areia); }
+.member--out:not([disabled]):hover { opacity: 1; }
 
-/* sentado (ativo) */
-.chair--active .chair__avatar {
-  background: var(--areia); color: var(--onix); border-color: var(--areia);
-  box-shadow: 0 0 0 4px rgba(168,144,112,0.14);
-}
-.chair--active .chair__furniture { color: var(--areia); }
-.chair--active .chair__name { color: var(--creme); }
-
-/* cadeira vazia (inativo) */
-.chair--empty { opacity: 0.6; }
-.chair--empty .chair__avatar { transform: translate(-50%, -4px); opacity: 0.7; }
-.chair--empty:not(:disabled):hover { opacity: 0.95; }
-
-.chair__name {
-  font-size: 11.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--areia);
-  max-width: 84px; text-align: center; line-height: 1.2;
-}
-
-/* cadeira da cabeceira (Você) */
-.chair--head { cursor: default; }
-.chair--head .chair__avatar--you {
-  background: var(--areia); color: var(--onix); border-color: var(--areia);
-  box-shadow: 0 0 0 4px rgba(168,144,112,0.2);
-}
-.chair--head .chair__furniture--head { color: var(--areia); }
-.chair--head .chair__name { color: var(--creme); }
+@keyframes memberIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
 /* thread */
 .delfos__scroll {
@@ -952,11 +972,14 @@ body::before {
 
 .delfos__empty {
   display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
-  padding: 56px 20px; color: var(--areia);
+  padding: 72px 20px 40px; color: var(--areia);
 }
-.delfos__empty-mark { color: var(--areia-40); margin-bottom: 8px; }
-.delfos__empty-title { font-family: var(--font-title); font-weight: 600; font-size: 24px; color: var(--branco); margin: 0; }
-.delfos__empty-sub { font-size: 13px; font-weight: 300; max-width: 380px; line-height: 1.6; margin: 0; color: rgba(245,239,230,0.6); }
+.delfos__empty-eyebrow {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase;
+  color: var(--areia); margin: 0 0 2px;
+}
+.delfos__empty-title { font-family: var(--font-title); font-weight: 600; font-size: 30px; color: var(--branco); margin: 0; }
+.delfos__empty-sub { font-size: 13.5px; font-weight: 300; max-width: 400px; line-height: 1.65; margin: 4px 0 0; color: rgba(245,239,230,0.62); }
 
 /* mensagens da reunião */
 .dmsg { display: flex; flex-direction: column; gap: 6px; }
@@ -1012,13 +1035,15 @@ body::before {
   /* delfos: header em 2 linhas */
   .delfos { height: calc(100vh - 60px); }
   .delfos__head { gap: 10px 14px; flex-wrap: wrap; justify-content: space-between; }
-  .delfos__brand { order: 3; flex: 1 1 100%; justify-content: flex-start; }
-  .delfos__brand-text { align-items: flex-start; }
-  .delfos__title-h { font-size: 22px; letter-spacing: 0.2em; }
-  .delfos__table { gap: 4px 8px; }
-  .chair__fig { width: 46px; height: 50px; }
-  .chair__name { font-size: 10.5px; max-width: 64px; }
-  .delfos__table-count { flex-basis: 100%; margin-left: 0; text-align: right; }
+  .delfos__brand { order: 3; flex: 1 1 100%; }
+  .delfos__title-h { font-size: 23px; }
+
+  /* participantes empilhados no mobile */
+  .delfos__roster { flex-direction: column; gap: 14px; }
+  .roster__zone--bench {
+    max-width: none; padding-left: 0; padding-top: 14px;
+    border-left: none; border-top: 1px dashed var(--areia-22);
+  }
 
   .delfos-banner { flex-direction: column; align-items: flex-start; gap: 16px; padding: 22px; }
   .delfos-banner__cta { align-self: stretch; justify-content: center; }
