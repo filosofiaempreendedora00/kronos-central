@@ -14,6 +14,8 @@ const Delfos = (() => {
   let roster = [];     // ids dos agentes sentados à mesa
   let busy = false;
   let abortCtrl = null;
+  let dustRaf = null;
+  let dustObserver = null;
 
   /* ----------------------------- Persistência ---------------------------- */
   function loadThread() {
@@ -43,12 +45,82 @@ const Delfos = (() => {
     renderTable();
     renderMessages();
     setTimeout(() => document.getElementById("delfosInput")?.focus(), 50);
+    requestAnimationFrame(startDust);
   }
 
   function close() {
     if (busy) abortCtrl?.abort();
+    stopDust();
     document.getElementById("delfosView").hidden = true;
     document.getElementById("dashboardView").hidden = false;
+  }
+
+  /* ----------------------------- Poeira ---------------------------------- */
+  /* Partículas fininhas decantando lentamente, planando como poeira no feixe. */
+  function startDust() {
+    const canvas = document.getElementById("delfosDust");
+    if (!canvas || typeof canvas.getContext !== "function") return;
+    const ctx = canvas.getContext("2d");
+    const host = canvas.parentElement; // #delfosView
+    let w = 0, h = 0, dpr = 1, particles = [];
+    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const spawn = (anywhere) => ({
+      x: Math.random() * w,
+      y: anywhere ? Math.random() * h : -6,
+      r: 0.3 + Math.random() * 0.9,          // fininhas
+      vy: 0.05 + Math.random() * 0.20,       // queda lenta
+      sway: 4 + Math.random() * 10,          // amplitude do planar
+      swaySpeed: 0.004 + Math.random() * 0.010,
+      phase: Math.random() * Math.PI * 2,
+      alpha: 0.08 + Math.random() * 0.30,
+    });
+
+    const applySize = () => {
+      const nw = canvas.clientWidth || host.clientWidth;
+      const nh = canvas.clientHeight || host.clientHeight;
+      if (nw === w && nh === h) return;
+      w = nw; h = nh;
+      if (w <= 0 || h <= 0) return; // ainda sem layout — espera o observer
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.round(w * dpr));
+      canvas.height = Math.max(1, Math.round(h * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const count = Math.max(26, Math.min(80, Math.round((w * h) / 24000)));
+      particles = Array.from({ length: count }, () => spawn(true));
+    };
+
+    const frame = () => {
+      if (w > 0 && h > 0) {
+        ctx.clearRect(0, 0, w, h);
+        for (const p of particles) {
+          p.y += p.vy;
+          p.phase += p.swaySpeed;
+          const x = p.x + Math.sin(p.phase) * p.sway;
+          if (p.y > h + 6) Object.assign(p, spawn(false));
+          ctx.beginPath();
+          ctx.arc(x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(198,172,134,${p.alpha})`;
+          ctx.fill();
+        }
+      }
+      if (!reduced) dustRaf = requestAnimationFrame(frame);
+    };
+
+    stopDust();
+    // ResizeObserver garante o tamanho correto mesmo quando o layout só
+    // aparece depois (ex.: troca de view, ambiente de preview, rotação).
+    if (typeof ResizeObserver !== "undefined") {
+      dustObserver = new ResizeObserver(() => applySize());
+      dustObserver.observe(canvas);
+    }
+    applySize();
+    frame(); // com reduced-motion, desenha um quadro estático e não agenda
+  }
+
+  function stopDust() {
+    if (dustRaf) { cancelAnimationFrame(dustRaf); dustRaf = null; }
+    if (dustObserver) { dustObserver.disconnect(); dustObserver = null; }
   }
 
   /* --------------------------- Participantes ----------------------------- */
