@@ -289,7 +289,7 @@
           <section class="settings__section">
             <h3 class="settings__title">Acesso mobile · Tailscale</h3>
             <p class="settings__desc">
-              Rode <code>npm run web</code> no PC e escaneie o QR no celular (na mesma rede Tailscale)
+              Com o app aberto no Mac, escaneie o QR no celular (na mesma rede Tailscale)
               para abrir a Central no telefone — mesma interface, adaptada pra mobile.
             </p>
             <div class="settings__mobile">
@@ -307,6 +307,13 @@
                   <a class="settings__url" id="mobileUrl" target="_blank" rel="noopener"></a>
                   <button class="btn-ghost btn-ghost--sm" id="copyUrlBtn" type="button">Copiar</button>
                 </div>
+                <label class="settings__pair">
+                  <input type="checkbox" id="pairKeyChk" />
+                  <span>Incluir a chave no QR (parear o celular numa tacada)</span>
+                </label>
+                <p class="settings__pairwarn" id="pairWarn" hidden>
+                  ⚠ Este QR contém sua chave da API. Escaneie só com o seu aparelho. A chave vai no fragmento (<code>#</code>) — não chega ao servidor e some da URL após abrir.
+                </p>
               </div>
             </div>
           </section>
