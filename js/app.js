@@ -154,24 +154,6 @@ function toggleMetricsEdit() {
   renderMetrics();
 }
 
-/* ------------------------------ Modal API key ---------------------------- */
-function openSettings() {
-  const modal = document.getElementById("settingsModal");
-  document.getElementById("apiKeyInput").value = localStorage.getItem(LS.apiKey) || "";
-  modal.hidden = false;
-}
-
-function closeSettings() {
-  document.getElementById("settingsModal").hidden = true;
-}
-
-function saveApiKey() {
-  const val = document.getElementById("apiKeyInput").value.trim();
-  if (val) localStorage.setItem(LS.apiKey, val);
-  else localStorage.removeItem(LS.apiKey);
-  closeSettings();
-}
-
 /* ------------------------------- Utils ----------------------------------- */
 function escapeAttr(s) {
   return String(s).replace(/"/g, "&quot;");
@@ -185,14 +167,6 @@ function init() {
   setInterval(tickClock, 10_000);
 
   document.getElementById("editMetricsBtn").addEventListener("click", toggleMetricsEdit);
-  document.getElementById("settingsBtn").addEventListener("click", openSettings);
-  document.getElementById("saveApiKeyBtn").addEventListener("click", saveApiKey);
-  document.querySelectorAll("[data-close]").forEach((el) =>
-    el.addEventListener("click", closeSettings)
-  );
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeSettings();
-  });
 
   // Delfos (sala de reuniões)
   document.getElementById("delfosBannerMark").innerHTML = pedimentSVG(40);
@@ -202,9 +176,10 @@ function init() {
   Delfos.bind();
   CostsView.bind();
   CostsView.renderMini();
+  Settings.bind();
 }
 
-// Exposto para outros módulos (ex.: chat pede a chave da API)
-window.App = { openSettings };
+// Exposto para outros módulos (ex.: chat/delfos pedem a chave da API)
+window.App = { openSettings: () => Settings.open() };
 
 document.addEventListener("DOMContentLoaded", init);
