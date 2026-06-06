@@ -1,23 +1,75 @@
 /* ===========================================================================
    KRONOS CENTRAL — Processo principal do Electron (app Mac)
-   Embrulha o mesmo web app estático (index.html) numa janela nativa.
+   Sobe um servidor HTTP local (acessível pela rede Tailscale) e carrega o
+   web app a partir dele — assim o celular abre a mesma Central pelo Tailscale,
+   sem precisar rodar nenhum comando à parte.
    =========================================================================== */
 
 const { app, BrowserWindow, shell } = require("electron");
 const path = require("path");
+const http = require("http");
+const fs = require("fs");
 
 const ICON = path.join(__dirname, "..", "build", "icon.png");
+const WWW = path.join(__dirname, "..", "www");
+const PORT = 4599;
 
-// Nome do app (afeta menu/Sobre/notificações; no .app empacotado vem do productName)
 app.setName("KRONOS Central");
 
-function createWindow() {
+const MIME = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+};
+
+/* Servidor estático simples (sem dependências), ligado a 0.0.0.0 para a rede. */
+function startServer(port) {
+  return new Promise((resolve) => {
+    const server = http.createServer((req, res) => {
+      let pathname;
+      try {
+        pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
+      } catch (_) {
+        pathname = "/";
+      }
+      if (pathname === "/" || pathname === "") pathname = "/index.html";
+      const safe = path.normalize(pathname).replace(/^(\.\.[/\\])+/, "");
+      const filePath = path.join(WWW, safe);
+      if (!filePath.startsWith(WWW)) {
+        res.writeHead(403);
+        res.end("Forbidden");
+        return;
+      }
+      fs.readFile(filePath, (err, data) => {
+        if (err) {
+          res.writeHead(404);
+          res.end("Not found");
+          return;
+        }
+        const ext = path.extname(filePath).toLowerCase();
+        res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
+        res.end(data);
+      });
+    });
+    server.on("error", () => resolve(null)); // porta ocupada, etc.
+    server.listen(port, "0.0.0.0", () => resolve(server));
+  });
+}
+
+function createWindow(loadUrl) {
   const win = new BrowserWindow({
     width: 1280,
     height: 860,
     minWidth: 380,
     minHeight: 600,
-    backgroundColor: "#150C06", // Ônix Quente — evita flash branco ao abrir
+    backgroundColor: "#150C06",
     title: "KRONOS Central",
     icon: ICON,
     webPreferences: {
@@ -27,12 +79,12 @@ function createWindow() {
     },
   });
 
-  win.loadFile(path.join(__dirname, "..", "www", "index.html"));
+  if (loadUrl) win.loadURL(loadUrl);
+  else win.loadFile(path.join(WWW, "index.html")); // fallback
 
-  // Links externos (modo Easy → claude.ai) abrem no navegador padrão,
-  // não dentro do app.
+  // Links externos (modo Easy → claude.ai) abrem no navegador padrão
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//.test(url)) {
+    if (/^https?:\/\//.test(url) && !url.startsWith(`http://localhost:${PORT}`)) {
       shell.openExternal(url);
       return { action: "deny" };
     }
@@ -40,19 +92,22 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   app.setAboutPanelOptions({
     applicationName: "KRONOS Central",
     applicationVersion: app.getVersion(),
     copyright: "KRONOS",
   });
-  // Ícone no Dock (macOS) durante o desenvolvimento
   if (process.platform === "darwin" && app.dock) {
     try { app.dock.setIcon(ICON); } catch (_) {}
   }
-  createWindow();
+
+  const server = await startServer(PORT);
+  const loadUrl = server ? `http://localhost:${PORT}/index.html` : null;
+  createWindow(loadUrl);
+
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) createWindow(loadUrl);
   });
 });
 
