@@ -166,6 +166,8 @@
          VIEW: DELFOS (sala de reuniões)
          =================================================================== -->
     <div id="delfosView" class="delfos" hidden>
+      <div class="delfos__light" aria-hidden="true"></div>
+
       <header class="delfos__head">
         <button class="chat__back" id="delfosBackBtn" aria-label="Voltar ao dashboard">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -175,17 +177,14 @@
         </button>
 
         <div class="delfos__brand">
-          <span class="delfos__brand-mark" id="delfosHeadMark" aria-hidden="true"></span>
-          <div class="delfos__brand-text">
-            <h2 class="delfos__title-h">DELFOS</h2>
-            <span class="delfos__sub">Mesa-redonda do conselho</span>
-          </div>
+          <h2 class="delfos__title-h">Delfos</h2>
+          <span class="delfos__sub">Conselho reunido</span>
         </div>
 
         <button class="btn-ghost btn-ghost--sm" id="delfosClearBtn">Encerrar reunião</button>
       </header>
 
-      <div class="delfos__table" id="delfosTable"></div>
+      <div class="delfos__roster" id="delfosRoster"></div>
 
       <div class="delfos__scroll" id="delfosScroll">
         <div class="delfos__messages" id="delfosMessages"></div>

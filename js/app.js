@@ -196,7 +196,6 @@ function init() {
 
   // Delfos (sala de reuniões)
   document.getElementById("delfosBannerMark").innerHTML = pedimentSVG(40);
-  document.getElementById("delfosHeadMark").innerHTML = pedimentSVG(30);
   document.getElementById("delfosEnter").addEventListener("click", () => Delfos.open());
 
   Chat.bind();
