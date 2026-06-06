@@ -318,7 +318,14 @@ const Chat = (() => {
 
     // Detecta se o usuário rolou pra cima — aí paramos de arrastá-lo pro fim.
     const sc = document.getElementById("chatScroll");
-    if (sc) sc.addEventListener("scroll", () => { stick = isNearBottom(sc); }, { passive: true });
+    if (sc) {
+      sc.addEventListener("scroll", () => { stick = isNearBottom(sc); }, { passive: true });
+      // tocar/rolar a conversa fecha o teclado (mobile)
+      sc.addEventListener("pointerdown", () => {
+        const a = document.activeElement;
+        if (a && a.id === "chatInput") a.blur();
+      });
+    }
 
     const input = document.getElementById("chatInput");
     input.addEventListener("input", () => autoGrow(input));
