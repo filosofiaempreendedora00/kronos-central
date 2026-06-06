@@ -1,8 +1,10 @@
 # macOS
 .DS_Store
 
-# Texturas-fonte (as usadas pelo app estão em www/assets)
+# Texturas-fonte e ativos de marca (os usados pelo app ficam em www/assets e build/)
 Texturas/
+Ativos Kronos/
+build/icon.iconset/
 
 # Config local de acesso mobile (host Tailscale do PC)
 www/mobile-config.json

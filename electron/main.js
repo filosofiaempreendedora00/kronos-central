@@ -6,6 +6,8 @@
 const { app, BrowserWindow, shell } = require("electron");
 const path = require("path");
 
+const ICON = path.join(__dirname, "..", "build", "icon.png");
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
@@ -14,6 +16,7 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: "#150C06", // Ônix Quente — evita flash branco ao abrir
     title: "KRONOS Central",
+    icon: ICON,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -35,6 +38,10 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Ícone no Dock (macOS) durante o desenvolvimento
+  if (process.platform === "darwin" && app.dock) {
+    try { app.dock.setIcon(ICON); } catch (_) {}
+  }
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
