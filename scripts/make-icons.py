@@ -4,7 +4,7 @@
 - Mac: squircle arredondado com margem (estilo macOS)
 """
 import os
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageEnhance
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "Ativos Kronos", "simbolo_transparente_v2.png")
@@ -31,19 +31,24 @@ def fit(sym_img, box):
     return sym_img.resize((max(1, int(w * s)), max(1, int(h * s))), Image.LANCZOS)
 
 def tex_square(size):
-    """Recorte central quadrado da textura, redimensionado para 'size'."""
+    """Recorte central quadrado da textura, redimensionado para 'size'.
+    A textura original de areia-ônix é escura demais para a granulação
+    aparecer no ícone — então realçamos brilho/contraste só aqui."""
     w, h = TEX.size
     s = min(w, h)
     left, top = (w - s) // 2, (h - s) // 2
-    return TEX.crop((left, top, left + s, top + s)).resize((size, size), Image.LANCZOS)
+    crop = TEX.crop((left, top, left + s, top + s)).resize((size, size), Image.LANCZOS)
+    crop = ImageEnhance.Brightness(crop).enhance(1.9)   # levanta a areia do preto
+    crop = ImageEnhance.Contrast(crop).enhance(1.3)      # define os grãos
+    return crop
 
-def square_icon(size, sym_scale=0.58):
+def square_icon(size, sym_scale=0.66):
     canvas = tex_square(size).copy()
     s = fit(sym, int(size * sym_scale))
     canvas.alpha_composite(s, ((size - s.width) // 2, (size - s.height) // 2))
     return canvas
 
-def rounded_icon(size, sym_scale=0.50, margin_ratio=0.10, radius_ratio=0.225):
+def rounded_icon(size, sym_scale=0.64, margin_ratio=0.10, radius_ratio=0.225):
     """Estilo macOS: textura arredondada com margem transparente."""
     canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     margin = int(size * margin_ratio)
