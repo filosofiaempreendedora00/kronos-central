@@ -1,0 +1,319 @@
+/* ===========================================================================
+   KRONOS CENTRAL — Delfos (Sala de Reuniões / mesa-redonda)
+
+   Sessão colaborativa: o fundador puxa um tópico e cada agente presente
+   responde EM SEQUÊNCIA, enxergando o que os anteriores disseram na thread.
+   Cada agente usa seu próprio system prompt + um enquadramento de reunião.
+   =========================================================================== */
+
+const Delfos = (() => {
+  const KEY_THREAD = "kronos.delfos.thread";
+  const KEY_ROSTER = "kronos.delfos.roster";
+
+  let thread = [];     // [{speaker:'user'|agentId, name, initials, content}]
+  let roster = [];     // ids dos agentes sentados à mesa
+  let busy = false;
+  let abortCtrl = null;
+
+  /* ----------------------------- Persistência ---------------------------- */
+  function loadThread() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY_THREAD));
+      if (Array.isArray(s)) return s;
+    } catch (_) {}
+    return [];
+  }
+  function saveThread() { localStorage.setItem(KEY_THREAD, JSON.stringify(thread)); }
+
+  function loadRoster() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY_ROSTER));
+      if (Array.isArray(s) && s.length) return s.filter((id) => AGENTS.some((a) => a.id === id));
+    } catch (_) {}
+    return AGENTS.map((a) => a.id); // padrão: todos à mesa
+  }
+  function saveRoster() { localStorage.setItem(KEY_ROSTER, JSON.stringify(roster)); }
+
+  /* ------------------------------- Abrir --------------------------------- */
+  function open() {
+    thread = loadThread();
+    roster = loadRoster();
+    document.getElementById("dashboardView").hidden = true;
+    document.getElementById("delfosView").hidden = false;
+    renderTable();
+    renderMessages();
+    setTimeout(() => document.getElementById("delfosInput")?.focus(), 50);
+  }
+
+  function close() {
+    if (busy) abortCtrl?.abort();
+    document.getElementById("delfosView").hidden = true;
+    document.getElementById("dashboardView").hidden = false;
+  }
+
+  /* ------------------------------ Mesa ----------------------------------- */
+  function renderTable() {
+    const el = document.getElementById("delfosTable");
+    const seated = roster.length;
+
+    const chairs = AGENTS.map((a) => {
+      const active = roster.includes(a.id);
+      return `
+        <button class="chair ${active ? "chair--active" : "chair--empty"}" data-id="${a.id}" type="button" ${busy ? "disabled" : ""}
+          title="${active ? "Sair da mesa" : "Sentar à mesa"}" aria-pressed="${active}">
+          <span class="chair__fig">
+            <span class="chair__avatar">${a.initials}</span>
+            <span class="chair__furniture">${chairSVG()}</span>
+          </span>
+          <span class="chair__name">${a.name}</span>
+        </button>`;
+    }).join("");
+
+    el.innerHTML = `
+      <div class="chair chair--head" title="Você preside a mesa">
+        <span class="chair__fig">
+          <span class="chair__avatar chair__avatar--you">VC</span>
+          <span class="chair__furniture chair__furniture--head">${chairSVG()}</span>
+        </span>
+        <span class="chair__name">Você</span>
+      </div>
+      <span class="delfos__table-div" aria-hidden="true"></span>
+      ${chairs}
+      <span class="delfos__table-count">${seated} ${seated === 1 ? "membro" : "membros"} à mesa</span>`;
+
+    if (!busy) {
+      el.querySelectorAll(".chair[data-id]").forEach((btn) => {
+        btn.addEventListener("click", () => toggleSeat(btn.dataset.id));
+      });
+    }
+  }
+
+  function toggleSeat(id) {
+    if (busy) return;
+    if (roster.includes(id)) roster = roster.filter((x) => x !== id);
+    else roster.push(id);
+    saveRoster();
+    renderTable();
+  }
+
+  /* ------------------------------ Render --------------------------------- */
+  function renderMessages() {
+    const box = document.getElementById("delfosMessages");
+    box.innerHTML = "";
+
+    if (thread.length === 0) {
+      box.innerHTML = `
+        <div class="delfos__empty">
+          <span class="delfos__empty-mark" aria-hidden="true">${pedimentSVG(46)}</span>
+          <p class="delfos__empty-title">O conselho aguarda</p>
+          <p class="delfos__empty-sub">Abra a reunião com um tópico ou pergunta. Cada membro presente responderá da sua perspectiva, em sequência.</p>
+        </div>`;
+      return;
+    }
+
+    thread.forEach((m) => box.appendChild(messageEl(m)));
+    scrollToBottom();
+  }
+
+  function messageEl(m) {
+    const isUser = m.speaker === "user";
+    const wrap = document.createElement("div");
+    wrap.className = `dmsg ${isUser ? "dmsg--user" : "dmsg--agent"}`;
+    if (isUser) {
+      wrap.innerHTML = `
+        <div class="dmsg__role">Você</div>
+        <div class="dmsg__bubble"></div>`;
+    } else {
+      wrap.innerHTML = `
+        <div class="dmsg__head">
+          <span class="dmsg__avatar">${m.initials}</span>
+          <span class="dmsg__name">${m.name}</span>
+        </div>
+        <div class="dmsg__bubble"></div>`;
+    }
+    wrap.querySelector(".dmsg__bubble").textContent = m.content;
+    return wrap;
+  }
+
+  function scrollToBottom() {
+    const sc = document.getElementById("delfosScroll");
+    sc.scrollTop = sc.scrollHeight;
+  }
+
+  /* --------------------------- Enquadramento ----------------------------- */
+  function transcriptText() {
+    const lines = thread.map((m) => `${m.speaker === "user" ? "Fundador" : m.name}: ${m.content}`);
+    return "Transcrição da reunião (mesa-redonda Delfos) até agora:\n\n" + lines.join("\n\n");
+  }
+
+  function meetingSystem(agent, present) {
+    const others = present.filter((p) => p.id !== agent.id).map((p) => p.name);
+    const mesa = others.length ? `Também estão à mesa: ${others.join(", ")}. ` : "";
+    return `${agent.systemPrompt}
+
+---
+CONTEXTO DA REUNIÃO — DELFOS
+Você está numa mesa-redonda chamada Delfos com o Fundador da KRONOS e outros membros do conselho. ${mesa}Você participa como ${agent.name} (${agent.role}).
+Fale em primeira pessoa, da sua perspectiva. Seja conciso e direto — 2 a 5 frases. Você pode concordar, discordar ou complementar o que já foi dito, mas agregue valor: não repita o que outro já falou. Não narre que está numa reunião; apenas contribua com sua posição.`;
+  }
+
+  /* ------------------------------ Enviar --------------------------------- */
+  async function send() {
+    if (busy) return;
+    const input = document.getElementById("delfosInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    const present = AGENTS.filter((a) => roster.includes(a.id)); // ordem canônica
+    if (present.length === 0) {
+      setHint("Selecione ao menos um membro para a mesa.");
+      return;
+    }
+    if (!getApiKey()) { App.openSettings(); return; }
+
+    if (thread.length === 0) document.getElementById("delfosMessages").innerHTML = "";
+
+    // fala do fundador
+    thread.push({ speaker: "user", name: "Você", initials: "VC", content: text });
+    document.getElementById("delfosMessages").appendChild(messageEl(thread[thread.length - 1]));
+    input.value = "";
+    autoGrow(input);
+    saveThread();
+    scrollToBottom();
+
+    busy = true;
+    setBusy(true);
+    renderTable(); // desabilita seats durante a rodada
+    abortCtrl = new AbortController();
+
+    for (const agent of present) {
+      const bubbleWrap = messageEl({ speaker: agent.id, name: agent.name, initials: agent.initials, content: "" });
+      bubbleWrap.classList.add("dmsg--streaming");
+      const bubble = bubbleWrap.querySelector(".dmsg__bubble");
+      bubble.innerHTML = `<span class="typing"><span></span><span></span><span></span></span>`;
+      document.getElementById("delfosMessages").appendChild(bubbleWrap);
+      scrollToBottom();
+
+      let acc = "";
+      try {
+        await streamMessage({
+          system: meetingSystem(agent, present),
+          messages: [{ role: "user", content: `${transcriptText()}\n\nAgora responda como ${agent.name} (${agent.role}).` }],
+          signal: abortCtrl.signal,
+          onText: (chunk) => {
+            if (acc === "") bubble.textContent = "";
+            acc += chunk;
+            bubble.textContent = acc;
+            scrollToBottom();
+          },
+        });
+        thread.push({ speaker: agent.id, name: agent.name, initials: agent.initials, content: acc });
+        saveThread();
+      } catch (err) {
+        if (err.name === "AbortError") {
+          if (acc) {
+            bubble.textContent = acc;
+            thread.push({ speaker: agent.id, name: agent.name, initials: agent.initials, content: acc });
+            saveThread();
+          } else {
+            bubbleWrap.remove();
+          }
+          break; // interrompe a rodada
+        } else {
+          bubble.classList.add("dmsg__bubble--error");
+          bubble.textContent = friendlyError(err);
+        }
+      } finally {
+        bubbleWrap.classList.remove("dmsg--streaming");
+      }
+    }
+
+    busy = false;
+    setBusy(false);
+    abortCtrl = null;
+    renderTable();
+    document.getElementById("delfosInput").focus();
+  }
+
+  function friendlyError(err) {
+    const msg = String(err.message || err);
+    if (msg === "NO_API_KEY") return "Configure a chave da API para conduzir a reunião.";
+    if (msg.startsWith("API_401")) return "Chave da API inválida. Verifique em Configurar.";
+    if (msg.startsWith("API_429")) return "Limite de uso atingido. Tente novamente em instantes.";
+    if (msg.startsWith("API_")) return "Erro da API: " + msg.replace(/^API_\d+:\s*/, "");
+    if (msg.includes("Failed to fetch")) return "Falha de conexão com a API.";
+    return "Ocorreu um erro: " + msg;
+  }
+
+  function setBusy(state) {
+    document.getElementById("delfosSendBtn").classList.toggle("composer__send--busy", state);
+    setHint(state ? "O conselho está deliberando… (Esc para interromper)" : "");
+  }
+  function setHint(msg) {
+    document.getElementById("delfosHint").textContent =
+      msg || "Enter envia · Shift+Enter quebra linha · cada membro presente responde em sequência";
+  }
+
+  /* ------------------------------ Encerrar ------------------------------- */
+  function clear() {
+    if (busy) abortCtrl?.abort();
+    thread = [];
+    saveThread();
+    renderMessages();
+  }
+
+  // Encerrar = limpa a reunião E volta ao dashboard
+  function endMeeting() {
+    clear();
+    close();
+  }
+
+  function autoGrow(el) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+  }
+
+  /* ------------------------------- Bind ---------------------------------- */
+  function bind() {
+    document.getElementById("delfosBackBtn").addEventListener("click", close);
+    document.getElementById("delfosClearBtn").addEventListener("click", endMeeting);
+    document.getElementById("delfosSendBtn").addEventListener("click", send);
+
+    const input = document.getElementById("delfosInput");
+    input.addEventListener("input", () => autoGrow(input));
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && busy) abortCtrl?.abort();
+    });
+  }
+
+  return { open, close, clear, endMeeting, bind };
+})();
+
+/* Cadeira (vista frontal) — assento da mesa Delfos. */
+function chairSVG() {
+  return `
+    <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true">
+      <rect x="11" y="3" width="18" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <rect x="7.5" y="19" width="25" height="4.6" rx="2.3" fill="currentColor"/>
+      <line x1="11" y1="23.5" x2="11" y2="37" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="29" y1="23.5" x2="29" y2="37" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>`;
+}
+
+/* Frontão de templo grego — marca da sala Delfos. */
+function pedimentSVG(size) {
+  return `
+    <svg viewBox="0 0 64 52" width="${size}" height="${size}" aria-hidden="true">
+      <polygon points="32,4 61,21 3,21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+      <line x1="6" y1="21" x2="58" y2="21" stroke="currentColor" stroke-width="1.4"/>
+      <line x1="11" y1="24" x2="11" y2="44" stroke="currentColor" stroke-width="1.3"/>
+      <line x1="22" y1="24" x2="22" y2="44" stroke="currentColor" stroke-width="1.3"/>
+      <line x1="32" y1="24" x2="32" y2="44" stroke="currentColor" stroke-width="1.3"/>
+      <line x1="42" y1="24" x2="42" y2="44" stroke="currentColor" stroke-width="1.3"/>
+      <line x1="53" y1="24" x2="53" y2="44" stroke="currentColor" stroke-width="1.3"/>
+      <line x1="6" y1="47" x2="58" y2="47" stroke="currentColor" stroke-width="1.4"/>
+    </svg>`;
+}
