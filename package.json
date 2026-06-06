@@ -10,6 +10,7 @@
     "start": "electron .",
     "dev": "electron .",
     "web": "python3 -m http.server 4599 --directory www",
+    "deploy:web": "git subtree push --prefix www origin gh-pages",
     "dist:mac": "electron-builder --mac",
     "ios:add": "cap add ios",
     "ios:sync": "cap sync ios",
