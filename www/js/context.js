@@ -72,6 +72,24 @@ const Context = (() => {
     return briefingRaw ? collapse(stripQuotes(briefingRaw)) : "";
   }
 
+  /* Estado atual da Cartilha de Nomes — injetado no contexto da IAra (RH),
+     gerado a partir de AGENTS (em operação) + NAME_ROSTER (reservas). */
+  function cartilhaBlock() {
+    if (typeof NAME_ROSTER === "undefined") return "";
+    const op = (typeof AGENTS !== "undefined" ? AGENTS : [])
+      .map((a) => `${a.nome || a.name} (${a.name})`).join(", ");
+    const r = NAME_ROSTER;
+    const prox = r.proxima ? `${r.proxima.nome} (${r.proxima.cargo} — ${r.proxima.nota})` : "—";
+    return [
+      "## CARTILHA DE NOMES — estado atual (você é a guardiã deste registro)",
+      `EM OPERAÇÃO: ${op}.`,
+      `PRÓXIMA A ENTRAR: ${prox}.`,
+      `BANCO DE NOMES — prontos: femininos — ${r.prontos.femininos.join(", ")}; masculinos — ${r.prontos.masculinos.join(", ")}.`,
+      `BANCO DE NOMES — backup (${r.backup.nota}): ${r.backup.nomes.join(", ")}.`,
+      'Convenção: "IA" sempre maiúsculo no nome. Ao promover um nome reserva a agente ativo, ele sai do Banco e entra em "Em operação" com o cargo.',
+    ].join("\n");
+  }
+
   /* System prompt completo de um agente (usado no chat e na Delfos). */
   function systemFor(agent) {
     const doctrine = typeof CONVERSATION_DOCTRINE === "string" ? CONVERSATION_DOCTRINE : "";
@@ -81,6 +99,7 @@ const Context = (() => {
       `## ESCOPO — ${agent.name} (${agent.role})\n${agent.escopo || ""}`,
     ];
     if (doctrine) parts.push("---", `## MODO DE CONVERSA\n${doctrine}`);
+    if (agent.id === "head-rh") { const c = cartilhaBlock(); if (c) parts.push("---", c); }
     const brief = briefingForPrompt();
     if (brief) parts.push("---", brief);
     return parts.join("\n\n");

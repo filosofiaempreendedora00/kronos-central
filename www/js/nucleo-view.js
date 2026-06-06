@@ -67,12 +67,40 @@ const NucleoView = (() => {
     const agentes = AGENTS.map((a) =>
       cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}`, a.nome || a.name, a.blurb || "Prompt-escopo do agente.")
     ).join("");
+    const pessoas = cardHtml("cartilha", "Guardada por IAra", "Cartilha de Nomes",
+      "Quem já opera, quem é a próxima a entrar e o banco de nomes dos próximos agentes.");
     hub.innerHTML =
       `<div class="lib-group"><span class="lib-group__label">Fundamentos</span>${fundamentos}</div>` +
-      `<div class="lib-group"><span class="lib-group__label">Agentes · prompt-escopo</span>${agentes}</div>`;
+      `<div class="lib-group"><span class="lib-group__label">Agentes · prompt-escopo</span>${agentes}</div>` +
+      `<div class="lib-group"><span class="lib-group__label">Pessoas · RH</span>${pessoas}</div>`;
     hub.querySelectorAll(".nucleo-card").forEach((c) =>
       c.addEventListener("click", () => openDoc(c.dataset.doc))
     );
+  }
+
+  /* ---------------------- Cartilha de Nomes (render) -------------------- */
+  function chip(label, cls, sub) {
+    return `<span class="namechip ${cls}">${esc(label)}` +
+      (sub ? `<span class="namechip__sub">${esc(sub)}</span>` : "") + `</span>`;
+  }
+  function renderCartilha() {
+    const op = (typeof AGENTS !== "undefined" ? AGENTS : []);
+    const r = (typeof NAME_ROSTER !== "undefined") ? NAME_ROSTER : { prontos: { femininos: [], masculinos: [] }, backup: { nomes: [], nota: "" } };
+    let h = "";
+    h += `<div class="cart-sec"><h3 class="cart-sec__h">Em operação <span class="cart-sec__count">${op.length}</span></h3>` +
+      `<div class="namechips">${op.map((a) => chip(a.nome || a.name, "namechip--op", a.name)).join("")}</div></div>`;
+    if (r.proxima) {
+      h += `<div class="cart-sec"><h3 class="cart-sec__h">Próxima a entrar</h3>` +
+        `<div class="namechips">${chip(r.proxima.nome, "namechip--next", r.proxima.cargo)}</div>` +
+        `<p class="cart-note">${esc(r.proxima.nota || "")}</p></div>`;
+    }
+    h += `<div class="cart-sec"><h3 class="cart-sec__h">Banco de nomes · prontos</h3>` +
+      `<p class="cart-sub">Femininos</p><div class="namechips">${r.prontos.femininos.map((n) => chip(n, "namechip--bank")).join("")}</div>` +
+      `<p class="cart-sub">Masculinos</p><div class="namechips">${r.prontos.masculinos.map((n) => chip(n, "namechip--bank")).join("")}</div></div>`;
+    h += `<div class="cart-sec"><h3 class="cart-sec__h">Banco de nomes · backup</h3>` +
+      `<div class="namechips">${r.backup.nomes.map((n) => chip(n, "namechip--backup")).join("")}</div>` +
+      `<p class="cart-note">${esc(r.backup.nota || "")}</p></div>`;
+    document.getElementById("docBody").innerHTML = h;
   }
 
   /* --------------------------- Leitor de doc ---------------------------- */
@@ -88,6 +116,15 @@ const NucleoView = (() => {
   }
 
   async function openDoc(which) {
+    if (which === "cartilha") {
+      showOnly("nucleoDocView");
+      document.getElementById("nucleoDocTitle").textContent = "Cartilha de Nomes";
+      document.getElementById("nucleoDocSub").textContent = "guardada por IAra · RH";
+      renderCartilha();
+      const sc0 = document.querySelector("#nucleoDocView .settings__scroll");
+      if (sc0) sc0.scrollTop = 0;
+      return;
+    }
     let title = "", sub = "", needsContext = false, raw = "";
     if (which === "nucleo") {
       title = "Núcleo central"; sub = "o DNA comum a todos os agentes"; needsContext = true;
