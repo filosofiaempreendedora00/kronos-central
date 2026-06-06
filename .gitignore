@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Editor / tooling
+.claude/
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Não versionar segredos (a chave da API fica só no localStorage do navegador)
+.env
+.env.local
