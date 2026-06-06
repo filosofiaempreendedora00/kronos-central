@@ -55,8 +55,8 @@ const Chat = (() => {
     history = loadHistory(agent.id);
 
     document.getElementById("chatAvatar").textContent = agent.initials;
-    document.getElementById("chatName").textContent = agent.name;
-    document.getElementById("chatRole").textContent = agent.role;
+    document.getElementById("chatName").textContent = agent.nome || agent.name;
+    document.getElementById("chatRole").textContent = `${agent.name} · ${agent.role}`;
 
     document.getElementById("dashboardView").hidden = true;
     document.getElementById("chatView").hidden = false;
@@ -149,7 +149,7 @@ const Chat = (() => {
               <line x1="24" y1="24" x2="32" y2="27" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
             </svg>
           </span>
-          <p class="chat__empty-title">Conversa com ${currentAgent.name}</p>
+          <p class="chat__empty-title">Conversa com ${currentAgent.nome || currentAgent.name}</p>
           <p class="chat__empty-sub">${currentAgent.blurb}</p>
         </div>`;
       return;
@@ -163,7 +163,7 @@ const Chat = (() => {
     const wrap = document.createElement("div");
     wrap.className = `msg msg--${role}`;
     wrap.innerHTML = `
-      <div class="msg__role">${role === "user" ? "Você" : currentAgent.name}</div>
+      <div class="msg__role">${role === "user" ? "Você" : (currentAgent.nome || currentAgent.name)}</div>
       <div class="msg__bubble"></div>
       <div class="msg__cost" hidden></div>`;
     wrap.querySelector(".msg__bubble").textContent = content;

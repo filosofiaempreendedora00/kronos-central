@@ -28,7 +28,7 @@ function renderAgents() {
     card.setAttribute("role", "button");
     card.setAttribute("tabindex", "0");
     card.setAttribute("data-agent", agent.id);
-    card.setAttribute("aria-label", `Conversar com ${agent.name}`);
+    card.setAttribute("aria-label", `Conversar com ${agent.nome || agent.name}`);
 
     card.innerHTML = `
       <div class="agent-card__top">
@@ -38,8 +38,8 @@ function renderAgents() {
         </span>
       </div>
       <div class="agent-card__body">
-        <h3 class="agent-card__name">${agent.name}</h3>
-        <p class="agent-card__role">${agent.role}</p>
+        <h3 class="agent-card__name">${agent.nome || agent.name}</h3>
+        <p class="agent-card__cargo">${agent.name}</p>
         <p class="agent-card__blurb">${agent.blurb}</p>
       </div>
       <div class="agent-card__foot">
