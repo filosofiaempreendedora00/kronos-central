@@ -133,8 +133,20 @@ const Delfos = (() => {
     const el = document.getElementById("delfosRoster");
     // A escolha de quem está na sala acontece só ANTES da reunião começar.
     // Com a conversa em andamento, o roster some para não atrapalhar o texto.
-    el.hidden = thread.length > 0;
+    const started = thread.length > 0;
+    el.hidden = started;
     const inRoom = AGENTS.filter((a) => roster.includes(a.id));
+
+    // Indicador discreto de quem está na mesa — só durante a reunião.
+    const present = document.getElementById("delfosPresent");
+    if (present) {
+      present.hidden = !started;
+      present.innerHTML = started
+        ? `<span class="present__label">Na mesa</span>` +
+          `<span class="present__av present__av--you" title="Você">VC</span>` +
+          inRoom.map((a) => `<span class="present__av" title="${a.name}">${a.initials}</span>`).join("")
+        : "";
+    }
     const bench = AGENTS.filter((a) => !roster.includes(a.id));
 
     const member = (a, zone) => `
@@ -397,7 +409,14 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     document.getElementById("delfosSendBtn").addEventListener("click", send);
 
     const sc = document.getElementById("delfosScroll");
-    if (sc) sc.addEventListener("scroll", () => { stick = isNearBottom(sc); }, { passive: true });
+    if (sc) {
+      sc.addEventListener("scroll", () => { stick = isNearBottom(sc); }, { passive: true });
+      // tocar/rolar a conversa fecha o teclado (mobile)
+      sc.addEventListener("pointerdown", () => {
+        const a = document.activeElement;
+        if (a && a.id === "delfosInput") a.blur();
+      });
+    }
 
     const input = document.getElementById("delfosInput");
     input.addEventListener("input", () => autoGrow(input));

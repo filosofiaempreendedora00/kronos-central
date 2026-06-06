@@ -160,8 +160,32 @@ function escapeAttr(s) {
 }
 
 /* ------------------------------- Boot ------------------------------------ */
+/* Ajusta a altura à área visível acima do teclado (iOS). Sem isso, ao focar o
+   campo o iOS rola a página e empurra o header (setinha de voltar) pra fora. */
+function fitViewportToKeyboard() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const root = document.documentElement;
+  let raf = 0;
+  const apply = () => {
+    // Guarda contra 0/indefinido (senão a altura colapsa); sem valor válido,
+    // o CSS cai no fallback 100dvh.
+    const h = vv.height;
+    if (h && h > 0) root.style.setProperty("--vvh", Math.round(h) + "px");
+    // Nas telas cheias (dashboard escondido), mantém o topo fixo p/ a setinha
+    // não sumir. No dashboard, não mexe no scroll.
+    const dash = document.getElementById("dashboardView");
+    if (dash && dash.hidden) window.scrollTo(0, 0);
+  };
+  const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(apply); };
+  vv.addEventListener("resize", schedule);
+  vv.addEventListener("scroll", schedule);
+  apply();
+}
+
 function init() {
   Context.load(); // carrega Núcleo + Briefing (alimenta todos os agentes)
+  fitViewportToKeyboard();
   renderAgents();
   renderMetrics();
   tickClock();
