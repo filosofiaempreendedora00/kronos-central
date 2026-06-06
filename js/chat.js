@@ -61,8 +61,10 @@ const Chat = (() => {
     document.getElementById("dashboardView").hidden = true;
     document.getElementById("chatView").hidden = false;
 
+    stick = true;
     renderMessages();
     applyMode(currentMode);
+    scrollToBottom(true);
   }
 
   /* --------------------------- Troca de modo ----------------------------- */
@@ -178,9 +180,17 @@ const Chat = (() => {
       (outTok ? ` · ${Cost.tok(outTok)} tok` : "");
   }
 
-  function scrollToBottom() {
+  // "Stick to bottom": só auto-rola se o usuário já estiver perto do fim.
+  // Se ele rolou pra cima pra ler, não o arrastamos de volta.
+  let stick = true;
+  function isNearBottom(sc, threshold = 140) {
+    return sc.scrollHeight - sc.scrollTop - sc.clientHeight < threshold;
+  }
+  function scrollToBottom(force) {
     const sc = document.getElementById("chatScroll");
-    sc.scrollTop = sc.scrollHeight;
+    if (!sc) return;
+    if (force) stick = true;
+    if (stick) sc.scrollTop = sc.scrollHeight;
   }
 
   /* ------------------------------ Enviar --------------------------------- */
@@ -204,7 +214,7 @@ const Chat = (() => {
     input.value = "";
     autoGrow(input);
     saveHistory();
-    scrollToBottom();
+    scrollToBottom(true);
 
     // bolha do assistente (streaming)
     busy = true;
@@ -214,7 +224,7 @@ const Chat = (() => {
     const bubble = assistantEl.querySelector(".msg__bubble");
     bubble.innerHTML = `<span class="typing"><span></span><span></span><span></span></span>`;
     document.getElementById("chatMessages").appendChild(assistantEl);
-    scrollToBottom();
+    scrollToBottom(true);
 
     abortCtrl = new AbortController();
     let acc = "";
@@ -304,6 +314,10 @@ const Chat = (() => {
       if (busy) abortCtrl?.abort();
       applyMode("hard");
     });
+
+    // Detecta se o usuário rolou pra cima — aí paramos de arrastá-lo pro fim.
+    const sc = document.getElementById("chatScroll");
+    if (sc) sc.addEventListener("scroll", () => { stick = isNearBottom(sc); }, { passive: true });
 
     const input = document.getElementById("chatInput");
     input.addEventListener("input", () => autoGrow(input));
