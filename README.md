@@ -12,8 +12,12 @@ Cada agente conversa com seu próprio system prompt, em dois modos:
 ## Stack
 
 HTML / CSS / JS puro — estático, sem backend. A chave da API é chamada direto do
-frontend e fica salva apenas no `localStorage` do dispositivo. Compatível com
-empacotamento via Electron, se necessário.
+frontend e fica salva apenas no `localStorage` do dispositivo.
+
+O **mesmo** código web roda em três alvos:
+- **Web** (qualquer navegador / servidor estático)
+- **Desktop Mac** via **Electron** (`electron/`)
+- **iOS** (planejado) via **Capacitor**, reaproveitando os mesmos arquivos
 
 ## Estrutura
 
@@ -30,13 +34,25 @@ Central/
 
 ## Rodar localmente
 
+### Web (navegador)
 ```bash
-# servidor estático simples
-python3 -m http.server 4599
+python3 -m http.server 4599   # ou: npm run web
 # abra http://localhost:4599
 ```
 
-Depois clique em **Configurar** e cole sua chave `sk-ant-...` (modo Hard).
+### App Mac (Electron)
+```bash
+npm install      # primeira vez (baixa o Electron)
+npm start        # abre a janela nativa do KRONOS Central
+```
+
+### Empacotar o .app / .dmg para Mac
+```bash
+npm install --save-dev electron-builder   # primeira vez
+npm run dist:mac                          # gera em dist/
+```
+
+Em qualquer alvo: clique em **Configurar** e cole sua chave `sk-ant-...` (modo Hard).
 
 ## Funcionalidades (v1)
 
@@ -47,10 +63,12 @@ Depois clique em **Configurar** e cole sua chave `sk-ant-...` (modo Hard).
 
 ## Roadmap
 
-- [ ] Embutir os system prompts finais dos 5 agentes
-- [ ] Sessão colaborativa (múltiplos agentes em sequência na mesma thread)
+- [x] Embutir os system prompts finais dos 5 agentes
+- [x] Sessão colaborativa — Delfos (múltiplos agentes em sequência na mesma thread)
+- [x] App Mac via Electron (scaffold)
+- [ ] Empacotar .dmg assinado para distribuição
+- [ ] App iOS via Capacitor
 - [ ] Prompt caching / limite de histórico para economizar tokens
-- [ ] Empacotamento Electron (.app para Mac)
 
 ## Identidade visual
 
