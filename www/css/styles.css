@@ -1285,6 +1285,11 @@ body::before {
     --pad-bottom: calc(20px + env(safe-area-inset-bottom));
     padding: var(--pad-top) calc(18px + env(safe-area-inset-right))
              var(--pad-bottom) calc(18px + env(safe-area-inset-left));
+    /* fixado na viewport VISÍVEL: acompanha altura e deslocamento do teclado */
+    position: fixed;
+    top: var(--vv-top, 0px);
+    left: 0;
+    right: 0;
     height: 100dvh;
     height: var(--app-h, 100dvh);   /* área REAL visível (encolhe com teclado) */
     min-height: 0;

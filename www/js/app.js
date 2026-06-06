@@ -160,20 +160,27 @@ function escapeAttr(s) {
 }
 
 /* ------------------------------- Boot ------------------------------------ */
-/* Mede a altura REAL visível (acima do teclado, descontando barras do iOS) e
-   expõe em --app-h. No mobile, o .app usa essa altura: com o corpo travado, a
-   tela inteira cabe sempre na área visível — sem "saltar" e sem rolar a página.
-   Só ouvimos 'resize' (teclado abre/fecha, barra some) — nada de forçar scroll. */
+/* Acompanha a VIEWPORT VISÍVEL do iOS: altura (--app-h) E deslocamento que o
+   teclado aplica (--vv-top = visualViewport.offsetTop). No mobile, o .app é
+   fixado nessa área, então, ao abrir o teclado, ele gruda exatamente acima dele
+   — o campo de texto e o botão de enviar ficam sempre visíveis e ao alcance,
+   sem ir parar colado no topo. Ouvimos 'resize' e 'scroll' (o iOS dispara
+   'scroll' do visualViewport quando empurra a tela ao focar o campo). */
 function fitViewportToKeyboard() {
   const vv = window.visualViewport;
   const root = document.documentElement;
   let raf = 0;
   const apply = () => {
     const h = vv ? vv.height : window.innerHeight;
+    const top = vv ? vv.offsetTop : 0;
     if (h && h > 0) root.style.setProperty("--app-h", Math.round(h) + "px");
+    root.style.setProperty("--vv-top", Math.round(top || 0) + "px");
   };
   const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(apply); };
-  if (vv) vv.addEventListener("resize", schedule);
+  if (vv) {
+    vv.addEventListener("resize", schedule);
+    vv.addEventListener("scroll", schedule);
+  }
   window.addEventListener("orientationchange", () => setTimeout(apply, 250));
   apply();
 }
