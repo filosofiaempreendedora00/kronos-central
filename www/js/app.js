@@ -374,6 +374,11 @@ function init() {
   document.querySelectorAll(".navitem[data-nav]").forEach((b) =>
     b.addEventListener("click", () => navGo(b.dataset.nav))
   );
+  // Clicar na logo (sidebar ou topo mobile) volta para a página principal.
+  const goHome = () => navGo("dash");
+  document.querySelector(".sidebar__brand")?.addEventListener("click", goHome);
+  document.querySelector(".appbar__logo")?.addEventListener("click", goHome);
+
   document.getElementById("menuToggle").addEventListener("click", openDrawer);
   document.getElementById("sidebarBackdrop").addEventListener("click", closeDrawer);
   document.getElementById("sidebarCollapse").addEventListener("click", toggleCollapse);
