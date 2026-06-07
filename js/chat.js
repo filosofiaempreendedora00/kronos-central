@@ -58,6 +58,9 @@ const Chat = (() => {
     document.getElementById("chatAvatar").classList.toggle("avatar--zoomable", !!agent.photo);
     document.getElementById("chatName").textContent = agent.nome || agent.name;
     document.getElementById("chatRole").textContent = `${agent.name} · ${agent.role}`;
+    // Cartilha de Nomes é da IAra — atalho só no chat dela.
+    const cartChip = document.getElementById("chatCartChip");
+    if (cartChip) cartChip.hidden = agent.id !== "head-rh";
 
     App.showView("chatView");
 
@@ -204,8 +207,9 @@ const Chat = (() => {
     wrap.appendChild(buildProposeCard(parsed));
   }
   function buildProposeCard({ raw, json }) {
+    const isBriefing = json.agent === "briefing";
     const target = AGENTS.find((a) => a.id === json.agent);
-    const targetName = target ? `${target.nome || target.name} (${target.name})` : json.agent;
+    const targetName = isBriefing ? "Briefing Vivo" : (target ? `${target.nome || target.name} (${target.name})` : json.agent);
     const card = document.createElement("div");
     card.className = "propose";
     const opLabel = json.mode === "append" ? "adicionar" : "ajustar trecho";
@@ -232,6 +236,17 @@ const Chat = (() => {
     const canPublish = () => typeof Sync !== "undefined" && Sync.configured();
 
     async function onApply() {
+      if (isBriefing) {
+        // Edição do Briefing Vivo → vira nova versão vigente (publica se houver token).
+        renderApplied("⟳ aplicando…", true);
+        const r = await Context.applyBriefingEdit(json.mode, json.find, json.content);
+        if (r.ok) {
+          markApplied(raw);
+          if (window.App && App.refreshBriefing) App.refreshBriefing();
+          renderApplied(`✓ Briefing atualizado${r.scope === "remote" ? " · todos os aparelhos" : " (só neste aparelho)"}`, true);
+        } else { renderActions(r.error); }
+        return;
+      }
       if (canPublish()) {
         // aprovar = publicar no GitHub → vale em TODOS os aparelhos, na hora.
         renderApplied("⟳ publicando…", true);
@@ -407,6 +422,7 @@ const Chat = (() => {
     });
     document.getElementById("chatClearBtn").addEventListener("click", clear);
     document.getElementById("chatSendBtn").addEventListener("click", send);
+    document.getElementById("chatCartChip")?.addEventListener("click", () => { if (window.App && App.openCartilha) App.openCartilha(); });
 
     document.getElementById("modeEasyBtn").addEventListener("click", () => applyMode("easy"));
     document.getElementById("modeHardBtn").addEventListener("click", () => {

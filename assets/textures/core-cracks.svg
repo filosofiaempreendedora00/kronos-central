@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="ember" x1="0" y1="1" x2="0.2" y2="0">
+      <stop offset="0" stop-color="#ff7a33"/>
+      <stop offset="0.45" stop-color="#c83c18"/>
+      <stop offset="1" stop-color="#5e1c0c"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.4"/>
+    </filter>
+  </defs>
+  <g fill="none" stroke="url(#ember)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- glow pass -->
+    <g filter="url(#glow)" opacity="0.5">
+      <path d="M-10 250 L70 232 L120 250 L168 214 L210 226 L150 250" stroke-width="2.4"/>
+      <path d="M168 214 L196 150 L240 120 L262 56 L300 30" stroke-width="2.2"/>
+      <path d="M240 120 L320 132 L372 96 L440 110 L500 84" stroke-width="2"/>
+      <path d="M262 56 L250 -8" stroke-width="1.6"/>
+      <path d="M372 96 L400 168 L470 200" stroke-width="1.8"/>
+      <path d="M120 250 L132 300" stroke-width="1.4"/>
+    </g>
+    <!-- sharp pass -->
+    <g opacity="0.72">
+      <path d="M-10 250 L70 232 L120 250 L168 214 L210 226 L150 250" stroke-width="1.1"/>
+      <path d="M168 214 L196 150 L240 120 L262 56 L300 30" stroke-width="1"/>
+      <path d="M240 120 L320 132 L372 96 L440 110 L500 84" stroke-width="0.9"/>
+      <path d="M262 56 L250 -8" stroke-width="0.7"/>
+      <path d="M372 96 L400 168 L470 200" stroke-width="0.8"/>
+      <path d="M120 250 L132 300" stroke-width="0.6"/>
+    </g>
+  </g>
+</svg>

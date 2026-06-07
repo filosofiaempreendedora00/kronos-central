@@ -1434,6 +1434,88 @@ body::before {
 .nucleo-card__cta { margin-top: 8px; font-size: 13.5px; letter-spacing: 0.04em; color: var(--areia); }
 .nucleo-card:hover .nucleo-card__cta { color: var(--creme); }
 
+/* Núcleo central — núcleo da Terra: marrom escuro incandescente + rachaduras */
+.nucleo-card--core {
+  background:
+    url("../assets/textures/core-cracks.svg"),
+    radial-gradient(125% 120% at 26% 118%, rgba(168,48,18,0.50), rgba(70,22,12,0) 50%),
+    radial-gradient(90% 80% at 84% -12%, rgba(120,44,24,0.32), transparent 50%),
+    linear-gradient(155deg, #2e1408, #160a04 72%);
+  background-size: cover, cover, cover, cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-color: rgba(150,72,42,0.34);
+}
+.nucleo-card--core .nucleo-card__title { color: #f4ddcd; }
+.nucleo-card--core .nucleo-card__kicker { color: #cf8a6a; }
+.nucleo-card--core:hover { border-color: rgba(205,92,52,0.55); }
+
+/* Briefing Vivo — natureza: verde, borboletas, vida e paz */
+.nucleo-card--living {
+  background:
+    url("../assets/textures/briefing-nature.svg"),
+    radial-gradient(95% 85% at 85% 14%, rgba(126,176,96,0.20), transparent 56%),
+    linear-gradient(155deg, #1d2614, #14180e 72%);
+  background-size: cover, cover, cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-color: rgba(126,164,94,0.30);
+}
+.nucleo-card--living .nucleo-card__title { color: #e9f1da; }
+.nucleo-card--living .nucleo-card__kicker { color: #abc795; }
+.nucleo-card--living:hover { border-color: rgba(156,196,116,0.5); }
+
+/* Chip da Cartilha (no chat da IAra e no doc dela) */
+.cart-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--areia-12); border: 1px solid var(--areia-22); color: var(--areia);
+  border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-family: inherit; cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+.cart-chip:hover { color: var(--creme); border-color: var(--areia-40); }
+.cart-chip[hidden] { display: none; }
+#docBody .cart-chip { margin-bottom: 14px; }
+
+/* Cartilha — modal sobre qualquer ambiente */
+.cartmodal {
+  position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center;
+  background: rgba(10,6,3,0.72); backdrop-filter: blur(4px); padding: 20px;
+}
+.cartmodal[hidden] { display: none; }
+.cartmodal__panel {
+  width: min(560px, 100%); max-height: 86vh; display: flex; flex-direction: column;
+  background: linear-gradient(rgba(21,12,6,0.62), rgba(21,12,6,0.8)), url("../assets/areia-sepia.png");
+  background-size: cover; background-position: center;
+  border: 1px solid var(--areia-40); border-radius: var(--radius); overflow: hidden;
+}
+.cartmodal__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--areia-22); }
+.cartmodal__title { margin: 0; font-family: var(--font-title); font-weight: 600; font-size: 21px; color: var(--branco); }
+.cartmodal__sub { font-size: 11.5px; color: var(--areia); }
+.cartmodal__close { background: transparent; border: none; color: var(--areia); cursor: pointer; padding: 6px; line-height: 0; }
+.cartmodal__close:hover { color: var(--creme); }
+.cartmodal__body { padding: 16px 20px 22px; overflow-y: auto; }
+
+/* Briefing Vivo — editor + versões */
+.briefing-doc__bar { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.brief-editor {
+  width: 100%; min-height: 340px; resize: vertical; box-sizing: border-box;
+  background: var(--onix); border: 1px solid var(--areia-22); border-radius: 10px; color: var(--creme);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; line-height: 1.55; padding: 14px;
+}
+.brief-editor:focus { outline: none; border-color: var(--areia-40); }
+.brief-editor__actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.brief-vers { display: flex; flex-direction: column; gap: 8px; }
+.brief-vers__row {
+  text-align: left; background: var(--sepia); border: 1px solid var(--areia-22); border-radius: 10px;
+  padding: 11px 13px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; color: inherit; font-family: inherit;
+}
+.brief-vers__row:hover { border-color: var(--areia-40); }
+.brief-vers__when { font-size: 12.5px; color: var(--areia); display: flex; align-items: center; gap: 8px; }
+.brief-vers__cur { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.08em; color: #7fae6e; border: 1px solid rgba(127,174,110,0.5); border-radius: 999px; padding: 1px 7px; }
+.brief-vers__prev { font-size: 12px; color: rgba(245,239,230,0.55); }
+.brief-vers__head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.brief-vers__date { font-size: 12.5px; color: var(--areia); }
+
 /* Biblioteca de prompts — grupos (cards distribuídos em grade) */
 #libHub { display: flex; flex-direction: column; gap: 30px; }
 .lib-group {

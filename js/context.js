@@ -17,8 +17,74 @@ const Context = (() => {
   const LS_B = "kronos.ctx.briefing";
 
   let nucleoRaw = localStorage.getItem(LS_N) || "";
-  let briefingRaw = localStorage.getItem(LS_B) || "";
+  let briefingRaw = localStorage.getItem(LS_B) || ""; // base do deploy (briefing.md)
   let readyPromise = null;
+
+  /* ----------------------- Briefing Vivo — versões ----------------------
+     O Briefing pode ser editado DENTRO do app (pelo fundador, ou pelo IAgo via
+     proposta aprovada). Cada salvamento cria uma VERSÃO carimbada; a mais nova é
+     a vigente que TODOS os agentes leem. Guardado localmente e publicado no
+     GitHub (briefing-live.json) quando há token — fica igual em todo aparelho. */
+  const LS_BLIVE = "kronos.briefing.live";
+  const BLIVE_PATH = "www/contexto/briefing-live.json";
+  let briefingVers = [];
+  try { const c = JSON.parse(localStorage.getItem(LS_BLIVE)); if (c && Array.isArray(c.versions)) briefingVers = c.versions; } catch (_) {}
+
+  function persistBlive() {
+    const arr = briefingVers.slice();
+    for (;;) {
+      try { localStorage.setItem(LS_BLIVE, JSON.stringify({ versions: arr })); briefingVers = arr; return; }
+      catch (_) { if (arr.length <= 1) return; arr.pop(); } // descarta versões antigas se a cota encher
+    }
+  }
+  function mergeBriefingVers(a, b) {
+    const byTs = new Map();
+    (Array.isArray(a) ? a : []).forEach((v) => { if (v && v.ts) byTs.set(v.ts, v); });
+    (Array.isArray(b) ? b : []).forEach((v) => { if (v && v.ts && !byTs.has(v.ts)) byTs.set(v.ts, v); });
+    return [...byTs.values()].sort((x, y) => (y.ts || 0) - (x.ts || 0)).slice(0, 60);
+  }
+  /* Texto vigente do Briefing: a última versão editada OU a base do deploy. */
+  function effectiveBriefing() {
+    return briefingVers.length ? briefingVers[0].content : briefingRaw;
+  }
+  function briefingVersions() {
+    // sempre devolve algo: se nunca foi editado, mostra a base do deploy como v0.
+    if (briefingVers.length) return briefingVers.map((v) => ({ ...v, base: false }));
+    return [{ content: briefingRaw, ts: null, base: true }];
+  }
+  const briefingSynced = () => typeof Sync !== "undefined" && Sync.configured();
+
+  /* Salva uma nova versão do Briefing (vira a vigente na hora p/ todos os agentes). */
+  async function saveBriefing(content) {
+    const text = String(content == null ? "" : content);
+    if (!text.trim()) return { ok: false, error: "O briefing não pode ficar vazio." };
+    if (effectiveBriefing().trim() === text.trim()) return { ok: false, error: "Nenhuma mudança em relação ao texto atual." };
+    briefingVers = [{ content: text, ts: Date.now() }, ...briefingVers].slice(0, 60);
+    persistBlive();
+    if (!briefingSynced()) return { ok: true, scope: "local" };
+    try {
+      const res = await Sync.readJson(BLIVE_PATH);
+      const sha = res.sha || null;
+      const remoteVers = res.json && Array.isArray(res.json.versions) ? res.json.versions : [];
+      briefingVers = mergeBriefingVers(briefingVers, remoteVers);
+      persistBlive();
+      const doc = { type: "kronos.briefing", version: 1, updatedAt: new Date().toISOString(), versions: briefingVers };
+      const w = await Sync.writeJson(BLIVE_PATH, doc, sha, "briefing: nova versão");
+      return w.ok ? { ok: true, scope: "remote" } : { ok: true, scope: "local", warn: w.error };
+    } catch (e) { return { ok: true, scope: "local", warn: e.message || String(e) }; }
+  }
+  /* Torna uma versão antiga a vigente (cria uma nova versão com aquele conteúdo). */
+  async function restoreBriefingVersion(ts) {
+    const v = briefingVers.find((x) => x.ts === ts) || (ts == null ? { content: briefingRaw } : null);
+    if (!v) return { ok: false, error: "Versão não encontrada." };
+    return saveBriefing(v.content);
+  }
+  /* Edição do Briefing proposta pelo IAgo (append/replace) → vira nova versão. */
+  async function applyBriefingEdit(mode, find, content) {
+    const r = computeNext(effectiveBriefing(), mode, find, content);
+    if (r.error) return { ok: false, error: r.error };
+    return saveBriefing(r.next);
+  }
 
   async function fetchText(url) {
     const r = await fetch(url, { cache: "no-cache" });
@@ -46,7 +112,18 @@ const Context = (() => {
       })();
       // Carrega, em paralelo, os ajustes de prompt publicados (cross-device).
       const sync = (typeof Sync !== "undefined") ? Sync.ready().catch(() => {}) : Promise.resolve();
-      await Promise.all([base, sync]);
+      // E o Briefing Vivo editado (versões publicadas) — vira a base para todos.
+      const blive = (async () => {
+        if (typeof Sync === "undefined") return;
+        try {
+          const res = await Sync.readJson(BLIVE_PATH);
+          if (res && res.json && Array.isArray(res.json.versions) && res.json.versions.length) {
+            briefingVers = mergeBriefingVers(res.json.versions, briefingVers);
+            persistBlive();
+          }
+        } catch (_) {}
+      })();
+      await Promise.all([base, sync, blive]);
     })();
     return readyPromise;
   }
@@ -74,7 +151,8 @@ const Context = (() => {
   }
 
   function briefingForPrompt() {
-    return briefingRaw ? collapse(stripQuotes(briefingRaw)) : "";
+    const b = effectiveBriefing();
+    return b ? collapse(stripQuotes(b)) : "";
   }
 
   /* Estado atual da Cartilha de Nomes — injetado no contexto da IAra (RH),
@@ -203,16 +281,19 @@ const Context = (() => {
 
   /* Cru, para a tela "Núcleo" (visualização). */
   function rawNucleo() { return nucleoRaw; }
-  function rawBriefing() { return briefingRaw; }
+  function rawBriefing() { return effectiveBriefing(); } // mostra o vigente (editado ou base)
   function briefingDate() {
-    const m = briefingRaw.match(/Última atualização:\s*\**\s*([0-9/.-]+)/i);
+    if (briefingVers.length && briefingVers[0].ts) {
+      const d = new Date(briefingVers[0].ts);
+      return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+    }
+    const m = effectiveBriefing().match(/Última atualização:\s*\**\s*([0-9/.-]+)/i);
     return m ? m[1] : "";
   }
 
-  /* Resumo "O que move o ponteiro" — extraído do bloco PONTEIRO do Briefing.
-     Retorna { hoje, medio, longo }. Mantido pelo fundador/IAgo no briefing.md. */
+  /* Resumo "O que move o ponteiro" — extraído do bloco PONTEIRO do Briefing. */
   function ponteiro() {
-    const t = briefingRaw || "";
+    const t = effectiveBriefing() || "";
     const sec = t.match(/##\s*PONTEIRO[^\n]*\n([\s\S]*?)(?=\n##\s|$)/i);
     const block = sec ? sec[1] : t;
     const grab = (key) => {
@@ -230,5 +311,6 @@ const Context = (() => {
     load, ready, systemFor, rawNucleo, rawBriefing, briefingDate, ponteiro,
     effectiveEscopo, isEscopoOverridden, isEscopoPublished,
     applyEscopoEdit, applyEscopoPermanent, revertEscopo, revertEscopoPermanent,
+    effectiveBriefing, briefingVersions, saveBriefing, restoreBriefingVersion, briefingSynced, applyBriefingEdit,
   };
 })();

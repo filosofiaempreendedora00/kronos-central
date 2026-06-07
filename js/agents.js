@@ -158,7 +158,7 @@ const AGENTS = [
 \`\`\`kronos-edit
 {"agent":"<id>","mode":"replace","find":"<trecho EXATO atual>","content":"<texto que entra no lugar>","resumo":"<uma linha>"}
 \`\`\`
-- IDs válidos: ceo, coo, cfo, cro, prompt-engineer, head-rh.
+- IDs válidos: ceo, coo, cfo, cro, prompt-engineer, head-rh — e também "briefing" (o Briefing Vivo). Use agent:"briefing" para propor uma atualização do cenário atual; ao aprovar, nasce uma nova versão vigente do Briefing para todos os agentes.
 - No "replace", o campo find precisa ser uma cópia LITERAL de um trecho do escopo atual daquele agente (você o tem na Biblioteca acima) — senão a aplicação falha. No "append", omita o find.
 - Um bloco por vez. Se o fundador pedir ajuste, refaça e proponha de novo. Mudar o prompt de um agente é mudar como ele pensa — trate com esse peso.`,
     easyUrl: "https://claude.ai/project/019e9a4c-6d0f-74d1-93e8-47268774eacb",

@@ -45,9 +45,10 @@ const NucleoView = (() => {
   }
 
   /* ------------------------------- Cards -------------------------------- */
-  function cardHtml(doc, kicker, title, desc, face) {
+  function cardHtml(doc, kicker, title, desc, face, variant) {
+    const cls = "nucleo-card" + (face ? " nucleo-card--agent" : "") + (variant ? " nucleo-card--" + variant : "");
     return `
-      <button class="nucleo-card${face ? " nucleo-card--agent" : ""}" data-doc="${doc}" type="button">
+      <button class="${cls}" data-doc="${doc}" type="button">
         ${face ? `<span class="nucleo-card__face">${face}</span>` : ""}
         <span class="nucleo-card__kicker">${kicker}</span>
         <span class="nucleo-card__title">${title}</span>
@@ -62,21 +63,18 @@ const NucleoView = (() => {
     const date = Context.briefingDate();
     const fundamentos =
       cardHtml("nucleo", "Camada 1 · muda raramente", "Núcleo central",
-        "O DNA comum a todo agente da KRONOS — identidade, missão, tom, léxico e comportamento.") +
+        "O DNA comum a todo agente da KRONOS — identidade, missão, tom, léxico e comportamento.", null, "core") +
       cardHtml("briefing", `Camada 2 · você atualiza${date ? ` · ${date}` : ""}`, "Briefing Vivo",
-        "O cenário atual da empresa. Todos os agentes leem por cima do Núcleo.");
+        "O cenário atual da empresa. Todos os agentes leem por cima do Núcleo.", null, "living");
     const agentes = AGENTS.map((a) => {
       const adj = Context.isEscopoPublished(a.id)
         ? ' <span class="lib-badge">publicado</span>'
         : (Context.isEscopoOverridden(a.id) ? ' <span class="lib-badge">ajustado (só aqui)</span>' : "");
       return cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}${adj}`, a.nome || a.name, a.blurb || "Prompt-escopo do agente.", agentAvatarHTML(a));
     }).join("");
-    const pessoas = cardHtml("cartilha", "Guardada por IAra", "Cartilha de Nomes",
-      "Quem já opera, quem é a próxima a entrar e o banco de nomes dos próximos agentes.");
     hub.innerHTML =
       `<div class="lib-group"><span class="lib-group__label">Fundamentos</span>${fundamentos}</div>` +
-      `<div class="lib-group"><span class="lib-group__label">Agentes · prompt-escopo</span>${agentes}</div>` +
-      `<div class="lib-group"><span class="lib-group__label">Pessoas · RH</span>${pessoas}</div>`;
+      `<div class="lib-group"><span class="lib-group__label">Agentes · prompt-escopo</span>${agentes}</div>`;
     hub.querySelectorAll(".nucleo-card").forEach((c) =>
       c.addEventListener("click", () => openDoc(c.dataset.doc))
     );
@@ -87,7 +85,7 @@ const NucleoView = (() => {
     return `<span class="namechip ${cls}">${esc(label)}` +
       (sub ? `<span class="namechip__sub">${esc(sub)}</span>` : "") + `</span>`;
   }
-  function renderCartilha() {
+  function cartilhaHTML() {
     const op = (typeof AGENTS !== "undefined" ? AGENTS : []);
     const r = (typeof NAME_ROSTER !== "undefined") ? NAME_ROSTER : { prontos: { femininos: [], masculinos: [] }, backup: { nomes: [], nota: "" } };
     let h = "";
@@ -104,7 +102,7 @@ const NucleoView = (() => {
     h += `<div class="cart-sec"><h3 class="cart-sec__h">Banco de nomes · backup</h3>` +
       `<div class="namechips">${r.backup.nomes.map((n) => chip(n, "namechip--backup")).join("")}</div>` +
       `<p class="cart-note">${esc(r.backup.nota || "")}</p></div>`;
-    document.getElementById("docBody").innerHTML = h;
+    return h;
   }
 
   /* --------------------------- Leitor de doc ---------------------------- */
@@ -115,14 +113,15 @@ const NucleoView = (() => {
     await renderHub();
   }
 
+  const scrollDocTop = () => { const sc = document.querySelector("#nucleoDocView .settings__scroll"); if (sc) sc.scrollTop = 0; };
+
   async function openDoc(which) {
     if (which === "cartilha") {
       showOnly("nucleoDocView");
       document.getElementById("nucleoDocTitle").textContent = "Cartilha de Nomes";
-      document.getElementById("nucleoDocSub").textContent = "guardada por IAra · RH";
-      renderCartilha();
-      const sc0 = document.querySelector("#nucleoDocView .settings__scroll");
-      if (sc0) sc0.scrollTop = 0;
+      document.getElementById("nucleoDocSub").textContent = "guardada por IAra · CAO";
+      document.getElementById("docBody").innerHTML = cartilhaHTML();
+      scrollDocTop();
       return;
     }
     if (which && which.startsWith("agent:")) {
@@ -132,31 +131,111 @@ const NucleoView = (() => {
       document.getElementById("nucleoDocTitle").textContent = a.nome || a.name;
       document.getElementById("nucleoDocSub").textContent = `${a.name} · prompt-escopo`;
       renderAgentDoc(a);
-      const scA = document.querySelector("#nucleoDocView .settings__scroll");
-      if (scA) scA.scrollTop = 0;
+      scrollDocTop();
       return;
     }
-
-    let title = "", sub = "", needsContext = false;
-    if (which === "nucleo") {
-      title = "Núcleo central"; sub = "o DNA comum a todos os agentes"; needsContext = true;
-    } else if (which === "briefing") {
-      title = "Briefing Vivo"; sub = "o cenário atual — edite www/contexto/briefing.md"; needsContext = true;
-    } else { return; }
-
-    showOnly("nucleoDocView");
-    document.getElementById("nucleoDocTitle").textContent = title;
-    document.getElementById("nucleoDocSub").textContent = sub;
-    const body = document.getElementById("docBody");
-    const paint = (text) => { body.innerHTML = mdToHtml(text || "_Material ainda não carregado._"); };
-
-    if (needsContext) {
-      paint(which === "nucleo" ? Context.rawNucleo() : Context.rawBriefing());
+    if (which === "briefing") {
+      showOnly("nucleoDocView");
+      document.getElementById("nucleoDocTitle").textContent = "Briefing Vivo";
+      document.getElementById("nucleoDocSub").textContent = "o cenário atual · você edita, ou pede ao IAgo";
+      document.getElementById("docBody").innerHTML = `<p class="cost-note">carregando…</p>`;
       await Context.ready();
-      paint(which === "nucleo" ? Context.rawNucleo() : Context.rawBriefing());
+      renderBriefingDoc();
+      scrollDocTop();
+      return;
     }
-    const sc = document.querySelector("#nucleoDocView .settings__scroll");
-    if (sc) sc.scrollTop = 0;
+    if (which === "nucleo") {
+      showOnly("nucleoDocView");
+      document.getElementById("nucleoDocTitle").textContent = "Núcleo central";
+      document.getElementById("nucleoDocSub").textContent = "o DNA comum a todos os agentes";
+      const body = document.getElementById("docBody");
+      const paint = () => { body.innerHTML = mdToHtml(Context.rawNucleo() || "_Material ainda não carregado._"); };
+      paint(); await Context.ready(); paint();
+      scrollDocTop();
+      return;
+    }
+  }
+
+  /* --------------------------- Briefing Vivo: doc + editor + versões -------- */
+  function fmtVer(ts) {
+    if (!ts) return "base (deploy)";
+    const d = new Date(ts);
+    const p = (n) => String(n).padStart(2, "0");
+    return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  function renderBriefingDoc() {
+    const body = document.getElementById("docBody");
+    const synced = Context.briefingSynced();
+    const vers = Context.briefingVersions();
+    const note = synced
+      ? "As edições são publicadas (GitHub) e passam a valer para todos os agentes, em todos os aparelhos, na hora."
+      : "Sem token do GitHub: a edição vale já neste aparelho. Configure o token em Configurar para publicar em todos.";
+    body.innerHTML = `
+      <div class="briefing-doc">
+        <div class="briefing-doc__bar">
+          <button class="btn-ghost btn-ghost--sm" id="briefEditBtn" type="button">Editar</button>
+          <button class="btn-ghost btn-ghost--sm" id="briefVersBtn" type="button">Versões (${vers.length})</button>
+        </div>
+        <p class="cost-note">${note} Entre os agentes, só o IAgo altera o Briefing (você aprova) — ou você edita aqui.</p>
+        <div id="briefMain" class="doc">${mdToHtml(Context.effectiveBriefing() || "_Material ainda não carregado._")}</div>
+      </div>`;
+    document.getElementById("briefEditBtn").addEventListener("click", openBriefEditor);
+    document.getElementById("briefVersBtn").addEventListener("click", openBriefVersions);
+  }
+  function openBriefEditor() {
+    const main = document.getElementById("briefMain");
+    main.innerHTML = `
+      <textarea class="brief-editor" id="briefTextarea" spellcheck="false"></textarea>
+      <div class="brief-editor__actions">
+        <button class="btn-solid" id="briefSaveBtn" type="button">Salvar nova versão</button>
+        <button class="btn-ghost btn-ghost--sm" id="briefCancelBtn" type="button">Cancelar</button>
+        <span class="settings__status" id="briefStatus"></span>
+      </div>`;
+    const ta = document.getElementById("briefTextarea");
+    ta.value = Context.effectiveBriefing();
+    document.getElementById("briefSaveBtn").addEventListener("click", async () => {
+      const st = document.getElementById("briefStatus");
+      st.textContent = "salvando…"; st.classList.remove("settings__status--ok");
+      const r = await Context.saveBriefing(ta.value);
+      if (!r.ok) { st.textContent = "⚠ " + r.error; return; }
+      if (window.App && App.refreshBriefing) App.refreshBriefing();
+      renderBriefingDoc();
+    });
+    document.getElementById("briefCancelBtn").addEventListener("click", renderBriefingDoc);
+    setTimeout(() => ta.focus(), 30);
+  }
+  function openBriefVersions() {
+    const main = document.getElementById("briefMain");
+    const vers = Context.briefingVersions();
+    main.innerHTML = `<div class="brief-vers">` + vers.map((v, i) => `
+      <button class="brief-vers__row" data-ts="${v.ts == null ? "" : v.ts}" type="button">
+        <span class="brief-vers__when">${fmtVer(v.ts)}${i === 0 ? ' <span class="brief-vers__cur">vigente</span>' : ""}</span>
+        <span class="brief-vers__prev">${esc((v.content || "").replace(/[#>*`]/g, "").replace(/\s+/g, " ").trim().slice(0, 96))}…</span>
+      </button>`).join("") + `</div>`;
+    main.querySelectorAll(".brief-vers__row").forEach((row) =>
+      row.addEventListener("click", () => viewBriefVersion(row.dataset.ts)));
+  }
+  function viewBriefVersion(tsStr) {
+    const vers = Context.briefingVersions();
+    const v = vers.find((x) => (x.ts == null ? "" : String(x.ts)) === String(tsStr));
+    if (!v) return;
+    const isCurrent = (vers[0].ts == null ? "" : String(vers[0].ts)) === String(tsStr);
+    const main = document.getElementById("briefMain");
+    main.innerHTML = `
+      <div class="brief-vers__head">
+        <button class="btn-ghost btn-ghost--sm" id="briefBackVers" type="button">← versões</button>
+        <span class="brief-vers__date">${fmtVer(v.ts)}</span>
+        ${isCurrent ? '<span class="settings__status settings__status--ok">vigente</span>' : '<button class="btn-solid" id="briefRestoreBtn" type="button">Tornar vigente</button>'}
+      </div>
+      <div class="doc">${mdToHtml(v.content)}</div>`;
+    document.getElementById("briefBackVers").addEventListener("click", openBriefVersions);
+    const rb = document.getElementById("briefRestoreBtn");
+    if (rb) rb.addEventListener("click", async () => {
+      rb.disabled = true; rb.textContent = "…";
+      await Context.restoreBriefingVersion(v.ts);
+      if (window.App && App.refreshBriefing) App.refreshBriefing();
+      renderBriefingDoc();
+    });
   }
 
   /* Doc de um agente: escopo EFETIVO + banner de reverter se foi ajustado. */
@@ -170,7 +249,13 @@ const NucleoView = (() => {
     const banner = overridden
       ? `<div class="doc-revert"><span>${tag}</span><button id="revertEscopoBtn" type="button">Reverter ao original</button></div>`
       : "";
-    body.innerHTML = banner + mdToHtml(Context.effectiveEscopo(a) || "_Sem escopo definido._");
+    // A IAra é a guardiã da Cartilha de Nomes — atalho no canto do doc dela.
+    const cartChip = a.id === "head-rh"
+      ? `<button class="cart-chip" id="docCartChip" type="button"><span class="cart-chip__mark">✦</span> Cartilha de Nomes</button>`
+      : "";
+    body.innerHTML = cartChip + banner + mdToHtml(Context.effectiveEscopo(a) || "_Sem escopo definido._");
+    const cc = document.getElementById("docCartChip");
+    if (cc) cc.addEventListener("click", () => { if (window.App && App.openCartilha) App.openCartilha(); });
     const rb = document.getElementById("revertEscopoBtn");
     if (rb) rb.addEventListener("click", async () => {
       if (published) {
@@ -197,5 +282,5 @@ const NucleoView = (() => {
     });
   }
 
-  return { open: openHub, openDoc, bind };
+  return { open: openHub, openDoc, bind, cartilhaHTML };
 })();
