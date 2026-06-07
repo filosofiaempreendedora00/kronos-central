@@ -386,9 +386,8 @@ function renderPonteiro() {
   if (!sec.dataset.bound) {
     sec.dataset.bound = "1";
     sec.addEventListener("click", () => {
-      if (ponteiroOpen) return;        // já aberto: clicar não fecha
-      ponteiroOpen = true;
-      sec.classList.remove("ponteiro--closed");
+      ponteiroOpen = !ponteiroOpen;     // clicar alterna: abre / recolhe
+      sec.classList.toggle("ponteiro--closed", !ponteiroOpen);
     });
   }
 }
