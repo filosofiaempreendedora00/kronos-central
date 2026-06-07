@@ -168,15 +168,15 @@ const CostsView = (() => {
     return `
       <div class="cost-budget${lowClass}">
         <div class="cost-budget__nums">
-          <span class="cost-budget__rem">${Cost.brl(s.remainingUSD)} <small>${Cost.usd(s.remainingUSD)}</small></span>
-          <span class="cost-budget__of">restam de ${Cost.usd(s.amountUSD)} colocados · marcado em ${fmtShortDate(s.sinceTs)}</span>
+          <span class="cost-budget__rem">${Cost.usd(s.remainingUSD)} <small>${Cost.brl(s.remainingUSD)}</small></span>
+          <span class="cost-budget__of">disponíveis de ${Cost.usd(s.amountUSD)} colocados · marcado em ${fmtShortDate(s.sinceTs)}</span>
         </div>
         <div class="cost-budget__bar"><span style="width:${s.pct.toFixed(1)}%"></span></div>
         <div class="cost-budget__foot">
-          <span>Gasto desde então: ${Cost.usd(s.spentUSD)} · ${Cost.brl(s.spentUSD)}</span>
+          <span>Já gastou: ${Cost.usd(s.spentUSD)} <small>(${Cost.brl(s.spentUSD)})</small></span>
           <button class="btn-ghost btn-ghost--sm" id="budgetEditBtn" type="button">Atualizar saldo</button>
         </div>
-        <p class="cost-note">Estimativa pelo uso rastreado neste app. Ao recolocar crédito, toque em “Atualizar saldo”.</p>
+        <p class="cost-note">O crédito da Anthropic é em dólar; aqui a conta é toda em US$ (o R$ é só referência pelo câmbio). Estimativa pelo uso rastreado. Ao recolocar crédito, toque em “Atualizar saldo”.</p>
       </div>`;
   }
   function bindBudget() {
