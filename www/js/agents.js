@@ -18,6 +18,8 @@ const AGENTS = [
     nome: "TIAgo",
     name: "CEO",
     cargoCurto: "CEO",
+    photo: "assets/agents/tiago.jpg",
+    photoFull: "assets/agents/tiago-full.jpg",
     role: "Estratégia & Visão",
     initials: "CE",
     status: "online",
@@ -33,6 +35,8 @@ const AGENTS = [
     nome: "MatIAs",
     name: "COO",
     cargoCurto: "COO",
+    photo: "assets/agents/matias.jpg",
+    photoFull: "assets/agents/matias-full.jpg",
     role: "Operações & Execução",
     initials: "CO",
     status: "online",
@@ -45,9 +49,11 @@ const AGENTS = [
   },
   {
     id: "cfo",
-    nome: "FabIAno",
+    nome: "FabIAna",
     name: "CFO",
     cargoCurto: "CFO",
+    photo: "assets/agents/fabiana.jpg",
+    photoFull: "assets/agents/fabiana-full.jpg",
     role: "Finanças & Capital",
     initials: "CF",
     status: "online",
@@ -63,6 +69,8 @@ const AGENTS = [
     nome: "DamIAno",
     name: "CRO Expert",
     cargoCurto: "CRO",
+    photo: "assets/agents/damiano.jpg",
+    photoFull: "assets/agents/damiano-full.jpg",
     role: "Otimização de Conversão",
     initials: "CR",
     status: "online",
@@ -92,6 +100,8 @@ const AGENTS = [
     nome: "IAgo",
     name: "Engenheiro de Prompt",
     cargoCurto: "Prompt Eng.",
+    photo: "assets/agents/iago.jpg",
+    photoFull: "assets/agents/iago-full.jpg",
     role: "IA & Automação",
     initials: "EP",
     status: "online",
@@ -187,7 +197,7 @@ const AGENTS = [
 Quando o fundador pede atualização da cartilha: mostre o que muda, mova o nome, confirme.
 
 **Conhecimento próprio:**
-- Convenção de nomes: todo agente tem "IA" maiúsculo embutido (IAgo, TIAgo, MatIAs). Evite par de gênero duplicado com agente ativo (se há FabIAno, não promova FabIAna sem necessidade).
+- Convenção de nomes: todo agente tem "IA" maiúsculo embutido (IAgo, TIAgo, MatIAs). Evite par de gênero duplicado com agente ativo (ex.: como FabIAna já está em operação, não promova FabIAno sem necessidade).
 - Cartilha em três estados: Em operação (ativo) · Próxima a entrar (cargo reservado, agente a criar) · Banco de nomes (disponível, sem cargo).
 - Template-mãe: agente novo nasce do Núcleo + um bloco ESCOPO. Seu briefing do cargo só precisa cobrir o que muda — o que o agente faz, não faz, como entrega e conhecimento próprio. O resto o Núcleo já dá.
 - Custo de elenco: mais agente = mais contexto, mais token, mais manutenção. Um time de 4 agentes afiados vale mais que 12 medianos. Em dúvida, menos agentes.`,
@@ -240,7 +250,7 @@ const NAME_ROSTER = {
   // Backup: "IA" mais escondido ou com bagagem — use se os de cima acabarem.
   backup: {
     nota: "IA mais escondido ou com bagagem — use se os de cima acabarem.",
-    nomes: ["NatálIA", "LavínIA", "CecílIA", "FabIAna", "MessIAs", "IsaíAs", "MarcIAno", "IAn"],
+    nomes: ["NatálIA", "LavínIA", "CecílIA", "MessIAs", "IsaíAs", "MarcIAno", "IAn"],
   },
 };
 
