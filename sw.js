@@ -9,7 +9,7 @@
    As chamadas à API da Anthropic NUNCA passam por aqui (sempre rede direta).
    =========================================================================== */
 
-const CACHE = "kronos-v32";
+const CACHE = "kronos-v33";
 
 // Caminhos relativos ao escopo — funcionam em localhost (Electron) e na
 // subpasta do GitHub Pages (/kronos-central/).
@@ -36,6 +36,11 @@ const PRECACHE = [
   "./assets/logo-mark.png",
   "./assets/agents/iara.jpg",
   "./assets/agents/iara-full.jpg",
+  "./assets/agents/tiago.jpg",
+  "./assets/agents/matias.jpg",
+  "./assets/agents/fabiana.jpg",
+  "./assets/agents/damiano.jpg",
+  "./assets/agents/iago.jpg",
   "./assets/areia-sepia.png",
   "./assets/areia-onix.png",
   "./assets/feixe-luz.jpg",
