@@ -73,7 +73,12 @@ const Settings = (() => {
 
   /* --------------------- Token do GitHub (publicar) --------------------- */
   function saveGhToken() {
-    const v = document.getElementById("ghTokenInput").value.trim();
+    // PAT do GitHub só tem [A-Za-z0-9_]. Remove espaços, quebras e caracteres
+    // invisíveis que o teclado/colagem do celular costuma injetar (causa de 401).
+    const input = document.getElementById("ghTokenInput");
+    const raw = input.value || "";
+    const v = raw.replace(/[^A-Za-z0-9_]/g, "");
+    if (v !== raw) input.value = v; // reflete o valor limpo de volta no campo
     if (typeof Sync !== "undefined") {
       Sync.setToken(v);
       Sync.load().then(updateGhStatus); // valida o token buscando o arquivo
