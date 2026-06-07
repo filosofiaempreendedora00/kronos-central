@@ -342,6 +342,14 @@ body::before {
   letter-spacing: 0.04em;
 }
 
+/* Avatar com foto (quando o agente tem .photo) */
+.avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+.agent-card__avatar, .chat__avatar, .dmsg__avatar, .member__avatar, .present__av { overflow: hidden; }
+.agent-card__avatar:has(.avatar-img),
+.chat__avatar:has(.avatar-img),
+.present__av:has(.avatar-img),
+.member__avatar:has(.avatar-img) { padding: 0; background: var(--onix); }
+
 .agent-card__status {
   display: inline-flex;
   align-items: center;

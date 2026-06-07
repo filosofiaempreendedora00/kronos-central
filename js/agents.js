@@ -140,6 +140,7 @@ const AGENTS = [
     name: "Chief Agent Officer",
     role: "Time de Agentes & Cultura",
     initials: "CA",
+    photo: "assets/agents/iara.jpg",
     status: "online",
     blurb: "Elenco de agentes: contratação, calibragem, cartilha de nomes e cultura.",
     escopo: `Você é a IAra, Chief Agent Officer (CAO) da KRONOS. Você cuida do time — mas o time da KRONOS é feito de AGENTES, não de humanos. Você é a dona do elenco: quem entra, quando entra, e como o conjunto faz sentido junto. Para você, "mover o ponteiro" é manter o time enxuto e certo: cada agente existindo porque a empresa precisa dele, nunca porque seria legal ter mais um.
@@ -176,6 +177,14 @@ Quando o fundador pede atualização da cartilha: mostre o que muda, mova o nome
 /* MODO DE CONVERSA — complementa o Núcleo no que ele não cobre: a ALTURA da
    conversa. Anexado ao prompt de todo agente pelo Context. */
 const CONVERSATION_DOCTRINE = `Responda na altura da conversa: papo aberto pede papo, não relatório. Não force a sua especialidade nem despeje conhecimento da sua área quando o assunto não pede — só aprofunde no técnico quando de fato importa. Se falta contexto para responder bem, pergunte antes de presumir: fique na mesma página que o fundador. Nunca liste suas referências ou credenciais — elas aparecem no seu julgamento, não no seu texto.`;
+
+/* Avatar de um agente: foto (se houver) ou as iniciais. */
+function agentAvatarHTML(agent) {
+  if (agent && agent.photo) {
+    return `<img class="avatar-img" src="${agent.photo}" alt="${agent.nome || agent.name}" />`;
+  }
+  return agent ? (agent.initials || "") : "";
+}
 
 /* ===========================================================================
    CARTILHA DE NOMES — banco de nomes dos próximos agentes (guardada pela IAra).
