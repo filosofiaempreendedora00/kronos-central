@@ -1077,7 +1077,9 @@ body::before {
   background: var(--onix); border: 1px solid var(--areia-40); color: var(--areia);
   font-family: var(--font-title); font-weight: 600; font-size: 12px;
 }
+.member__text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
 .member__name { font-size: 12.5px; font-weight: 500; color: var(--creme); white-space: nowrap; }
+.member__cargo { font-size: 9.5px; font-weight: 400; letter-spacing: 0.04em; color: var(--areia); white-space: nowrap; text-transform: uppercase; }
 
 /* na sala (ativo) */
 .member--in .member__avatar { background: var(--areia); color: var(--onix); border-color: var(--areia); }
