@@ -137,15 +137,26 @@ const NucleoView = (() => {
         "O DNA comum a todo agente da KRONOS — identidade, missão, tom, léxico e comportamento.", null, "core") +
       cardHtml("briefing", `Camada 2 · você atualiza${date ? ` · ${date}` : ""}`, "Briefing Vivo",
         "O cenário atual da empresa. Todos os agentes leem por cima do Núcleo.", null, "living");
-    const agentes = AGENTS.map((a) => {
-      const adj = Context.isEscopoPublished(a.id)
-        ? ' <span class="lib-badge">publicado</span>'
-        : (Context.isEscopoOverridden(a.id) ? ' <span class="lib-badge">ajustado (só aqui)</span>' : "");
-      return cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}${adj}`, a.nome || a.name, a.blurb || "Prompt-escopo do agente.", agentAvatarHTML(a));
-    }).join("");
+    const adjBadge = (a) => Context.isEscopoPublished(a.id)
+      ? ' <span class="lib-badge">publicado</span>'
+      : (Context.isEscopoOverridden(a.id) ? ' <span class="lib-badge">ajustado (só aqui)</span>' : "");
+    const agentCard = (a, variant, extraKicker) =>
+      cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}${extraKicker || ""}${adjBadge(a)}`,
+        a.nome || a.name, a.blurb || "Prompt-escopo do agente.", agentAvatarHTML(a), variant);
+
+    // IAgo — guardião dos prompts: vem primeiro, em destaque, com o aviso.
+    const iago = AGENTS.find((a) => a.id === "prompt-engineer");
+    const others = AGENTS.filter((a) => a.id !== "prompt-engineer");
+    const guardian = iago ? `
+      <div class="lib-guardian">
+        ${agentCard(iago, "guardian", ' <span class="lib-badge lib-badge--guardian">guardião dos prompts</span>')}
+        <p class="lib-guardian__note"><strong>Só o IAgo edita prompts.</strong> Pelas regras da KRONOS, ele é o <strong>único agente autorizado</strong> a alterar o prompt-escopo dos outros — e sempre com a <strong>sua aprovação</strong>. Os demais cards abaixo são leitura.</p>
+      </div>` : "";
+    const rest = others.map((a) => agentCard(a)).join("");
+
     hub.innerHTML =
       `<div class="lib-group lib-group--fund"><span class="lib-group__label">Fundamentos</span>${fundamentos}</div>` +
-      `<div class="lib-group"><span class="lib-group__label">Agentes · prompt-escopo</span>${agentes}</div>`;
+      `<div class="lib-group"><span class="lib-group__label">Agentes · prompt-escopo</span>${guardian}${rest}</div>`;
     hub.querySelectorAll(".nucleo-card").forEach((c) =>
       c.addEventListener("click", () => openDoc(c.dataset.doc))
     );
