@@ -75,13 +75,30 @@ const NucleoView = (() => {
       <circle class="flower__center" r="2"/>
     </g>
   </svg>`;
-  const FLORA = [["grass", 7, 5.6, 0], ["flower", 24, 7, -1.4], ["grass", 45, 6.2, -2.6], ["grass", 67, 5.9, -0.7], ["flower", 85, 6.8, -3.2]];
+  const GRASS2 = `<svg class="grass__svg" viewBox="0 0 18 54" aria-hidden="true">
+    <path d="M9 54 C 8 36 7 22 4 8"/>
+    <path d="M9 54 C 10 34 12 22 15 10"/>
+    <path d="M9 54 C 9 38 9 28 9 18"/>
+  </svg>`;
+  // arbustinho florido num cantinho (inferior direito): tipos/tamanhos/inclinações
+  // variados e bem juntos (podem se sobrepor) — natural, sem espaçamento exato.
+  // [tipo, left%, bottomPx, larguraPx, sway(s), delay(s), inclinação a1°, a2°]
+  const FLORA = [
+    ["grass",  66, -2, 30, 6.2, -0.3, -5, 1],
+    ["grass2", 71, -3, 14, 5.0, -1.8,  2, 8],
+    ["flower", 74, -2, 25, 6.9, -2.5, -3, 3],
+    ["grass",  78, -5, 37, 5.9, -0.9, -1, 6],
+    ["grass2", 83, -3, 12, 5.3, -2.2, -7, 0],
+    ["flower", 86, -4, 16, 7.3, -1.2,  1, 5],
+    ["grass",  90, -3, 23, 5.6, -3.0,  3, 9],
+  ];
+  const svgOf = (k) => k === "flower" ? FLOWER : (k === "grass2" ? GRASS2 : GRASS);
   const POLLEN = [[14,80,0,11,3],[30,90,3,13,2],[48,74,6,10,3.5],[64,86,1.5,12,2.5],[78,68,4.5,14,3],[88,82,8,11,2],[22,62,9,15,2.5]];
   const EMBERS = [[24,84,0,9,2.5],[40,92,3,11,2],[58,80,6,8,3],[72,88,1.5,10,2],[86,76,4,12,2.5]];
   const dots = (cls, arr) => arr.map(([l, t, d, u, s]) =>
     `<span class="${cls}" style="left:${l}%;top:${t}%;width:${s}px;height:${s}px;--d:${d}s;--u:${u}s"></span>`).join("");
-  const flora = () => FLORA.map(([k, l, sw, sd]) =>
-    `<span class="flora flora--${k}" style="left:${l}%;--sw:${sw}s;--sd:${sd}s">${k === "grass" ? GRASS : FLOWER}</span>`).join("");
+  const flora = () => FLORA.map(([k, l, b, w, sw, sd, a1, a2]) =>
+    `<span class="flora flora--${k.replace("2", "")}" style="left:${l}%;bottom:${b}px;width:${w}px;--sw:${sw}s;--sd:${sd}s;--a1:${a1}deg;--a2:${a2}deg">${svgOf(k)}</span>`).join("");
   function decorHtml(variant) {
     if (variant === "living") {
       return `<span class="card-decor" aria-hidden="true">
