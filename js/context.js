@@ -90,16 +90,70 @@ const Context = (() => {
     ].join("\n");
   }
 
+  /* ----------------------- Escopo efetivo + edições --------------------- */
+  /* O escopo de um agente pode ter um override (aplicado pelo fundador via
+     proposta do IAgo). A versão efetiva = override (se houver) OU o do código. */
+  const escopoKey = (id) => "kronos.escopo." + id;
+  function effectiveEscopo(agent) {
+    if (!agent) return "";
+    try { const o = localStorage.getItem(escopoKey(agent.id)); if (o != null) return o; } catch (_) {}
+    return agent.escopo || "";
+  }
+  function isEscopoOverridden(id) {
+    try { return localStorage.getItem(escopoKey(id)) != null; } catch (_) { return false; }
+  }
+  /* Aplica uma edição proposta (append ou replace). Retorna {ok, error}. */
+  function applyEscopoEdit(agentId, mode, find, content) {
+    const agent = (typeof AGENTS !== "undefined" ? AGENTS : []).find((a) => a.id === agentId);
+    if (!agent) return { ok: false, error: "Agente não encontrado: " + agentId };
+    const base = effectiveEscopo(agent);
+    let next;
+    if (mode === "append") {
+      if (!content || !content.trim()) return { ok: false, error: "Nada para adicionar." };
+      next = base.trimEnd() + "\n\n" + content.trim();
+    } else if (mode === "replace") {
+      if (!find || !base.includes(find)) {
+        return { ok: false, error: "O trecho a substituir não foi encontrado no prompt atual (precisa ser uma cópia exata)." };
+      }
+      next = base.replace(find, content || "");
+    } else {
+      return { ok: false, error: "Operação inválida: " + mode };
+    }
+    try {
+      localStorage.setItem(escopoKey(agentId), next);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: "Falha ao salvar: " + e.message };
+    }
+  }
+  function revertEscopo(id) {
+    try { localStorage.removeItem(escopoKey(id)); } catch (_) {}
+  }
+
+  /* Biblioteca de prompts (acesso de leitura) — injetada no contexto do IAgo,
+     pra que as propostas dele sejam 100% baseadas no texto REAL e atual. */
+  function promptsLibraryBlock() {
+    const list = (typeof AGENTS !== "undefined" ? AGENTS : []).map((a) =>
+      `### ${a.nome || a.name} — ${a.name} (${a.role}) · id: ${a.id}\n${effectiveEscopo(a)}`
+    ).join("\n\n");
+    return [
+      "## BIBLIOTECA DE PROMPTS — acesso de leitura (texto atual de cada agente)",
+      "Use estes textos EXATOS ao propor uma alteração (o campo find no replace precisa ser cópia literal).",
+      list,
+    ].join("\n\n");
+  }
+
   /* System prompt completo de um agente (usado no chat e na Delfos). */
   function systemFor(agent) {
     const doctrine = typeof CONVERSATION_DOCTRINE === "string" ? CONVERSATION_DOCTRINE : "";
     const parts = [
       nucleoForPrompt(agent),
       "---",
-      `## ESCOPO — ${agent.name} (${agent.role})\n${agent.escopo || ""}`,
+      `## ESCOPO — ${agent.name} (${agent.role})\n${effectiveEscopo(agent)}`,
     ];
     if (doctrine) parts.push("---", `## MODO DE CONVERSA\n${doctrine}`);
     if (agent.id === "head-rh") { const c = cartilhaBlock(); if (c) parts.push("---", c); }
+    if (agent.id === "prompt-engineer") parts.push("---", promptsLibraryBlock());
     const brief = briefingForPrompt();
     if (brief) parts.push("---", brief);
     return parts.join("\n\n");
@@ -113,5 +167,8 @@ const Context = (() => {
     return m ? m[1] : "";
   }
 
-  return { load, ready, systemFor, rawNucleo, rawBriefing, briefingDate };
+  return {
+    load, ready, systemFor, rawNucleo, rawBriefing, briefingDate,
+    effectiveEscopo, isEscopoOverridden, applyEscopoEdit, revertEscopo,
+  };
 })();

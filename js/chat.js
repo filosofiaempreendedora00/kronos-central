@@ -165,11 +165,84 @@ const Chat = (() => {
       <div class="msg__role">${role === "user" ? "Você" : (currentAgent.nome || currentAgent.name)}</div>
       <div class="msg__bubble"></div>
       <div class="msg__cost" hidden></div>`;
-    wrap.querySelector(".msg__bubble").textContent = content;
+    const bubble = wrap.querySelector(".msg__bubble");
+    bubble.textContent = content;
     if (role === "assistant" && meta && meta.costUSD != null) {
       setCostLabel(wrap.querySelector(".msg__cost"), meta.costUSD, meta.outTok);
     }
+    if (role === "assistant") attachProposal(wrap, bubble, content);
     return wrap;
+  }
+
+  /* --------- Proposta de edição de prompt (IAgo) → card de aprovação ------ */
+  const APPLIED_KEY = "kronos.appliedEdits";
+  function appliedSet() {
+    try { const a = JSON.parse(localStorage.getItem(APPLIED_KEY)); return new Set(Array.isArray(a) ? a : []); } catch (_) { return new Set(); }
+  }
+  function markApplied(raw) {
+    const s = appliedSet(); s.add(raw);
+    localStorage.setItem(APPLIED_KEY, JSON.stringify([...s]));
+  }
+  function parseEditBlock(text) {
+    const m = (text || "").match(/```kronos-edit\s*([\s\S]*?)```/);
+    if (!m) return null;
+    try {
+      const json = JSON.parse(m[1].trim());
+      if (!json || !json.agent || !json.mode) return null;
+      return { raw: m[0], json };
+    } catch (_) { return null; }
+  }
+  function stripEditBlock(text) {
+    return (text || "").replace(/```kronos-edit\s*[\s\S]*?```/g, "").trim();
+  }
+  function attachProposal(wrap, bubble, content) {
+    // só o IAgo propõe edições
+    if (!currentAgent || currentAgent.id !== "prompt-engineer") return;
+    const parsed = parseEditBlock(content);
+    if (!parsed) return;
+    bubble.textContent = stripEditBlock(content); // tira o JSON da bolha
+    wrap.appendChild(buildProposeCard(parsed));
+  }
+  function buildProposeCard({ raw, json }) {
+    const target = AGENTS.find((a) => a.id === json.agent);
+    const targetName = target ? `${target.nome || target.name} (${target.name})` : json.agent;
+    const card = document.createElement("div");
+    card.className = "propose";
+    const opLabel = json.mode === "append" ? "adicionar" : "ajustar trecho";
+    const detail = json.mode === "replace"
+      ? `<div class="propose__diff"><span class="propose__lbl">sai</span><pre>${escapeHtml(json.find || "")}</pre><span class="propose__lbl">entra</span><pre>${escapeHtml(json.content || "")}</pre></div>`
+      : `<div class="propose__diff"><span class="propose__lbl">adiciona</span><pre>${escapeHtml(json.content || "")}</pre></div>`;
+    const already = appliedSet().has(raw);
+    card.innerHTML = `
+      <div class="propose__head"><span class="propose__tag">Proposta do IAgo</span> alterar <strong>${targetName}</strong> · ${opLabel}</div>
+      <div class="propose__summary">${escapeHtml(json.resumo || "")}</div>
+      <button class="propose__toggle" type="button">ver detalhe</button>
+      <div class="propose__detail" hidden>${detail}</div>
+      <div class="propose__actions"></div>`;
+    const actions = card.querySelector(".propose__actions");
+    const detailEl = card.querySelector(".propose__detail");
+    card.querySelector(".propose__toggle").addEventListener("click", (e) => {
+      detailEl.hidden = !detailEl.hidden;
+      e.target.textContent = detailEl.hidden ? "ver detalhe" : "ocultar detalhe";
+    });
+    const renderApplied = (msg, ok) => {
+      actions.innerHTML = `<span class="propose__done ${ok ? "" : "propose__done--err"}">${msg}</span>`;
+    };
+    if (already) {
+      renderApplied("✓ já aplicado", true);
+    } else {
+      actions.innerHTML = `<button class="propose__apply" type="button">Aplicar</button><button class="propose__discard" type="button">Descartar</button>`;
+      actions.querySelector(".propose__apply").addEventListener("click", () => {
+        const r = Context.applyEscopoEdit(json.agent, json.mode, json.find, json.content);
+        if (r.ok) { markApplied(raw); renderApplied(`✓ Aplicado ao prompt de ${targetName}`, true); }
+        else { renderApplied("⚠ " + r.error, false); }
+      });
+      actions.querySelector(".propose__discard").addEventListener("click", () => card.remove());
+    }
+    return card;
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
   function setCostLabel(el, costUSD, outTok) {
@@ -248,6 +321,7 @@ const Chat = (() => {
       saveHistory();
       setCostLabel(assistantEl.querySelector(".msg__cost"), costUSD, outTok);
       Cost.log({ context: "chat", agentId: currentAgent.id, agentName: currentAgent.name, usage: result.usage, costUSD });
+      attachProposal(assistantEl, bubble, acc); // proposta de edição do IAgo → card de aprovação
       scrollToBottom();
     } catch (err) {
       if (err.name === "AbortError") {
