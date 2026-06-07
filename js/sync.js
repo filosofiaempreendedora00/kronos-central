@@ -55,13 +55,23 @@ const Sync = (() => {
     try { if (sha) localStorage.setItem(LS_SHA, sha); else localStorage.removeItem(LS_SHA); } catch (_) {}
   }
 
-  function parseDoc(text) {
-    try {
-      const j = JSON.parse(text);
-      if (j && typeof j === "object" && j.overrides && typeof j.overrides === "object") return j.overrides;
-      if (j && typeof j === "object") return j; // tolerância: mapa direto
-    } catch (_) {}
+  const isEnvelope = (j) => j && typeof j === "object" && j.v && j.ct && j.salt && j.iv;
+  const overridesOf = (doc) => {
+    if (doc && typeof doc === "object" && doc.overrides && typeof doc.overrides === "object") return doc.overrides;
+    if (doc && typeof doc === "object") return doc; // tolerância: mapa direto
     return {};
+  };
+
+  /* O arquivo no GitHub é um ENVELOPE CIFRADO (mesma chave do cofre) para não
+     expor os prompts no repo público. Decifra com Auth; tolera o formato antigo
+     em texto puro (migra na próxima publicação). */
+  async function decodeDoc(text) {
+    let j; try { j = JSON.parse(text); } catch (_) { return {}; }
+    if (isEnvelope(j)) {
+      if (typeof Auth === "undefined" || !Auth.decryptJSON) throw new Error("cofre indisponível para decifrar");
+      return overridesOf(await Auth.decryptJSON(j));
+    }
+    return overridesOf(j); // legado em texto puro
   }
 
   async function fetchRemote() {
@@ -76,13 +86,14 @@ const Sync = (() => {
       if (!r.ok) throw new Error("GitHub " + r.status);
       const j = await r.json();
       sha = j.sha || null;
-      return parseDoc(b64decode(j.content || ""));
+      return await decodeDoc(b64decode(j.content || ""));
     }
-    // sem token: tenta leitura pública (só funciona se o repo for público)
+    // sem token: leitura pública do envelope (o repo é público); a decifragem
+    // ainda exige a senha do cofre deste aparelho — ler não vaza, só destrava local.
     const r = await fetch(rawUrl() + "?t=" + Date.now(), { cache: "no-store" });
     if (r.status === 404) return {};
     if (!r.ok) throw new Error("raw " + r.status);
-    return parseDoc(await r.text());
+    return await decodeDoc(await r.text());
   }
 
   function load() {
@@ -109,7 +120,15 @@ const Sync = (() => {
     const tk = token();
     if (!tk) return { ok: false, error: "Sem token do GitHub. Configure em Configurar." };
     const doc = { version: 1, updatedAt: new Date().toISOString(), overrides };
-    const body = { message, content: b64encode(JSON.stringify(doc, null, 2)), branch: REPO.branch };
+    // Cifra com a chave do cofre: o repo é público, o conteúdo NÃO pode vazar.
+    let payload;
+    try {
+      if (typeof Auth === "undefined" || !Auth.encryptJSON) throw new Error("cofre indisponível");
+      payload = JSON.stringify(await Auth.encryptJSON(doc), null, 2);
+    } catch (e) {
+      return { ok: false, error: "Falha ao cifrar o ajuste: " + (e.message || e) };
+    }
+    const body = { message, content: b64encode(payload), branch: REPO.branch };
     if (sha) body.sha = sha;
     let r;
     try {
@@ -146,7 +165,8 @@ const Sync = (() => {
   async function commit(agentId, escopo, resumo) {
     const prev = overrides;
     overrides = { ...overrides, [agentId]: { escopo, resumo: resumo || "", updatedAt: new Date().toISOString() } };
-    const res = await putDoc(`IAgo: ajuste no prompt de ${agentId}${resumo ? " — " + resumo : ""}`);
+    // Mensagem genérica de propósito: o conteúdo (e qual agente) fica só no envelope cifrado.
+    const res = await putDoc("kronos: ajuste de prompt publicado");
     if (!res.ok) overrides = prev; // desfaz em memória se o GitHub recusou
     persistCache();
     return res;
@@ -157,7 +177,7 @@ const Sync = (() => {
     if (!(agentId in overrides)) return { ok: true };
     const prev = overrides;
     const copy = { ...overrides }; delete copy[agentId]; overrides = copy;
-    const res = await putDoc(`IAgo: reverter prompt de ${agentId}${resumo ? " — " + resumo : ""}`);
+    const res = await putDoc("kronos: prompt revertido");
     if (!res.ok) overrides = prev;
     persistCache();
     return res;

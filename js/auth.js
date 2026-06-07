@@ -15,7 +15,41 @@ const Auth = (() => {
   const VAULT_URL = "vault.enc";
 
   const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  const b64enc = (buf) => { const a = new Uint8Array(buf); let s = ""; for (let i = 0; i < a.length; i++) s += String.fromCharCode(a[i]); return btoa(s); };
   const passOf = (email, password) => (email || "").trim().toLowerCase() + "|" + (password || "");
+  const ITER = 150000;
+  const storedPass = () => { try { return localStorage.getItem(LS_PASS); } catch (_) { return null; } };
+
+  async function deriveKey(passphrase, saltBytes, iter, usages) {
+    const baseKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(passphrase), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: saltBytes, iterations: iter, hash: "SHA-256" },
+      baseKey, { name: "AES-GCM", length: 256 }, false, usages
+    );
+  }
+
+  /* Cifra um objeto JS com a MESMA chave do cofre (derivada da senha guardada
+     neste aparelho). Devolve um envelope no mesmo formato do vault.enc. Usado
+     para guardar os ajustes do IAgo no GitHub sem expô-los no repo público.
+     Lança se o cofre estiver trancado (sem senha salva). */
+  async function encryptJSON(obj) {
+    const pass = storedPass();
+    if (!pass) throw new Error("Cofre trancado — faça login para cifrar.");
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(pass, salt, ITER, ["encrypt"]);
+    const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(obj)));
+    return { v: 1, kdf: "PBKDF2-SHA256", iter: ITER, salt: b64enc(salt), iv: b64enc(iv), ct: b64enc(ct) };
+  }
+
+  /* Decifra um envelope produzido por encryptJSON. */
+  async function decryptJSON(env) {
+    const pass = storedPass();
+    if (!pass) throw new Error("Cofre trancado.");
+    const key = await deriveKey(pass, b64(env.salt), env.iter || ITER, ["decrypt"]);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(env.iv) }, key, b64(env.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
 
   async function decryptVault(passphrase) {
     const enc = await fetch(VAULT_URL + "?x=" + Date.now(), { cache: "no-store" }).then((r) => r.json());
@@ -76,5 +110,5 @@ const Auth = (() => {
     showGate(onReady);
   }
 
-  return { boot, logout };
+  return { boot, logout, encryptJSON, decryptJSON, hasPass: () => !!storedPass() };
 })();
