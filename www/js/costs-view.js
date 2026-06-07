@@ -19,8 +19,8 @@ const CostsView = (() => {
         (c) => `
         <div class="metric-card">
           <span class="metric-card__label">${c.label}</span>
-          <span class="metric-card__value">${Cost.usd(c.v.cost)}</span>
-          <span class="cost-sub">${Cost.brl(c.v.cost)} · ${c.v.calls} ${c.v.calls === 1 ? "interação" : "interações"}</span>
+          <span class="metric-card__value">${Cost.brl(c.v.cost)}</span>
+          <span class="cost-sub">${Cost.usd(c.v.cost)} · ${c.v.calls} ${c.v.calls === 1 ? "interação" : "interações"}</span>
         </div>`
       )
       .join("");
@@ -40,8 +40,8 @@ const CostsView = (() => {
     return `
       <div class="cost-card">
         <span class="cost-card__label">${label}</span>
-        <span class="cost-card__value">${Cost.usd(v.cost)}</span>
-        <span class="cost-card__brl">${Cost.brl(v.cost)}</span>
+        <span class="cost-card__value">${Cost.brl(v.cost)}</span>
+        <span class="cost-card__brl">${Cost.usd(v.cost)}</span>
         <span class="cost-card__meta">${v.calls} ${v.calls === 1 ? "interação" : "interações"} · ${Cost.tok(v.input + v.output)} tok</span>
       </div>`;
   }
@@ -66,7 +66,7 @@ const CostsView = (() => {
         <div class="cost-row">
           <span class="cost-row__name">${r.k}</span>
           <span class="cost-row__meta">${r.v.calls} · ${Cost.tok(r.v.input + r.v.output)} tok</span>
-          <span class="cost-row__val">${Cost.usd(r.v.cost)}</span>
+          <span class="cost-row__val">${Cost.brl(r.v.cost)}</span>
         </div>`
       )
       .join("");
@@ -78,7 +78,7 @@ const CostsView = (() => {
         <div class="cost-row">
           <span class="cost-row__name">${a.name}</span>
           <span class="cost-row__meta">${a.calls} · ${Cost.tok(a.input + a.output)} tok</span>
-          <span class="cost-row__val">${Cost.usd(a.cost)}</span>
+          <span class="cost-row__val">${Cost.brl(a.cost)}</span>
         </div>`
           )
           .join("")
@@ -90,7 +90,7 @@ const CostsView = (() => {
         <div class="cost-bar">
           <span class="cost-bar__day">${d.label}</span>
           <span class="cost-bar__track"><span class="cost-bar__fill" style="width:${Math.max(2, (d.cost / maxDay) * 100)}%"></span></span>
-          <span class="cost-bar__val">${d.cost > 0 ? Cost.usd(d.cost) : "—"}</span>
+          <span class="cost-bar__val">${d.cost > 0 ? Cost.brl(d.cost) : "—"}</span>
         </div>`
       )
       .join("");

@@ -260,7 +260,7 @@ const Delfos = (() => {
     if (!el) return;
     el.hidden = false;
     el.textContent =
-      `≈ ${Cost.usd(costUSD)} · ${Cost.brl(costUSD)}` + (outTok ? ` · ${Cost.tok(outTok)} tok` : "");
+      `≈ ${Cost.brl(costUSD)} · ${Cost.usd(costUSD)}` + (outTok ? ` · ${Cost.tok(outTok)} tok` : "");
   }
 
   function updateMeetingCost() {
@@ -269,7 +269,7 @@ const Delfos = (() => {
     const total = thread.reduce((a, m) => a + (m.costUSD || 0), 0);
     if (total > 0) {
       el.hidden = false;
-      el.textContent = `Reunião ≈ ${Cost.usd(total)} · ${Cost.brl(total)}`;
+      el.textContent = `Reunião ≈ ${Cost.brl(total)} · ${Cost.usd(total)}`;
     } else {
       el.hidden = true;
     }
@@ -477,7 +477,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
       <button class="hist-card" data-i="${i}" type="button">
         <span class="hist-card__top">
           <span class="hist-card__date">${fmtDate(e.ts)}</span>
-          ${e.cost > 0 ? `<span class="hist-card__cost">≈ ${Cost.usd(e.cost)}</span>` : ""}
+          ${e.cost > 0 ? `<span class="hist-card__cost">≈ ${Cost.brl(e.cost)}</span>` : ""}
         </span>
         <span class="hist-card__title">${escapeHtml(e.title || "Reunião")}</span>
         <span class="hist-card__foot">
