@@ -64,9 +64,10 @@ const NucleoView = (() => {
         "O DNA comum a todo agente da KRONOS — identidade, missão, tom, léxico e comportamento.") +
       cardHtml("briefing", `Camada 2 · você atualiza${date ? ` · ${date}` : ""}`, "Briefing Vivo",
         "O cenário atual da empresa. Todos os agentes leem por cima do Núcleo.");
-    const agentes = AGENTS.map((a) =>
-      cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}`, a.nome || a.name, a.blurb || "Prompt-escopo do agente.")
-    ).join("");
+    const agentes = AGENTS.map((a) => {
+      const adj = Context.isEscopoOverridden(a.id) ? ' <span class="lib-badge">ajustado</span>' : "";
+      return cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}${adj}`, a.nome || a.name, a.blurb || "Prompt-escopo do agente.");
+    }).join("");
     const pessoas = cardHtml("cartilha", "Guardada por IAra", "Cartilha de Nomes",
       "Quem já opera, quem é a próxima a entrar e o banco de nomes dos próximos agentes.");
     hub.innerHTML =
@@ -121,15 +122,23 @@ const NucleoView = (() => {
       if (sc0) sc0.scrollTop = 0;
       return;
     }
-    let title = "", sub = "", needsContext = false, raw = "";
+    if (which && which.startsWith("agent:")) {
+      const a = AGENTS.find((x) => x.id === which.slice(6));
+      if (!a) return;
+      showOnly("nucleoDocView");
+      document.getElementById("nucleoDocTitle").textContent = a.nome || a.name;
+      document.getElementById("nucleoDocSub").textContent = `${a.name} · prompt-escopo`;
+      renderAgentDoc(a);
+      const scA = document.querySelector("#nucleoDocView .settings__scroll");
+      if (scA) scA.scrollTop = 0;
+      return;
+    }
+
+    let title = "", sub = "", needsContext = false;
     if (which === "nucleo") {
       title = "Núcleo central"; sub = "o DNA comum a todos os agentes"; needsContext = true;
     } else if (which === "briefing") {
       title = "Briefing Vivo"; sub = "o cenário atual — edite www/contexto/briefing.md"; needsContext = true;
-    } else if (which && which.startsWith("agent:")) {
-      const a = AGENTS.find((x) => x.id === which.slice(6));
-      if (!a) return;
-      title = a.nome || a.name; sub = `${a.name} · prompt-escopo`; raw = a.escopo || "_Sem escopo definido._";
     } else { return; }
 
     showOnly("nucleoDocView");
@@ -142,11 +151,21 @@ const NucleoView = (() => {
       paint(which === "nucleo" ? Context.rawNucleo() : Context.rawBriefing());
       await Context.ready();
       paint(which === "nucleo" ? Context.rawNucleo() : Context.rawBriefing());
-    } else {
-      paint(raw);
     }
     const sc = document.querySelector("#nucleoDocView .settings__scroll");
     if (sc) sc.scrollTop = 0;
+  }
+
+  /* Doc de um agente: escopo EFETIVO + banner de reverter se foi ajustado. */
+  function renderAgentDoc(a) {
+    const body = document.getElementById("docBody");
+    const overridden = Context.isEscopoOverridden(a.id);
+    const banner = overridden
+      ? `<div class="doc-revert"><span>⟳ Ajustado pelo fundador (via IAgo).</span><button id="revertEscopoBtn" type="button">Reverter ao original</button></div>`
+      : "";
+    body.innerHTML = banner + mdToHtml(Context.effectiveEscopo(a) || "_Sem escopo definido._");
+    const rb = document.getElementById("revertEscopoBtn");
+    if (rb) rb.addEventListener("click", () => { Context.revertEscopo(a.id); renderAgentDoc(a); });
   }
 
   function toDashboard() { App.navGo("dash"); }
