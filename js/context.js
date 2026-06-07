@@ -13,12 +13,16 @@
    =========================================================================== */
 
 const Context = (() => {
-  const LS_N = "kronos.ctx.nucleo";
-  const LS_B = "kronos.ctx.briefing";
-
-  let nucleoRaw = localStorage.getItem(LS_N) || "";
-  let briefingRaw = localStorage.getItem(LS_B) || ""; // base do deploy (briefing.md)
+  // Núcleo + Briefing-base vêm do cofre criptografado (semeados no login).
+  let nucleoRaw = "";
+  let briefingRaw = "";
   let readyPromise = null;
+
+  /* Recebe núcleo e briefing-base do cofre (chamado por applyKronosData). */
+  function seedBase(nucleo, briefing) {
+    nucleoRaw = nucleo || "";
+    briefingRaw = briefing || "";
+  }
 
   /* ----------------------- Briefing Vivo — versões ----------------------
      O Briefing pode ser editado DENTRO do app (pelo fundador, ou pelo IAgo via
@@ -86,30 +90,9 @@ const Context = (() => {
     return saveBriefing(r.next);
   }
 
-  async function fetchText(url) {
-    const r = await fetch(url, { cache: "no-cache" });
-    if (!r.ok) throw new Error(url + " -> " + r.status);
-    return r.text();
-  }
-
   function load() {
     readyPromise = (async () => {
-      const base = (async () => {
-        try {
-          const [n, b] = await Promise.all([
-            fetchText("contexto/nucleo.md"),
-            fetchText("contexto/briefing.md"),
-          ]);
-          nucleoRaw = n;
-          briefingRaw = b;
-          localStorage.setItem(LS_N, n);
-          localStorage.setItem(LS_B, b);
-        } catch (_) {
-          // Offline / falha: usa o que estiver no cache do localStorage.
-          nucleoRaw = localStorage.getItem(LS_N) || nucleoRaw;
-          briefingRaw = localStorage.getItem(LS_B) || briefingRaw;
-        }
-      })();
+      // Núcleo/Briefing já foram semeados (seedBase) a partir do cofre no login.
       // Carrega, em paralelo, os ajustes de prompt publicados (cross-device).
       const sync = (typeof Sync !== "undefined") ? Sync.ready().catch(() => {}) : Promise.resolve();
       // E o Briefing Vivo editado (versões publicadas) — vira a base para todos.
@@ -123,7 +106,7 @@ const Context = (() => {
           }
         } catch (_) {}
       })();
-      await Promise.all([base, sync, blive]);
+      await Promise.all([sync, blive]);
     })();
     return readyPromise;
   }
@@ -308,7 +291,7 @@ const Context = (() => {
   }
 
   return {
-    load, ready, systemFor, rawNucleo, rawBriefing, briefingDate, ponteiro,
+    load, ready, seedBase, systemFor, rawNucleo, rawBriefing, briefingDate, ponteiro,
     effectiveEscopo, isEscopoOverridden, isEscopoPublished,
     applyEscopoEdit, applyEscopoPermanent, revertEscopo, revertEscopoPermanent,
     effectiveBriefing, briefingVersions, saveBriefing, restoreBriefingVersion, briefingSynced, applyBriefingEdit,

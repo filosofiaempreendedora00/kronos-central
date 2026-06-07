@@ -1,55 +1,56 @@
 /* ===========================================================================
-   KRONOS CENTRAL — Camada de acesso (login simples)
+   KRONOS CENTRAL — Acesso + cofre criptografado
 
-   Objetivo: impedir que alguém que pegue o link abra a Central e veja as infos.
-   A senha NÃO fica em texto puro no código — guardamos só um hash SHA-256
-   salgado; no login, o que você digita é hasheado e comparado.
+   O conteúdo sensível mora cifrado em www/vault.enc (AES-256-GCM, chave derivada
+   da sua senha por PBKDF2). O login NÃO compara hash: ele TENTA DESCRIPTOGRAFAR.
+   Se a senha abre o cofre, está correta — e os dados são aplicados aos agentes.
 
-   IMPORTANTE (honestidade): este é um portão do lado do cliente. Ele barra o
-   acesso casual pelo navegador, mas como o site é estático e público, alguém
-   técnico ainda poderia ler os arquivos servidos direto. A proteção REAL do
-   conteúdo exige criptografar os materiais (próximo passo) — ver conversa.
+   • Quem pega o link/arquivo cru só vê texto embaralhado.
+   • Você loga uma vez; a senha fica só neste aparelho (localStorage) e destrava
+     o cofre nas próximas aberturas. "Sair" apaga isso.
    =========================================================================== */
 
 const Auth = (() => {
-  const LS = "kronos.auth";
-  const SALT = "kronos-central-v1";
-  // hash de  email.toLowerCase() + "|" + senha + "|" + SALT
-  const HASH = "e1b9b6f3e51c65df1d769c8f45f756f7966b5ccfd033432b18d2abd80b70bfdc";
-  const TOKEN = "k:" + HASH; // valor gravado no aparelho ao logar (fica logado)
+  const LS_PASS = "kronos.pass";   // passphrase (email|senha) — só neste aparelho
+  const VAULT_URL = "vault.enc";
 
-  function ok() {
-    try { return localStorage.getItem(LS) === TOKEN; } catch (_) { return false; }
-  }
-  async function sha256hex(s) {
-    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
-  async function tryLogin(email, password) {
-    const h = await sha256hex((email || "").trim().toLowerCase() + "|" + (password || "") + "|" + SALT);
-    if (h === HASH) { try { localStorage.setItem(LS, TOKEN); } catch (_) {} return true; }
-    return false;
-  }
-  function logout() { try { localStorage.removeItem(LS); } catch (_) {} location.reload(); }
+  const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  const passOf = (email, password) => (email || "").trim().toLowerCase() + "|" + (password || "");
 
-  /* Mostra o portão e resolve onSuccess quando o login passa. */
-  function showGate(onSuccess) {
+  async function decryptVault(passphrase) {
+    const enc = await fetch(VAULT_URL + "?x=" + Date.now(), { cache: "no-store" }).then((r) => r.json());
+    const baseKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(passphrase), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: b64(enc.salt), iterations: enc.iter, hash: "SHA-256" },
+      baseKey, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+    );
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(enc.iv) }, key, b64(enc.ct));
+    return JSON.parse(new TextDecoder().decode(pt)); // lança erro se a senha estiver errada
+  }
+
+  async function unlock(passphrase, persist) {
+    const data = await decryptVault(passphrase);
+    if (typeof applyKronosData === "function") applyKronosData(data);
+    if (persist) { try { localStorage.setItem(LS_PASS, passphrase); } catch (_) {} }
+    return data;
+  }
+
+  function logout() { try { localStorage.removeItem(LS_PASS); } catch (_) {} location.reload(); }
+
+  function showGate(onReady) {
     const gate = document.getElementById("authGate");
-    if (!gate) { onSuccess && onSuccess(); return; }
     gate.hidden = false;
     const emailEl = document.getElementById("authEmail");
     const pwdEl = document.getElementById("authPwd");
     const btn = document.getElementById("authBtn");
     const err = document.getElementById("authErr");
     const submit = async () => {
-      err.textContent = "";
-      btn.disabled = true; btn.textContent = "Entrando…";
-      let okk = false;
-      try { okk = await tryLogin(emailEl.value, pwdEl.value); } catch (_) {}
-      if (okk) {
+      err.textContent = ""; btn.disabled = true; btn.textContent = "Entrando…";
+      try {
+        await unlock(passOf(emailEl.value, pwdEl.value), true);
         gate.hidden = true;
-        onSuccess && onSuccess();
-      } else {
+        onReady();
+      } catch (_) {
         err.textContent = "Email ou senha incorretos.";
         btn.disabled = false; btn.textContent = "Entrar";
         pwdEl.value = ""; pwdEl.focus();
@@ -63,5 +64,17 @@ const Auth = (() => {
     setTimeout(() => { (emailEl.value ? pwdEl : emailEl).focus(); }, 60);
   }
 
-  return { ok, showGate, logout };
+  /* Ponto de entrada do app: destrava com a senha guardada, ou pede login.
+     Chama onReady() (= init do app) só depois que os dados foram aplicados. */
+  async function boot(onReady) {
+    let saved = null;
+    try { saved = localStorage.getItem(LS_PASS); } catch (_) {}
+    if (saved) {
+      try { await unlock(saved, false); document.getElementById("authGate").hidden = true; onReady(); return; }
+      catch (_) { try { localStorage.removeItem(LS_PASS); } catch (_) {} } // senha mudou/cofre novo → relogar
+    }
+    showGate(onReady);
+  }
+
+  return { boot, logout };
 })();
