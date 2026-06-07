@@ -55,6 +55,7 @@ const Chat = (() => {
     history = loadHistory(agent.id);
 
     document.getElementById("chatAvatar").innerHTML = agentAvatarHTML(agent);
+    document.getElementById("chatAvatar").classList.toggle("avatar--zoomable", !!agent.photo);
     document.getElementById("chatName").textContent = agent.nome || agent.name;
     document.getElementById("chatRole").textContent = `${agent.name} · ${agent.role}`;
 
@@ -305,6 +306,11 @@ const Chat = (() => {
   /* ------------------------------- Bind ---------------------------------- */
   function bind() {
     document.getElementById("chatBackBtn").addEventListener("click", close);
+    document.getElementById("chatAvatar").addEventListener("click", () => {
+      if (currentAgent && currentAgent.photo) {
+        App.openLightbox(currentAgent.photoFull || currentAgent.photo, currentAgent.nome || currentAgent.name);
+      }
+    });
     document.getElementById("chatClearBtn").addEventListener("click", clear);
     document.getElementById("chatSendBtn").addEventListener("click", send);
 

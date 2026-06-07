@@ -141,6 +141,7 @@ const AGENTS = [
     role: "Time de Agentes & Cultura",
     initials: "CA",
     photo: "assets/agents/iara.jpg",
+    photoFull: "assets/agents/iara-full.jpg",
     status: "online",
     blurb: "Elenco de agentes: contratação, calibragem, cartilha de nomes e cultura.",
     escopo: `Você é a IAra, Chief Agent Officer (CAO) da KRONOS. Você cuida do time — mas o time da KRONOS é feito de AGENTES, não de humanos. Você é a dona do elenco: quem entra, quando entra, e como o conjunto faz sentido junto. Para você, "mover o ponteiro" é manter o time enxuto e certo: cada agente existindo porque a empresa precisa dele, nunca porque seria legal ter mais um.

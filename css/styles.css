@@ -1354,6 +1354,33 @@ body::before {
 /* backup — bem discreto */
 .namechip--backup { color: rgba(168,144,112,0.6); border-color: var(--areia-12); }
 
+/* ============================== LIGHTBOX =============================== */
+.avatar--zoomable { cursor: zoom-in; }
+.lightbox {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(10, 6, 3, 0.93);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.lightbox[hidden] { display: none; }
+.lightbox__img {
+  max-width: 94vw; max-height: 90vh; border-radius: 14px; object-fit: contain;
+  cursor: zoom-in; transition: transform 0.3s ease;
+  box-shadow: 0 30px 90px -20px rgba(0, 0, 0, 0.85);
+}
+.lightbox__img.zoomed { transform: scale(3.5); cursor: zoom-out; }
+.lightbox__close {
+  position: absolute; top: calc(16px + env(safe-area-inset-top)); right: 18px;
+  width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+  background: rgba(0, 0, 0, 0.45); border: 1px solid var(--areia-40); color: var(--creme);
+  display: grid; place-items: center;
+}
+.lightbox__close svg { stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.lightbox__hint {
+  position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom));
+  text-align: center; font-size: 12.5px; letter-spacing: 0.08em; color: var(--areia);
+  pointer-events: none; transition: opacity 0.3s ease;
+}
+
 /* ============================== RESPONSIVO ============================== */
 @media (max-width: 640px) {
   /* iOS dá zoom automático em campo com fonte < 16px ao focar — o que
