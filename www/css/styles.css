@@ -1490,15 +1490,14 @@ body::before {
 /* graminhas e florzinhas finas, balançando com o vento (sway escalonado) */
 .flora { position: absolute; bottom: -3px; transform-origin: bottom center; opacity: .56;
   animation: sway var(--sw,6s) ease-in-out var(--sd,0s) infinite; }
-.flora--grass { width: 26px; }
-.flora--flower { width: 22px; opacity: .62; }
+.flora--flower { opacity: .62; }
 .grass__svg, .flower__svg { width: 100%; height: auto; display: block; }
 .grass__svg path { fill: none; stroke: #7cab66; stroke-width: 1.2; stroke-linecap: round; }
 .flower__stem { fill: none; stroke: #7cab66; stroke-width: 1.2; stroke-linecap: round; }
 .flower__leaf { fill: #6fa65e; }
 .flower__petal { fill: rgba(232,224,186,0.9); }
 .flower__center { fill: #d9a85a; }
-@keyframes sway { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3.5deg); } }
+@keyframes sway { 0%,100% { transform: rotate(var(--a1,-3deg)); } 50% { transform: rotate(var(--a2,3.5deg)); } }
 
 /* UMA borboleta: passeia por todo o card (preferindo as áreas com menos texto,
    à direita), inclinando mais ao voar — sensação de movimento direcionado */
