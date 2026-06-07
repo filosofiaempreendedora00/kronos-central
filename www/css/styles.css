@@ -996,8 +996,11 @@ body::before {
 .ponteiro[hidden] { display: none; }
 .ponteiro__head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 /* ponteiro deitado, apontando para o título (tip à direita) */
-.ponteiro__iconwrap { width: 48px; height: 26px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.ponteiro__icon { height: 46px; width: auto; display: block; transform: rotate(90deg); }
+.ponteiro__iconwrap { width: 48px; height: 26px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: visible; }
+/* fechado/destaque: aponta para a pergunta (à direita); aberto: gira p/ baixo,
+   apontando para o texto que se revela em seguida */
+.ponteiro__icon { height: 46px; width: auto; display: block; transform: rotate(90deg); transition: transform 0.5s cubic-bezier(0.34, 1.15, 0.5, 1); }
+.ponteiro:not(.ponteiro--closed) .ponteiro__icon { transform: rotate(180deg); }
 .ponteiro__q {
   margin: 0; font-family: var(--font-title); font-weight: 600;
   font-size: 27px; color: var(--branco); line-height: 1.08;
