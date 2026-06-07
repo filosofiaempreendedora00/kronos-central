@@ -39,11 +39,7 @@ const Settings = (() => {
 
   /* ------------------------------- Abrir --------------------------------- */
   function open() {
-    ["dashboardView", "chatView", "delfosView", "costsView"].forEach((id) => {
-      const e = document.getElementById(id);
-      if (e) e.hidden = true;
-    });
-    document.getElementById("settingsView").hidden = false;
+    App.showView("settingsView");
 
     document.getElementById("apiKeyInput").value = localStorage.getItem(LS_KEY) || "";
     updateKeyStatus();
@@ -54,8 +50,7 @@ const Settings = (() => {
   }
 
   function close() {
-    document.getElementById("settingsView").hidden = true;
-    document.getElementById("dashboardView").hidden = false;
+    App.navGo("dash");
   }
 
   /* ----------------------------- Chave da API ---------------------------- */
@@ -132,7 +127,7 @@ const Settings = (() => {
       includeKey = e.target.checked;
       renderMobile();
     });
-    document.getElementById("settingsBtn").addEventListener("click", open);
+    // abertura agora é pela sidebar (nav "Configurar"); aqui só o voltar.
     document.getElementById("settingsBackBtn").addEventListener("click", close);
     document.getElementById("saveApiKeyBtn").addEventListener("click", saveKey);
     document.getElementById("apiKeyInput").addEventListener("keydown", (e) => {

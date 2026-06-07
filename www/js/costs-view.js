@@ -28,14 +28,12 @@ const CostsView = (() => {
 
   /* Tela completa */
   function open() {
-    document.getElementById("dashboardView").hidden = true;
-    document.getElementById("costsView").hidden = false;
+    App.showView("costsView");
     renderFull();
   }
   function close() {
-    document.getElementById("costsView").hidden = true;
-    document.getElementById("dashboardView").hidden = false;
     renderMini();
+    App.navGo("dash");
   }
 
   function periodCard(label, v) {

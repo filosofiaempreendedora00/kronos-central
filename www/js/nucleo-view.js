@@ -104,11 +104,7 @@ const NucleoView = (() => {
   }
 
   /* --------------------------- Leitor de doc ---------------------------- */
-  const ALL_VIEWS = ["dashboardView", "chatView", "delfosView", "costsView", "settingsView", "nucleoView", "nucleoDocView"];
-  function showOnly(id) {
-    ALL_VIEWS.forEach((v) => { const e = document.getElementById(v); if (e) e.hidden = (v !== id); });
-    window.scrollTo(0, 0);
-  }
+  const showOnly = (id) => App.showView(id); // troca de tela centralizada
 
   async function openHub() {
     showOnly("nucleoView");
@@ -153,10 +149,10 @@ const NucleoView = (() => {
     if (sc) sc.scrollTop = 0;
   }
 
-  function toDashboard() { showOnly("dashboardView"); }
+  function toDashboard() { App.navGo("dash"); }
 
   function bind() {
-    document.getElementById("nucleoBtn").addEventListener("click", openHub);
+    // abertura é pela sidebar (nav "Contextos"); aqui só os "voltar".
     document.getElementById("nucleoBackBtn").addEventListener("click", toDashboard);
     document.getElementById("nucleoDocBackBtn").addEventListener("click", openHub);
     document.addEventListener("keydown", (e) => {

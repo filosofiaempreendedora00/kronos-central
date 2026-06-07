@@ -58,8 +58,7 @@ const Chat = (() => {
     document.getElementById("chatName").textContent = agent.nome || agent.name;
     document.getElementById("chatRole").textContent = `${agent.name} · ${agent.role}`;
 
-    document.getElementById("dashboardView").hidden = true;
-    document.getElementById("chatView").hidden = false;
+    App.showView("chatView");
 
     stick = true;
     renderMessages();
@@ -129,8 +128,7 @@ const Chat = (() => {
 
   function close() {
     if (busy) abortCtrl?.abort();
-    document.getElementById("chatView").hidden = true;
-    document.getElementById("dashboardView").hidden = false;
+    App.navGo("agentes"); // volta para a lista de agentes
     currentAgent = null;
   }
 

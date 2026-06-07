@@ -61,8 +61,7 @@ const Delfos = (() => {
   function open() {
     thread = loadThread();
     roster = loadRoster();
-    document.getElementById("dashboardView").hidden = true;
-    document.getElementById("delfosView").hidden = false;
+    App.showView("delfosView");
     renderTable();
     renderMessages();
     updateMeetingCost();
@@ -75,8 +74,7 @@ const Delfos = (() => {
   function close() {
     if (busy) abortCtrl?.abort();
     stopDust();
-    document.getElementById("delfosView").hidden = true;
-    document.getElementById("dashboardView").hidden = false;
+    App.navGo("dash");
   }
 
   /* ----------------------------- Poeira ---------------------------------- */
@@ -452,13 +450,11 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
   }
   function openHistory() {
     stopDust();
-    document.getElementById("delfosView").hidden = true;
-    document.getElementById("delfosHistoryView").hidden = false;
+    App.showView("delfosHistoryView");
     renderHistoryList();
   }
   function closeHistory() {
-    document.getElementById("delfosHistoryView").hidden = true;
-    document.getElementById("delfosView").hidden = false;
+    App.showView("delfosView");
     requestAnimationFrame(startDust);
   }
   function renderHistoryList() {
