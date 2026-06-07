@@ -421,6 +421,15 @@
     </div><!-- /.app -->
   </div><!-- /.shell -->
 
+  <!-- Lightbox de foto (clique no avatar com foto) -->
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="lightbox__close" id="lightboxClose" type="button" aria-label="Fechar">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+    </button>
+    <img class="lightbox__img" id="lightboxImg" src="" alt="" />
+    <span class="lightbox__hint" id="lightboxHint">toque na pupila para ampliar ✦</span>
+  </div>
+
   <script src="js/vendor/qrcode.js"></script>
   <script src="js/agents.js"></script>
   <script src="js/context.js"></script>

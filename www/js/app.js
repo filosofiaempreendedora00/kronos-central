@@ -73,6 +73,17 @@ function renderAgents() {
       openEasyDirect(agent.id);
     });
 
+    // clique na FOTO → amplia (sem entrar no chat)
+    const avImg = card.querySelector(".agent-card__avatar img");
+    if (avImg && agent.photo) {
+      const av = card.querySelector(".agent-card__avatar");
+      av.classList.add("avatar--zoomable");
+      av.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openLightbox(agent.photoFull || agent.photo, agent.nome || agent.name);
+      });
+    }
+
     grid.appendChild(card);
   });
 }
@@ -223,6 +234,51 @@ function navGo(key) {
   closeDrawer();
 }
 
+/* -------------------------------- Lightbox -------------------------------- */
+function openLightbox(src, alt) {
+  const lb = document.getElementById("lightbox");
+  const img = document.getElementById("lightboxImg");
+  if (!lb || !img) return;
+  img.classList.remove("zoomed");
+  img.style.transformOrigin = "center center";
+  img.src = src;
+  img.alt = alt || "";
+  lb.hidden = false;
+}
+function closeLightbox() {
+  const lb = document.getElementById("lightbox");
+  const img = document.getElementById("lightboxImg");
+  if (lb) lb.hidden = true;
+  if (img) { img.src = ""; img.classList.remove("zoomed"); }
+}
+function bindLightbox() {
+  const lb = document.getElementById("lightbox");
+  const img = document.getElementById("lightboxImg");
+  const closeBtn = document.getElementById("lightboxClose");
+  if (!lb || !img) return;
+  closeBtn?.addEventListener("click", closeLightbox);
+  // clicar no fundo (fora da imagem) fecha
+  lb.addEventListener("click", (e) => { if (e.target === lb) closeLightbox(); });
+  // clicar na imagem amplia no ponto clicado (zoom na pupila); clicar de novo volta
+  img.addEventListener("click", (e) => {
+    if (img.classList.contains("zoomed")) {
+      img.classList.remove("zoomed");
+      img.style.transformOrigin = "center center";
+    } else {
+      const r = img.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * 100;
+      const y = ((e.clientY - r.top) / r.height) * 100;
+      img.style.transformOrigin = `${x}% ${y}%`;
+      img.classList.add("zoomed");
+    }
+    const hint = document.getElementById("lightboxHint");
+    if (hint) hint.style.opacity = "0";
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !lb.hidden) closeLightbox();
+  });
+}
+
 /* ------------------------------- Sidebar / gaveta ------------------------- */
 function openDrawer() {
   document.getElementById("shell").classList.add("drawer-open");
@@ -262,6 +318,8 @@ function init() {
     document.getElementById("shell").classList.add("sidebar-collapsed");
   }
 
+  bindLightbox();
+
   Chat.bind();
   Delfos.bind();
   CostsView.bind();
@@ -279,6 +337,7 @@ window.App = {
   openSettings: () => navGo("config"),
   openNucleo: () => navGo("contextos"),
   closeDrawer,
+  openLightbox,
 };
 
 document.addEventListener("DOMContentLoaded", init);
