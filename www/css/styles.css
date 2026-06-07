@@ -1395,9 +1395,10 @@ body::before {
      .app; cada tela cheia tem sua própria rolagem interna. */
   html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
   .app {
-    --pad-top: calc(20px + env(safe-area-inset-top));
+    /* sem padding no topo: a barra (appbar) cola no topo e cuida do notch.
+       O espaço do notch volta só nas sub-telas, que não têm a barra. */
     --pad-bottom: calc(20px + env(safe-area-inset-bottom));
-    padding: var(--pad-top) calc(18px + env(safe-area-inset-right))
+    padding: 0 calc(18px + env(safe-area-inset-right))
              var(--pad-bottom) calc(18px + env(safe-area-inset-left));
     /* fixado na viewport VISÍVEL: acompanha altura e deslocamento do teclado */
     position: fixed;
@@ -1411,6 +1412,8 @@ body::before {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
+  /* sub-telas (chat/delfos/...) não têm appbar → precisam do espaço do notch */
+  .app.app--sub { padding-top: calc(14px + env(safe-area-inset-top)); }
   /* telas cheias preenchem o app — sem altura fixa; rolagem é interna */
   .chat, .delfos, .costs, .settings { height: auto; flex: 1 1 auto; min-height: 0; }
   .chat__scroll, .delfos__scroll, .costs__scroll, .settings__scroll {
@@ -1435,11 +1438,17 @@ body::before {
   }
   .sidebar__backdrop[hidden] { display: none; }
 
-  /* ---- APPBAR (barra superior só no mobile) ---- */
+  /* ---- APPBAR (barra superior só no mobile) ----
+     Cola no topo (sticky), full-width (anula o padding lateral do .app) e
+     leva o safe-area do notch DENTRO dela. O conteúdo rola limpo por baixo. */
   .appbar {
     display: flex; align-items: center; gap: 12px;
-    position: sticky; top: 0; z-index: 5; flex-shrink: 0;
-    height: 50px; background: var(--onix);
+    position: sticky; top: 0; z-index: 10; flex-shrink: 0;
+    margin: 0 calc(-18px - env(safe-area-inset-right)) 0 calc(-18px - env(safe-area-inset-left));
+    padding: env(safe-area-inset-top) calc(18px + env(safe-area-inset-right))
+             0 calc(18px + env(safe-area-inset-left));
+    min-height: calc(50px + env(safe-area-inset-top));
+    background: var(--onix);
     border-bottom: 1px solid var(--areia-12);
   }
   .app.app--sub .appbar { display: none; }
