@@ -9,12 +9,14 @@ const LS = {
 
 /* ----------------------------- Relógio ao vivo ---------------------------- */
 function tickClock() {
-  const el = document.getElementById("liveClock");
-  if (!el) return;
   const now = new Date();
   const hh = String(now.getHours()).padStart(2, "0");
   const mm = String(now.getMinutes()).padStart(2, "0");
-  el.textContent = `${hh}:${mm}`;
+  const t = `${hh}:${mm}`;
+  ["liveClock", "liveClockMobile"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t;
+  });
 }
 
 /* ------------------------------ Agentes (Bloco 1) ------------------------- */
@@ -185,6 +187,56 @@ function fitViewportToKeyboard() {
   apply();
 }
 
+/* --------------------- Navegação central (troca de telas) ----------------- */
+const VIEW_IDS = [
+  "dashboardView", "agentesView", "chatView", "delfosView",
+  "costsView", "settingsView", "nucleoView", "nucleoDocView", "delfosHistoryView",
+];
+const SUB_VIEWS = ["chatView", "delfosView", "nucleoDocView", "delfosHistoryView"];
+// Qual item da sidebar fica ativo para cada tela (sub-telas herdam a seção pai).
+const VIEW_NAV = {
+  dashboardView: "dash", agentesView: "agentes", chatView: "agentes",
+  delfosView: "dash", delfosHistoryView: "dash", costsView: "custos",
+  settingsView: "config", nucleoView: "contextos", nucleoDocView: "contextos",
+};
+
+function setActiveNav(key) {
+  document.querySelectorAll(".navitem[data-nav]").forEach((b) =>
+    b.classList.toggle("is-active", b.dataset.nav === key)
+  );
+}
+
+/* Mostra UMA tela e esconde todas as outras (fonte única da verdade). */
+function showView(id) {
+  VIEW_IDS.forEach((v) => { const e = document.getElementById(v); if (e) e.hidden = (v !== id); });
+  const app = document.getElementById("app");
+  if (app) { app.classList.toggle("app--sub", SUB_VIEWS.includes(id)); app.scrollTop = 0; }
+  setActiveNav(VIEW_NAV[id] || "");
+}
+
+function navGo(key) {
+  if (key === "dash") showView("dashboardView");
+  else if (key === "agentes") showView("agentesView");
+  else if (key === "contextos") NucleoView.open();
+  else if (key === "custos") CostsView.open();
+  else if (key === "config") Settings.open();
+  closeDrawer();
+}
+
+/* ------------------------------- Sidebar / gaveta ------------------------- */
+function openDrawer() {
+  document.getElementById("shell").classList.add("drawer-open");
+  const b = document.getElementById("sidebarBackdrop"); if (b) b.hidden = false;
+}
+function closeDrawer() {
+  document.getElementById("shell").classList.remove("drawer-open");
+  const b = document.getElementById("sidebarBackdrop"); if (b) b.hidden = true;
+}
+function toggleCollapse() {
+  const collapsed = document.getElementById("shell").classList.toggle("sidebar-collapsed");
+  localStorage.setItem("kronos.sidebarCollapsed", collapsed ? "1" : "0");
+}
+
 function init() {
   Context.load(); // carrega Núcleo + Briefing (alimenta todos os agentes)
   fitViewportToKeyboard();
@@ -199,15 +251,34 @@ function init() {
   document.getElementById("delfosBannerMark").innerHTML = pedimentSVG(40);
   document.getElementById("delfosEnter").addEventListener("click", () => Delfos.open());
 
+  // Navegação da sidebar / gaveta
+  document.querySelectorAll(".navitem[data-nav]").forEach((b) =>
+    b.addEventListener("click", () => navGo(b.dataset.nav))
+  );
+  document.getElementById("menuToggle").addEventListener("click", openDrawer);
+  document.getElementById("sidebarBackdrop").addEventListener("click", closeDrawer);
+  document.getElementById("sidebarCollapse").addEventListener("click", toggleCollapse);
+  if (localStorage.getItem("kronos.sidebarCollapsed") === "1") {
+    document.getElementById("shell").classList.add("sidebar-collapsed");
+  }
+
   Chat.bind();
   Delfos.bind();
   CostsView.bind();
   CostsView.renderMini();
   NucleoView.bind();
   Settings.bind();
+
+  showView("dashboardView"); // estado inicial
 }
 
-// Exposto para outros módulos (ex.: chat/delfos pedem a chave da API)
-window.App = { openSettings: () => Settings.open(), openNucleo: () => NucleoView.open() };
+// Exposto para outros módulos (troca de tela centralizada + atalhos)
+window.App = {
+  showView,
+  navGo,
+  openSettings: () => navGo("config"),
+  openNucleo: () => navGo("contextos"),
+  closeDrawer,
+};
 
 document.addEventListener("DOMContentLoaded", init);
