@@ -204,10 +204,18 @@ const NucleoView = (() => {
   }
 
   const scrollDocTop = () => { const sc = document.querySelector("#nucleoDocView .settings__scroll"); if (sc) sc.scrollTop = 0; };
+  // rostinho ao lado do nome no topo do doc — só nos docs de agente.
+  function setDocAvatar(a) {
+    const el = document.getElementById("nucleoDocAvatar");
+    if (!el) return;
+    if (a) { el.hidden = false; el.innerHTML = agentAvatarHTML(a); }
+    else { el.hidden = true; el.innerHTML = ""; }
+  }
 
   async function openDoc(which) {
     if (which === "cartilha") {
       showOnly("nucleoDocView");
+      setDocAvatar(null);
       document.getElementById("nucleoDocTitle").textContent = "Cartilha de Nomes";
       document.getElementById("nucleoDocSub").textContent = "guardada por IAra · CAO";
       document.getElementById("docBody").innerHTML = cartilhaHTML();
@@ -218,6 +226,7 @@ const NucleoView = (() => {
       const a = AGENTS.find((x) => x.id === which.slice(6));
       if (!a) return;
       showOnly("nucleoDocView");
+      setDocAvatar(a);
       document.getElementById("nucleoDocTitle").textContent = a.nome || a.name;
       document.getElementById("nucleoDocSub").textContent = `${a.name} · prompt-escopo`;
       renderAgentDoc(a);
@@ -226,6 +235,7 @@ const NucleoView = (() => {
     }
     if (which === "briefing") {
       showOnly("nucleoDocView");
+      setDocAvatar(null);
       document.getElementById("nucleoDocTitle").textContent = "Briefing Vivo";
       document.getElementById("nucleoDocSub").textContent = "o cenário atual · você edita, ou pede ao IAgo";
       document.getElementById("docBody").innerHTML = `<p class="cost-note">carregando…</p>`;
@@ -236,6 +246,7 @@ const NucleoView = (() => {
     }
     if (which === "nucleo") {
       showOnly("nucleoDocView");
+      setDocAvatar(null);
       document.getElementById("nucleoDocTitle").textContent = "Núcleo central";
       document.getElementById("nucleoDocSub").textContent = "o DNA comum a todos os agentes";
       const body = document.getElementById("docBody");
