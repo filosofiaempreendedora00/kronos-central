@@ -482,7 +482,10 @@ body::before {
 }
 
 .metric-card {
-  background: var(--sepia);
+  background:
+    linear-gradient(rgba(21,12,6,0.55), rgba(21,12,6,0.72)),
+    url("../assets/areia-sepia.png");
+  background-size: cover; background-position: center;
   border: 1px solid var(--areia-22);
   border-radius: var(--radius);
   padding: 24px 24px 26px;
@@ -965,7 +968,8 @@ body::before {
   background:
     radial-gradient(42% 150% at 84% -30%, rgba(180,152,116,0.30), rgba(180,152,116,0.08) 45%, transparent 72%),
     linear-gradient(120deg, rgba(168,144,112,0.10), transparent 55%),
-    var(--sepia);
+    linear-gradient(rgba(21,12,6,0.55), rgba(21,12,6,0.72)),
+    url("../assets/areia-sepia.png") center/cover;
   border: 1px solid var(--areia-40);
   border-radius: var(--radius);
   padding: 26px 30px;
@@ -1201,7 +1205,11 @@ body::before {
 /* cards de período */
 .cost-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--gap); }
 .cost-card {
-  background: var(--sepia); border: 1px solid var(--areia-22); border-radius: var(--radius);
+  background:
+    linear-gradient(rgba(21,12,6,0.55), rgba(21,12,6,0.72)),
+    url("../assets/areia-sepia.png");
+  background-size: cover; background-position: center;
+  border: 1px solid var(--areia-22); border-radius: var(--radius);
   padding: 22px; display: flex; flex-direction: column; gap: 5px;
 }
 .cost-card__label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--areia); }
