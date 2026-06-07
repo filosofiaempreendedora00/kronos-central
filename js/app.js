@@ -393,6 +393,68 @@ function renderPonteiro() {
   }
 }
 
+/* Partículas de areia ao vento na seção do ponteiro (canvas leve).
+   Vento as carrega para a direita; velocidades/tamanhos/opacidades variados —
+   umas rápidas, outras lentas, como poeira no ar. */
+function startPonteiroDust() {
+  const canvas = document.getElementById("ponteiroDust");
+  if (!canvas || typeof canvas.getContext !== "function") return;
+  const ctx = canvas.getContext("2d");
+  const host = canvas.parentElement;
+  const section = document.getElementById("ponteiroSection");
+  const dashView = document.getElementById("dashboardView");
+  let w = 0, h = 0, dpr = 1, parts = [];
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  const spawn = (anywhere) => ({
+    x: anywhere ? Math.random() * w : rnd(-8, -2),
+    y: Math.random() * h,
+    r: rnd(0.4, 1.7),
+    vx: rnd(0.10, 0.78),              // vento: algumas rápidas, outras lentas
+    sway: rnd(0.15, 1.0),
+    swaySpeed: rnd(0.004, 0.02),
+    phase: Math.random() * Math.PI * 2,
+    alpha: rnd(0.05, 0.5),
+  });
+
+  const applySize = () => {
+    const nw = canvas.clientWidth || host.clientWidth;
+    const nh = canvas.clientHeight || host.clientHeight;
+    if (nw === w && nh === h) return;
+    w = nw; h = nh;
+    if (w <= 0 || h <= 0) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.round(w * dpr));
+    canvas.height = Math.max(1, Math.round(h * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const count = Math.max(26, Math.min(82, Math.round((w * h) / 2400)));
+    parts = Array.from({ length: count }, () => spawn(true));
+  };
+
+  const frame = () => {
+    const visible = section && !section.hidden && dashView && !dashView.hidden;
+    if (visible && w > 0 && h > 0) {
+      ctx.clearRect(0, 0, w, h);
+      for (const p of parts) {
+        p.x += p.vx;
+        p.phase += p.swaySpeed;
+        const y = p.y + Math.sin(p.phase) * p.sway;
+        if (p.x > w + 8) Object.assign(p, spawn(false));
+        ctx.beginPath();
+        ctx.arc(p.x, y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(226,196,144,${p.alpha})`;
+        ctx.fill();
+      }
+    }
+    if (!reduced) requestAnimationFrame(frame);
+  };
+
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(() => applySize()).observe(canvas);
+  applySize();
+  frame();
+}
+
 function init() {
   // Chegou aqui = já logado e cofre destravado (Auth.boot aplicou os dados).
   Context.load(); // ajustes publicados + briefing editado (núcleo/briefing já semeados)
@@ -449,6 +511,7 @@ function init() {
   Settings.bind();
 
   showView("dashboardView"); // estado inicial
+  startPonteiroDust();        // poeira de areia ao vento na seção do ponteiro
 }
 
 // Exposto para outros módulos (troca de tela centralizada + atalhos)
