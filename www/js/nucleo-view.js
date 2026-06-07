@@ -56,23 +56,38 @@ const NucleoView = (() => {
       <path d="M0 0 C 24 6 34 22 22 36 C 8 34 2 16 0 0 Z"/>
     </g>
   </svg>`;
-  const LEAF = `<svg class="leaf__svg" viewBox="0 0 40 60" aria-hidden="true">
-    <path class="leaf__stem" d="M20 60 C 18 42 20 26 28 12"/>
-    <path class="leaf__blade" d="M22 42 C 8 40 2 28 4 16 C 20 18 28 30 22 42 Z"/>
-    <path class="leaf__blade" d="M26 30 C 14 28 8 16 10 6 C 24 10 32 22 26 30 Z"/>
+  const GRASS = `<svg class="grass__svg" viewBox="0 0 30 50" aria-hidden="true">
+    <path d="M15 50 C 12 34 9 22 3 10"/>
+    <path d="M15 50 C 14 32 15 20 16 5"/>
+    <path d="M15 50 C 18 36 22 25 27 14"/>
+    <path d="M15 50 C 13 38 11 30 8 22"/>
+    <path d="M15 50 C 16 38 19 30 23 24"/>
   </svg>`;
+  const FLOWER = `<svg class="flower__svg" viewBox="0 0 26 56" aria-hidden="true">
+    <path class="flower__stem" d="M13 56 C 12 40 13 30 13 18"/>
+    <path class="flower__leaf" d="M13 38 C 6 36 3 30 4 24 C 11 26 15 32 13 38 Z"/>
+    <g class="flower__bloom" transform="translate(13 13)">
+      <ellipse class="flower__petal" cx="0" cy="-5.5" rx="2.3" ry="4.2"/>
+      <ellipse class="flower__petal" cx="5.2" cy="-1.7" rx="2.3" ry="4.2" transform="rotate(72)"/>
+      <ellipse class="flower__petal" cx="3.2" cy="4.5" rx="2.3" ry="4.2" transform="rotate(144)"/>
+      <ellipse class="flower__petal" cx="-3.2" cy="4.5" rx="2.3" ry="4.2" transform="rotate(216)"/>
+      <ellipse class="flower__petal" cx="-5.2" cy="-1.7" rx="2.3" ry="4.2" transform="rotate(288)"/>
+      <circle class="flower__center" r="2"/>
+    </g>
+  </svg>`;
+  const FLORA = [["grass", 7, 5.6, 0], ["flower", 24, 7, -1.4], ["grass", 45, 6.2, -2.6], ["grass", 67, 5.9, -0.7], ["flower", 85, 6.8, -3.2]];
   const POLLEN = [[14,80,0,11,3],[30,90,3,13,2],[48,74,6,10,3.5],[64,86,1.5,12,2.5],[78,68,4.5,14,3],[88,82,8,11,2],[22,62,9,15,2.5]];
   const EMBERS = [[24,84,0,9,2.5],[40,92,3,11,2],[58,80,6,8,3],[72,88,1.5,10,2],[86,76,4,12,2.5]];
   const dots = (cls, arr) => arr.map(([l, t, d, u, s]) =>
     `<span class="${cls}" style="left:${l}%;top:${t}%;width:${s}px;height:${s}px;--d:${d}s;--u:${u}s"></span>`).join("");
+  const flora = () => FLORA.map(([k, l, sw, sd]) =>
+    `<span class="flora flora--${k}" style="left:${l}%;--sw:${sw}s;--sd:${sd}s">${k === "grass" ? GRASS : FLOWER}</span>`).join("");
   function decorHtml(variant) {
     if (variant === "living") {
       return `<span class="card-decor" aria-hidden="true">
         <span class="cd-sun"></span>
-        <span class="leaf leaf--a">${LEAF}</span>
-        <span class="leaf leaf--b">${LEAF}</span>
-        <span class="bfly bfly--a"><span class="bfly__bob">${BFLY}</span></span>
-        <span class="bfly bfly--b"><span class="bfly__bob">${BFLY}</span></span>
+        ${flora()}
+        <span class="bfly"><span class="bfly__bob">${BFLY}</span></span>
         ${dots("pollen", POLLEN)}
       </span>`;
     }
