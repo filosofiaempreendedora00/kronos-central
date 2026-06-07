@@ -73,7 +73,7 @@ const NucleoView = (() => {
       return cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}${adj}`, a.nome || a.name, a.blurb || "Prompt-escopo do agente.", agentAvatarHTML(a));
     }).join("");
     hub.innerHTML =
-      `<div class="lib-group"><span class="lib-group__label">Fundamentos</span>${fundamentos}</div>` +
+      `<div class="lib-group lib-group--fund"><span class="lib-group__label">Fundamentos</span>${fundamentos}</div>` +
       `<div class="lib-group"><span class="lib-group__label">Agentes · prompt-escopo</span>${agentes}</div>`;
     hub.querySelectorAll(".nucleo-card").forEach((c) =>
       c.addEventListener("click", () => openDoc(c.dataset.doc))
