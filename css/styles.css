@@ -1427,8 +1427,8 @@ body::before {
   transition: border-color 0.18s ease, transform 0.18s ease;
   position: relative; overflow: hidden;
 }
-/* conteúdo acima da decoração — mas NÃO a própria camada de decoração */
-.nucleo-card > span:not(.card-decor) { position: relative; z-index: 1; }
+/* conteúdo acima da decoração — exceto a camada de decor e a tag-guardião (canto) */
+.nucleo-card > span:not(.card-decor):not(.guard-badge) { position: relative; z-index: 1; }
 .nucleo-card:hover { border-color: var(--areia-40); transform: translateY(-2px); }
 /* rosto do agente nos cards de Contextos */
 .nucleo-card__face {
@@ -1721,29 +1721,44 @@ body::before {
 .doc-revert button { background: transparent; border: 1px solid var(--areia-40); color: var(--areia); border-radius: 999px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
 .doc-revert button:hover { color: var(--creme); border-color: var(--areia); }
 .lib-badge { font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--onix); background: var(--areia); padding: 1px 7px; border-radius: 999px; margin-left: 8px; }
-.lib-badge--guardian { background: var(--creme); color: var(--onix); font-weight: 600; }
-
-/* IAgo — guardião dos prompts: destaque + aviso, antes dos demais */
-.lib-guardian { grid-column: 1 / -1; display: flex; gap: 18px; align-items: stretch; margin-bottom: 6px; }
-.lib-guardian .nucleo-card { flex: 0 0 auto; width: min(360px, 50%); }
-.lib-guardian__note { flex: 1; align-self: center; font-size: 13.5px; line-height: 1.65; color: rgba(245,239,230,0.7); margin: 0; }
-.lib-guardian__note strong { color: var(--creme); font-weight: 600; }
+/* IAgo — guardião dos prompts: card-herói horizontal, fundo estilo Delfos */
+.lib-guardian { grid-column: 1 / -1; margin-bottom: 8px; }
 .nucleo-card--guardian {
-  border-color: var(--areia);
-  box-shadow: 0 0 0 1px rgba(196,170,130,0.45), 0 10px 34px rgba(150,120,80,0.16);
+  flex-direction: row; align-items: center; gap: 22px; padding: 22px 24px;
+  border-color: rgba(196,170,130,0.5);
+  box-shadow: 0 0 0 1px rgba(196,170,130,0.32), 0 12px 40px rgba(150,120,80,0.18);
   background:
-    radial-gradient(120% 120% at 80% -10%, rgba(196,170,130,0.16), transparent 55%),
-    linear-gradient(rgba(21,12,6,0.5), rgba(21,12,6,0.68)),
-    url("../assets/areia-sepia.png");
-  background-size: cover; background-position: center;
+    radial-gradient(46% 130% at 86% -22%, rgba(196,170,130,0.30), rgba(196,170,130,0.06) 45%, transparent 72%),
+    linear-gradient(120deg, rgba(168,144,112,0.10), transparent 55%),
+    var(--sepia);
 }
-.nucleo-card--guardian .nucleo-card__title { color: var(--branco); }
-.nucleo-card--guardian:hover { border-color: var(--creme); }
+.nucleo-card--guardian:hover { border-color: var(--creme); transform: translateY(-2px); }
+.guard-face {
+  position: relative; flex-shrink: 0; width: 92px; height: 92px; border-radius: 50%;
+  overflow: hidden; background: var(--onix); border: 1px solid var(--areia-40);
+  box-shadow: 0 0 0 3px rgba(196,170,130,0.22);
+}
+.guard-body { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.guard-name { font-family: var(--font-title); font-weight: 600; font-size: 26px; color: var(--branco); line-height: 1.05; }
+.guard-role { font-size: 11px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; color: var(--areia); margin-bottom: 2px; }
+.guard-note { font-size: 13px; font-weight: 300; line-height: 1.6; color: rgba(245,239,230,0.74); max-width: 520px; }
+.guard-note strong { color: var(--creme); font-weight: 600; }
+.guard-badge {
+  position: absolute; z-index: 2; top: 13px; right: 15px;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600;
+  color: var(--onix); background: linear-gradient(120deg, #efe0c6 0%, #d8bd8c 50%, #c5a268 100%);
+  padding: 4px 11px 4px 9px; border-radius: 999px;
+  box-shadow: 0 2px 14px rgba(201,169,110,0.5), inset 0 0 0 1px rgba(255,244,222,0.45);
+}
+.guard-badge__star { font-size: 10px; }
 
 @media (max-width: 640px) {
-  .lib-guardian { flex-direction: column; gap: 12px; }
-  .lib-guardian .nucleo-card { width: 100%; }
-  .lib-guardian__note { font-size: 12.5px; }
+  .nucleo-card--guardian { gap: 15px; padding: 18px 16px; }
+  .guard-face { width: 70px; height: 70px; }
+  .guard-name { font-size: 22px; }
+  .guard-note { font-size: 12px; }
+  .guard-badge { top: 10px; right: 10px; }
 }
 
 /* ============================== LIGHTBOX =============================== */
