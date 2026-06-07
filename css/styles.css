@@ -62,7 +62,10 @@ body::before {
   flex-shrink: 0;
   height: 100vh;
   height: 100dvh;
-  background: var(--sepia-soft);
+  background:
+    linear-gradient(rgba(18,10,5,0.74), rgba(18,10,5,0.86)),
+    url("../assets/areia-sepia.png");
+  background-size: cover; background-position: center;
   border-right: 1px solid var(--areia-22);
   display: flex;
   flex-direction: column;
@@ -71,7 +74,7 @@ body::before {
   overflow: hidden;
   transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.sidebar__brand { display: flex; align-items: center; gap: 10px; padding: 2px 10px 22px; }
+.sidebar__brand { display: flex; align-items: center; gap: 10px; padding: 2px 10px 22px; cursor: pointer; }
 .sidebar__logo { height: 25px; width: auto; display: block; }
 .sidebar__logo--mark { display: none; height: 26px; }
 .sidebar__sub {
@@ -114,7 +117,8 @@ body::before {
 .sidebar-collapsed .sidebar__foot .clock { display: none; }
 .sidebar-collapsed .sidebar__logo--full { display: none; }
 .sidebar-collapsed .sidebar__logo--mark { display: block; }
-.sidebar-collapsed .sidebar__brand { justify-content: center; padding-left: 0; padding-right: 0; }
+.sidebar-collapsed .sidebar__brand { justify-content: center; gap: 0; padding-left: 0; padding-right: 0; }
+.sidebar-collapsed .sidebar__sub { display: none; }
 .sidebar-collapsed .navitem { justify-content: center; padding: 11px 0; gap: 0; }
 .sidebar-collapsed .sidebar__collapse { align-self: center; }
 .sidebar-collapsed .sidebar__collapse svg { transform: rotate(180deg); transition: transform 0.28s ease; }
@@ -1343,9 +1347,9 @@ body::before {
 /* Hub do Núcleo: dois ambientes em cards */
 .nucleo-hub { gap: 20px; }
 .nucleo-card {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 7px;
   text-align: left; width: 100%; cursor: pointer;
-  padding: 26px 26px 22px;
+  padding: 20px 20px 18px;
   background:
     linear-gradient(rgba(21,12,6,0.55), rgba(21,12,6,0.72)),
     url("../assets/areia-sepia.png");
@@ -1359,14 +1363,20 @@ body::before {
   font-size: 11px; font-weight: 400; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--areia);
 }
-.nucleo-card__title { font-family: var(--font-title); font-weight: 600; font-size: 27px; color: var(--branco); line-height: 1.1; }
-.nucleo-card__desc { font-size: 14px; font-weight: 300; line-height: 1.6; color: rgba(245,239,230,0.74); max-width: 560px; }
+.nucleo-card__title { font-family: var(--font-title); font-weight: 600; font-size: 21px; color: var(--branco); line-height: 1.15; }
+.nucleo-card__desc { font-size: 13px; font-weight: 300; line-height: 1.55; color: rgba(245,239,230,0.74); }
 .nucleo-card__cta { margin-top: 8px; font-size: 13.5px; letter-spacing: 0.04em; color: var(--areia); }
 .nucleo-card:hover .nucleo-card__cta { color: var(--creme); }
 
-/* Biblioteca de prompts — grupos */
-.lib-group { display: flex; flex-direction: column; gap: 14px; }
+/* Biblioteca de prompts — grupos (cards distribuídos em grade) */
+#libHub { display: flex; flex-direction: column; gap: 30px; }
+.lib-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
 .lib-group__label {
+  grid-column: 1 / -1;
   font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--areia); padding-bottom: 2px;
 }
@@ -1542,7 +1552,7 @@ body::before {
     display: flex; align-items: center; padding: 6px; margin-left: -6px; cursor: pointer;
   }
   .appbar__menu svg { stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
-  .appbar__logo { height: 21px; width: auto; display: block; }
+  .appbar__logo { height: 21px; width: auto; display: block; cursor: pointer; }
   .appbar .clock { margin-left: auto; font-size: 14px; }
 
   /* telas top-level com header próprio: no mobile a appbar já navega,
