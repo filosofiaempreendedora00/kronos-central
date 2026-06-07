@@ -172,7 +172,10 @@ const Delfos = (() => {
       <button class="member member--${zone}" data-id="${a.id}" type="button" ${busy ? "disabled" : ""}
         title="${(a.nome || a.name)} (${a.name}) — ${zone === "in" ? "remover da sala" : "trazer para a sala"}" aria-pressed="${zone === "in"}">
         <span class="member__avatar">${agentAvatarHTML(a)}</span>
-        <span class="member__name">${a.nome || a.name}</span>
+        <span class="member__text">
+          <span class="member__name">${a.nome || a.name}</span>
+          <span class="member__cargo">${a.name}</span>
+        </span>
       </button>`;
 
     el.innerHTML = `
@@ -181,7 +184,10 @@ const Delfos = (() => {
         <div class="roster__members">
           <span class="member member--you" title="Você preside o conselho">
             <span class="member__avatar member__avatar--you">VC</span>
-            <span class="member__name">Você</span>
+            <span class="member__text">
+              <span class="member__name">Você</span>
+              <span class="member__cargo">preside</span>
+            </span>
           </span>
           ${inRoom.map((a) => member(a, "in")).join("")}
           ${inRoom.length === 0 ? `<span class="roster__hint">convoque membros &rarr;</span>` : ""}
