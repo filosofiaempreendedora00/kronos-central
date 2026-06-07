@@ -46,6 +46,27 @@ async function streamMessage({ system, messages, onText, signal }) {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error("NO_API_KEY");
 
+  /* PROMPT CACHING — corta custo sem perder inteligência.
+     O system prompt (Núcleo + Escopo + Modo de Conversa + Briefing) é idêntico
+     a cada turno; marcamos com cache_control para que, nas chamadas seguintes
+     (dentro de ~5 min), ele seja lido do cache a ~10% do preço de input.
+     Numa conversa de vários turnos, também cacheamos o histórico (marcando a
+     última mensagem), então só o turno novo é cobrado como input cheio. */
+  const systemBlocks = typeof system === "string"
+    ? [{ type: "text", text: system, cache_control: { type: "ephemeral" } }]
+    : system;
+
+  const cachedMessages = messages.map((m, i) => {
+    // só cacheia o histórico quando há conversa de fato (>1 msg) — evita
+    // desperdício em chamadas de turno único (ex.: cada agente na Delfos).
+    if (i !== messages.length - 1 || messages.length < 2) return m;
+    if (typeof m.content !== "string") return m;
+    return {
+      role: m.role,
+      content: [{ type: "text", text: m.content, cache_control: { type: "ephemeral" } }],
+    };
+  });
+
   const res = await fetch(ANTHROPIC.url, {
     method: "POST",
     signal,
@@ -58,8 +79,8 @@ async function streamMessage({ system, messages, onText, signal }) {
     body: JSON.stringify({
       model: ANTHROPIC.model,
       max_tokens: ANTHROPIC.maxTokens,
-      system,
-      messages,
+      system: systemBlocks,
+      messages: cachedMessages,
       stream: true,
     }),
   });
