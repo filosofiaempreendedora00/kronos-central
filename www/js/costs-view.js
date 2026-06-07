@@ -119,13 +119,84 @@ const CostsView = (() => {
           <span>Câmbio US$ → R$</span>
           <input type="number" step="0.01" min="0" id="brlRateInput" value="${Cost.brlRate()}" />
         </label>
-        <p class="cost-note">Preço claude-sonnet-4: US$ 3 / milhão de tokens de entrada · US$ 15 / milhão de saída. Valores estimados a partir do uso reportado pela API.</p>
+        <p class="cost-note">Preço claude-sonnet-4.6: US$ 3 / milhão de tokens de entrada · US$ 15 / milhão de saída (cache mais barato). Valores calculados a partir do uso reportado pela API — diferença para o painel da Anthropic vem só do câmbio.</p>
+      </section>
+
+      <section class="cost-section">
+        <h3 class="cost-section__title">Backup do histórico</h3>
+        <p class="cost-note">${backupNote()}</p>
+        <div class="cost-backup">
+          <button class="btn-ghost btn-ghost--sm" id="costExportBtn" type="button">Exportar (.json)</button>
+          <button class="btn-ghost btn-ghost--sm" id="costImportBtn" type="button">Importar / juntar (.json)</button>
+          ${Cost.syncStatus().configured ? '<button class="btn-ghost btn-ghost--sm" id="costBackupBtn" type="button">Fazer backup agora</button>' : ""}
+        </div>
+        <span class="settings__status" id="costBackupStatus"></span>
       </section>`;
 
     const rateInput = document.getElementById("brlRateInput");
     rateInput.addEventListener("change", () => {
       Cost.setBrlRate(rateInput.value);
       renderFull();
+    });
+    bindBackup();
+  }
+
+  function backupNote() {
+    const s = Cost.syncStatus();
+    if (s.configured) {
+      return `Backup automático no GitHub <strong>ligado</strong> — o histórico fica salvo e igual em todos os aparelhos (${s.count} registro(s)). Exportar gera uma cópia extra.`;
+    }
+    return `O histórico vive só neste aparelho. <strong>Exporte um .json de vez em quando</strong> para não perder, ou configure o token do GitHub em Configurar para backup automático e em todos os aparelhos.`;
+  }
+
+  function setBackupStatus(msg, ok) {
+    const el = document.getElementById("costBackupStatus");
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.toggle("settings__status--ok", !!ok);
+  }
+
+  function download(name, text) {
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function bindBackup() {
+    const exp = document.getElementById("costExportBtn");
+    if (exp) exp.addEventListener("click", () => {
+      const stamp = new Date().toISOString().slice(0, 10);
+      download(`kronos-custos-${stamp}.json`, Cost.exportJSON());
+      setBackupStatus("Arquivo exportado ✓ guarde em local seguro.", true);
+    });
+
+    const imp = document.getElementById("costImportBtn");
+    if (imp) imp.addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "file"; input.accept = "application/json,.json";
+      input.addEventListener("change", () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const r = Cost.importJSON(String(reader.result || ""));
+          if (r.ok) { setBackupStatus(`Importado ✓ ${r.added} novo(s) · ${r.total} no total.`, true); renderFull(); }
+          else setBackupStatus("⚠ " + r.error, false);
+        };
+        reader.readAsText(file);
+      });
+      input.click();
+    });
+
+    const bkp = document.getElementById("costBackupBtn");
+    if (bkp) bkp.addEventListener("click", async () => {
+      setBackupStatus("⟳ enviando ao GitHub…", true);
+      const r = await Cost.flushBackup();
+      if (r && r.ok) setBackupStatus("Backup publicado ✓ vale em todos os aparelhos.", true);
+      else setBackupStatus("⚠ " + ((r && r.error) || "falhou"), false);
     });
   }
 
