@@ -268,7 +268,7 @@ const Chat = (() => {
   function setCostLabel(el, costUSD, outTok) {
     el.hidden = false;
     el.textContent =
-      `≈ ${Cost.usd(costUSD)} · ${Cost.brl(costUSD)}` +
+      `≈ ${Cost.brl(costUSD)} · ${Cost.usd(costUSD)}` +
       (outTok ? ` · ${Cost.tok(outTok)} tok` : "");
   }
 
