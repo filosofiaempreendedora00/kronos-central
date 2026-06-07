@@ -129,7 +129,17 @@
               <span class="block__rule" aria-hidden="true"></span>
               <span class="block__hint">Clique em um card para conversar</span>
             </div>
-            <div class="agents-grid" id="agentsGrid"></div>
+            <div class="agents-search">
+              <svg class="agents-search__icon" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+              <input type="search" id="agentSearch" class="agents-search__input" placeholder="Buscar por nome ou função…" autocomplete="off" />
+              <button type="button" id="agentSearchClear" class="agents-search__clear" aria-label="Limpar busca">
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <div class="agents-groups" id="agentsGrid"></div>
           </section>
         </div>
       </div>

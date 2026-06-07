@@ -189,6 +189,15 @@ Quando o fundador pede atualização da cartilha: mostre o que muda, mova o nome
   },
 ];
 
+/* NÍVEIS HIERÁRQUICOS — divisórias na página de Agentes (do topo à base).
+   Fonte única: para mudar um colaborador de nível, mova o id de lista.
+   Agente que não estiver em nenhuma lista cai no grupo "Outros". */
+const NIVEIS = [
+  { id: "estrategico", label: "Estratégico", desc: "direção e decisões de alto nível", ids: ["ceo", "cfo", "head-rh"] },
+  { id: "tatico", label: "Tático", desc: "traduz a estratégia em planos e coordenação", ids: ["coo", "cro"] },
+  { id: "operacional", label: "Operacional", desc: "execução técnica e mão na massa", ids: ["prompt-engineer"] },
+];
+
 /* MODO DE CONVERSA — complementa o Núcleo no que ele não cobre: a ALTURA da
    conversa. Anexado ao prompt de todo agente pelo Context. */
 const CONVERSATION_DOCTRINE = `Responda na altura da conversa: papo aberto pede papo, não relatório. Não force a sua especialidade nem despeje conhecimento da sua área quando o assunto não pede — só aprofunde no técnico quando de fato importa. Se falta contexto para responder bem, pergunte antes de presumir: fique na mesma página que o fundador. Nunca liste suas referências ou credenciais — elas aparecem no seu julgamento, não no seu texto.`;

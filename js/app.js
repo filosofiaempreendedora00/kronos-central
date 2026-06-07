@@ -20,19 +20,71 @@ function tickClock() {
 }
 
 /* ------------------------------ Agentes (Bloco 1) ------------------------- */
+let agentQuery = ""; // texto do filtro de busca de colaboradores
+
+/* Filtro: casa por nome do colaborador OU por função/cargo. */
+function agentMatches(agent, q) {
+  if (!q) return true;
+  const hay = `${agent.nome || ""} ${agent.name || ""} ${agent.role || ""}`.toLowerCase();
+  return hay.includes(q);
+}
+
 function renderAgents() {
-  const grid = document.getElementById("agentsGrid");
-  grid.innerHTML = "";
+  const host = document.getElementById("agentsGrid");
+  host.innerHTML = "";
+  const q = agentQuery.trim().toLowerCase();
 
-  AGENTS.forEach((agent) => {
-    const card = document.createElement("div");
-    card.className = "agent-card";
-    card.setAttribute("role", "button");
-    card.setAttribute("tabindex", "0");
-    card.setAttribute("data-agent", agent.id);
-    card.setAttribute("aria-label", `Conversar com ${agent.nome || agent.name}`);
+  // Monta os grupos na ordem dos NÍVEIS; o que sobrar vai para "Outros".
+  const niveis = (typeof NIVEIS !== "undefined" ? NIVEIS : []);
+  const claimed = new Set();
+  const groups = niveis.map((n) => ({
+    label: n.label,
+    desc: n.desc,
+    agents: AGENTS.filter((a) => n.ids.includes(a.id) && (claimed.add(a.id), true)),
+  }));
+  const leftover = AGENTS.filter((a) => !claimed.has(a.id));
+  if (leftover.length) groups.push({ label: "Outros", desc: "", agents: leftover });
 
-    card.innerHTML = `
+  let total = 0;
+  groups.forEach((g) => {
+    const matched = g.agents.filter((a) => agentMatches(a, q));
+    if (!matched.length) return;
+    total += matched.length;
+
+    const wrap = document.createElement("div");
+    wrap.className = "agent-group";
+    wrap.innerHTML = `
+      <div class="agent-divider">
+        <span class="agent-divider__label">${g.label}</span>
+        ${g.desc ? `<span class="agent-divider__desc">${g.desc}</span>` : ""}
+        <span class="agent-divider__rule" aria-hidden="true"></span>
+        <span class="agent-divider__count">${matched.length}</span>
+      </div>`;
+    const grid = document.createElement("div");
+    grid.className = "agents-grid";
+    matched.forEach((a) => grid.appendChild(makeAgentCard(a)));
+    wrap.appendChild(grid);
+    host.appendChild(wrap);
+  });
+
+  if (total === 0) {
+    const p = document.createElement("p");
+    p.className = "agents-empty";
+    p.textContent = `Nenhum colaborador encontrado para “${agentQuery.trim()}”.`;
+    host.appendChild(p);
+  }
+}
+
+/* Monta o card de um colaborador (extraído para reuso entre os grupos). */
+function makeAgentCard(agent) {
+  const card = document.createElement("div");
+  card.className = "agent-card";
+  card.setAttribute("role", "button");
+  card.setAttribute("tabindex", "0");
+  card.setAttribute("data-agent", agent.id);
+  card.setAttribute("aria-label", `Conversar com ${agent.nome || agent.name}`);
+
+  card.innerHTML = `
       <div class="agent-card__top">
         <span class="agent-card__avatar">${agentAvatarHTML(agent)}</span>
         <span class="agent-card__status agent-card__status--${agent.status}">
@@ -84,8 +136,7 @@ function renderAgents() {
       });
     }
 
-    grid.appendChild(card);
-  });
+  return card;
 }
 
 function openAgent(id) {
@@ -302,6 +353,14 @@ function init() {
   setInterval(tickClock, 10_000);
 
   document.getElementById("editMetricsBtn").addEventListener("click", toggleMetricsEdit);
+
+  // Busca de colaboradores (por nome ou função)
+  const agentSearch = document.getElementById("agentSearch");
+  if (agentSearch) {
+    agentSearch.addEventListener("input", () => { agentQuery = agentSearch.value; renderAgents(); });
+    const clr = document.getElementById("agentSearchClear");
+    if (clr) clr.addEventListener("click", () => { agentSearch.value = ""; agentQuery = ""; renderAgents(); agentSearch.focus(); });
+  }
 
   // Delfos (sala de reuniões)
   document.getElementById("delfosBannerMark").innerHTML = pedimentSVG(40);

@@ -275,6 +275,41 @@ body::before {
   gap: var(--gap);
 }
 
+/* Busca de colaboradores (nome ou função) */
+.agents-search { position: relative; display: flex; align-items: center; margin-bottom: 24px; }
+.agents-search__icon { position: absolute; left: 15px; color: var(--areia); opacity: .7; pointer-events: none; }
+.agents-search__input {
+  width: 100%; background: var(--sepia); border: 1px solid var(--areia-22);
+  border-radius: 999px; padding: 12px 42px; color: var(--creme);
+  font-family: inherit; font-size: 16px; transition: border-color 0.2s ease;
+}
+.agents-search__input::placeholder { color: rgba(245,239,230,0.45); }
+.agents-search__input:focus { outline: none; border-color: var(--areia-40); }
+.agents-search__input::-webkit-search-decoration,
+.agents-search__input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.agents-search__clear {
+  position: absolute; right: 11px; display: none; background: transparent; border: none;
+  color: var(--areia); cursor: pointer; padding: 6px; line-height: 0; border-radius: 50%;
+}
+.agents-search__clear:hover { color: var(--creme); }
+.agents-search__input:not(:placeholder-shown) + .agents-search__clear { display: inline-flex; }
+.agents-empty { color: var(--areia); font-size: 14px; padding: 6px 2px; }
+
+/* Grupos por nível (Estratégico / Tático / Operacional) */
+.agents-groups { display: flex; flex-direction: column; gap: 32px; }
+.agent-group { display: flex; flex-direction: column; gap: 16px; }
+.agent-divider { display: flex; align-items: baseline; gap: 12px; }
+.agent-divider__label {
+  font-family: var(--font-title); font-weight: 600; font-size: 16px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--areia); white-space: nowrap;
+}
+.agent-divider__desc { font-size: 12.5px; font-weight: 300; color: rgba(245,239,230,0.55); white-space: nowrap; }
+.agent-divider__rule { flex: 1; height: 1px; background: var(--areia-22); }
+.agent-divider__count {
+  font-size: 11px; color: var(--areia); border: 1px solid var(--areia-22);
+  border-radius: 999px; padding: 1px 8px; text-align: center;
+}
+
 .agent-card {
   text-align: left;
   background-color: var(--sepia);
@@ -1522,6 +1557,8 @@ body::before {
 
   /* 2 cards por linha no mobile (agentes e métricas) */
   .agents-grid, .metrics-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .agents-groups { gap: 24px; }
+  .agent-divider__desc { display: none; }
   .agent-card { padding: 14px 14px 13px; gap: 12px; min-height: 0; }
   .agent-card__avatar { width: 38px; height: 38px; font-size: 15px; }
   .agent-card__name { font-size: 17px; }
