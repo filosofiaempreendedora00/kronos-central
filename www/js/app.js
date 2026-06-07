@@ -322,6 +322,33 @@ function bindLightbox() {
   });
 }
 
+/* ------------------------------- Cartilha (modal) ------------------------ */
+/* A Cartilha de Nomes é da IAra — abre como modal sobre qualquer ambiente
+   (chat com a IAra, ou doc dela na Biblioteca), sem perder o lugar. */
+function openCartilha() {
+  const modal = document.getElementById("cartilhaModal");
+  const body = document.getElementById("cartilhaBody");
+  if (!modal || !body) return;
+  body.innerHTML = (typeof NucleoView !== "undefined" && NucleoView.cartilhaHTML) ? NucleoView.cartilhaHTML() : "";
+  modal.hidden = false;
+}
+function closeCartilha() {
+  const modal = document.getElementById("cartilhaModal");
+  if (modal) modal.hidden = true;
+}
+function bindCartilha() {
+  const modal = document.getElementById("cartilhaModal");
+  if (!modal) return;
+  document.getElementById("cartilhaClose")?.addEventListener("click", closeCartilha);
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeCartilha(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !modal.hidden) closeCartilha(); });
+}
+
+/* Re-renderiza o que depende do Briefing após uma edição (ponteiro da home). */
+function refreshBriefing() {
+  try { renderPonteiro(); } catch (_) {}
+}
+
 /* ------------------------------- Sidebar / gaveta ------------------------- */
 function openDrawer() {
   document.getElementById("shell").classList.add("drawer-open");
@@ -398,6 +425,7 @@ function init() {
   }
 
   bindLightbox();
+  bindCartilha();
 
   Chat.bind();
   Delfos.bind();
@@ -417,6 +445,8 @@ window.App = {
   openNucleo: () => navGo("contextos"),
   closeDrawer,
   openLightbox,
+  openCartilha,
+  refreshBriefing,
 };
 
 document.addEventListener("DOMContentLoaded", init);
