@@ -26,6 +26,26 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <!-- Portão de acesso (visível por padrão; o JS esconde se já estiver logado) -->
+  <div class="authgate" id="authGate">
+    <div class="authgate__panel">
+      <img class="authgate__logo" src="assets/logo-kronos.png" alt="KRONOS" />
+      <h1 class="authgate__title">Acesso restrito</h1>
+      <p class="authgate__sub">Esta central é privada. Entre para continuar.</p>
+      <label class="authgate__field">
+        <span>Email</span>
+        <input type="email" id="authEmail" autocomplete="username" placeholder="seu@email" />
+      </label>
+      <label class="authgate__field">
+        <span>Senha</span>
+        <input type="password" id="authPwd" autocomplete="current-password" placeholder="••••••••" />
+      </label>
+      <button class="authgate__btn" id="authBtn" type="button">Entrar</button>
+      <span class="authgate__err" id="authErr"></span>
+      <span class="authgate__hint">Fica logado neste aparelho até você sair.</span>
+    </div>
+  </div>
+
   <div class="shell" id="shell">
     <!-- ============================ SIDEBAR ============================ -->
     <aside class="sidebar" id="sidebar">
@@ -440,6 +460,13 @@
               </div>
             </div>
           </section>
+
+          <!-- Conta / acesso -->
+          <section class="settings__section">
+            <h3 class="settings__title">Acesso</h3>
+            <p class="settings__desc">Você fica logado neste aparelho. Saia para exigir login de novo (ex.: num aparelho emprestado).</p>
+            <button class="btn-ghost btn-ghost--sm" id="logoutBtn" type="button">Sair (bloquear a Central)</button>
+          </section>
         </div>
       </div>
     </div>
@@ -518,6 +545,7 @@
   </div>
 
   <script src="js/vendor/qrcode.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/agents.js"></script>
   <script src="js/sync.js"></script>
   <script src="js/context.js"></script>
