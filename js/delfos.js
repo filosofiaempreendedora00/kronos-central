@@ -29,11 +29,17 @@ const Delfos = (() => {
   function saveThread() { localStorage.setItem(KEY_THREAD, JSON.stringify(thread)); }
 
   function loadRoster() {
+    // Padrão é VAZIO — você clica em quem participa (não expulsa ninguém).
     try {
+      if (!localStorage.getItem("kronos.delfos.rosterV2")) {
+        localStorage.setItem("kronos.delfos.rosterV2", "1");
+        localStorage.removeItem(KEY_ROSTER); // zera o "todos" do modelo antigo, uma vez
+        return [];
+      }
       const s = JSON.parse(localStorage.getItem(KEY_ROSTER));
-      if (Array.isArray(s) && s.length) return s.filter((id) => AGENTS.some((a) => a.id === id));
+      if (Array.isArray(s)) return s.filter((id) => AGENTS.some((a) => a.id === id));
     } catch (_) {}
-    return AGENTS.map((a) => a.id); // padrão: todos à mesa
+    return [];
   }
   function saveRoster() { localStorage.setItem(KEY_ROSTER, JSON.stringify(roster)); }
 
@@ -161,13 +167,10 @@ const Delfos = (() => {
      Clicar move o membro entre as duas zonas. */
   function renderTable() {
     const el = document.getElementById("delfosRoster");
-    // A escolha de quem está na sala acontece só ANTES da reunião começar.
-    // Com a conversa em andamento, o roster some para não atrapalhar o texto.
     const started = thread.length > 0;
-    el.hidden = started;
     const inRoom = AGENTS.filter((a) => roster.includes(a.id));
 
-    // Indicador discreto de quem está na mesa — só durante a reunião.
+    // Topo durante a reunião: só os participantes.
     const present = document.getElementById("delfosPresent");
     if (present) {
       present.hidden = !started;
@@ -177,21 +180,41 @@ const Delfos = (() => {
           inRoom.map((a) => `<span class="present__av" title="${(a.nome || a.name)} — ${a.name}">${agentAvatarHTML(a)}</span>`).join("")
         : "";
     }
-    const bench = AGENTS.filter((a) => !roster.includes(a.id));
 
-    const member = (a, zone) => `
-      <button class="member member--${zone}" data-id="${a.id}" type="button" ${busy ? "disabled" : ""}
-        title="${(a.nome || a.name)} (${a.name}) — ${zone === "in" ? "remover da sala" : "trazer para a sala"}" aria-pressed="${zone === "in"}">
-        <span class="member__avatar">${agentAvatarHTML(a)}</span>
-        <span class="member__text">
-          <span class="member__name">${a.nome || a.name}</span>
-          <span class="member__cargo">${cargoCurtoOf(a)}</span>
-        </span>
-      </button>`;
+    // Reunião em andamento: o que NÃO entrou escurece e some; sobra a barra do topo.
+    if (started) {
+      if (!el.hidden && !el.dataset.exiting) {
+        el.dataset.exiting = "1";
+        el.querySelectorAll(".member--off").forEach((m) => m.classList.add("member--leaving"));
+        el.classList.add("delfos__roster--exit");
+        setTimeout(() => {
+          el.hidden = true;
+          el.classList.remove("delfos__roster--exit");
+          delete el.dataset.exiting;
+        }, 560);
+      } else {
+        el.hidden = true;
+      }
+      return;
+    }
 
+    // Seleção (antes de começar): você CLICA em quem participa — padrão vazio.
+    el.hidden = false;
+    const member = (a) => {
+      const on = roster.includes(a.id);
+      return `
+        <button class="member member--${on ? "on" : "off"}" data-id="${a.id}" type="button"
+          aria-pressed="${on}" title="${(a.nome || a.name)} (${a.name}) — ${on ? "tirar da mesa" : "trazer pra mesa"}">
+          <span class="member__avatar">${agentAvatarHTML(a)}</span>
+          <span class="member__text">
+            <span class="member__name">${a.nome || a.name}</span>
+            <span class="member__cargo">${cargoCurtoOf(a)}</span>
+          </span>
+        </button>`;
+    };
     el.innerHTML = `
-      <div class="roster__zone roster__zone--room">
-        <span class="roster__label">Na sala <span class="roster__count">${inRoom.length + 1}</span></span>
+      <div class="roster__pick">
+        <span class="roster__label">Quem entra na mesa? <span class="roster__count">${inRoom.length + 1}</span></span>
         <div class="roster__members">
           <span class="member member--you" title="Você preside o conselho">
             <span class="member__avatar member__avatar--you">VC</span>
@@ -200,22 +223,13 @@ const Delfos = (() => {
               <span class="member__cargo">preside</span>
             </span>
           </span>
-          ${inRoom.map((a) => member(a, "in")).join("")}
-          ${inRoom.length === 0 ? `<span class="roster__hint">convoque membros &rarr;</span>` : ""}
+          ${AGENTS.map(member).join("")}
         </div>
-      </div>
-      <div class="roster__zone roster__zone--bench">
-        <span class="roster__label roster__label--muted">Fora</span>
-        <div class="roster__members">
-          ${bench.length ? bench.map((a) => member(a, "out")).join("") : `<span class="roster__hint">todos presentes</span>`}
-        </div>
+        ${inRoom.length === 0 ? `<span class="roster__hint">toque em quem você quer na reunião</span>` : ""}
       </div>`;
 
-    if (!busy) {
-      el.querySelectorAll(".member[data-id]").forEach((btn) => {
-        btn.addEventListener("click", () => toggleSeat(btn.dataset.id));
-      });
-    }
+    el.querySelectorAll(".member[data-id]").forEach((btn) =>
+      btn.addEventListener("click", () => toggleSeat(btn.dataset.id)));
   }
 
   function toggleSeat(id) {
