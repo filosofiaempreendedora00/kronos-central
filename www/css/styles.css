@@ -1519,7 +1519,25 @@ body::before {
 
   /* blocos */
   .block__hint { display: none; }
-  .agents-grid, .metrics-grid { grid-template-columns: 1fr; }
+
+  /* 2 cards por linha no mobile (agentes e métricas) */
+  .agents-grid, .metrics-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .agent-card { padding: 14px 14px 13px; gap: 12px; min-height: 0; }
+  .agent-card__avatar { width: 38px; height: 38px; font-size: 15px; }
+  .agent-card__name { font-size: 17px; }
+  .agent-card__cargo { font-size: 11px; }
+  .agent-card__blurb { font-size: 12px; }
+  .agent-card__easy { padding: 7px 10px; }
+  .metric-card { padding: 15px 15px 16px; gap: 8px; min-height: 0; }
+  .metric-card__value { font-size: 26px; }
+
+  /* 2 cards por linha na Biblioteca de prompts (fundamentos e agentes) */
+  .lib-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .lib-group__label { grid-column: 1 / -1; }
+  .nucleo-card { padding: 16px 16px 14px; gap: 7px; }
+  .nucleo-card__title { font-size: 19px; }
+  .nucleo-card__desc { font-size: 12.5px; line-height: 1.5; }
+  .nucleo-card__cta { font-size: 12.5px; }
   /* chat: header em 2 linhas (identidade em cima, ações embaixo) */
   .chat__head { gap: 12px 14px; flex-wrap: wrap; padding-bottom: 16px; }
   .chat__back { padding: 4px 2px; }
