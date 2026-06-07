@@ -153,6 +153,33 @@ const Cost = (() => {
     if (Number.isFinite(v) && v > 0) localStorage.setItem(KEY_BRL, String(v));
   }
 
+  /* --------- Budget Anthropic (estimativa — a API não expõe o saldo) -------
+     A chave de mensagens não lê o saldo da organização (não há endpoint público,
+     e o navegador não acessa a Admin API). Então o fundador registra quanto
+     colocou e a Central desconta o gasto rastreado para estimar o que resta. */
+  const KEY_BUDGET = "kronos.budget";
+  function getBudget() {
+    try { const b = JSON.parse(localStorage.getItem(KEY_BUDGET)); if (b && Number.isFinite(b.amountUSD) && b.amountUSD > 0) return b; } catch (_) {}
+    return null;
+  }
+  function setBudget(amountUSD) {
+    const v = parseFloat(amountUSD);
+    if (!Number.isFinite(v) || v <= 0) { localStorage.removeItem(KEY_BUDGET); return null; }
+    const b = { amountUSD: v, sinceTs: Date.now() }; // marca o saldo a partir de agora
+    localStorage.setItem(KEY_BUDGET, JSON.stringify(b));
+    return b;
+  }
+  function budgetStatus() {
+    const b = getBudget();
+    if (!b) return null;
+    const spent = all().filter((e) => e.ts >= b.sinceTs).reduce((a, e) => a + (e.costUSD || 0), 0);
+    return {
+      amountUSD: b.amountUSD, sinceTs: b.sinceTs, spentUSD: spent,
+      remainingUSD: Math.max(0, b.amountUSD - spent),
+      pct: Math.min(100, (spent / b.amountUSD) * 100),
+    };
+  }
+
   /* ----------------------------- Agregações ------------------------------ */
   function startOfDay(d) {
     const x = new Date(d);
@@ -236,5 +263,6 @@ const Cost = (() => {
   return {
     log, reset, all, summary, brlRate, setBrlRate, usd, brl, tok,
     mergeInto, exportJSON, importJSON, pullBackup, flushBackup, syncStatus,
+    getBudget, setBudget, budgetStatus,
   };
 })();

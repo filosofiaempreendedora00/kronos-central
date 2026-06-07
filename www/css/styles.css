@@ -962,7 +962,7 @@ body::before {
 /* ===================== O QUE MOVE O PONTEIRO (home) ===================== */
 .ponteiro {
   position: relative; overflow: hidden;
-  margin-bottom: var(--gap);
+  margin-bottom: 6px;
   padding: 24px 28px 22px;
   border: 1px solid var(--areia-22); border-radius: var(--radius);
   background:
@@ -993,7 +993,7 @@ body::before {
 .ponteiro__txt { font-size: 12.5px; font-weight: 300; line-height: 1.5; color: rgba(245,239,230,0.6); }
 
 /* divisor ornamental entre o ponteiro e a Delfos */
-.div-ornament { display: flex; justify-content: center; color: var(--areia); margin: 4px 0 26px; }
+.div-ornament { display: flex; justify-content: center; color: var(--areia); margin: 2px 0 12px; }
 .div-ornament__svg { width: 100%; max-width: 300px; height: 26px; }
 .ponteiro[hidden] + .div-ornament { display: none; }
 
@@ -1294,6 +1294,25 @@ body::before {
 .cost-note { font-size: 11.5px; font-weight: 300; line-height: 1.6; color: rgba(245,239,230,0.5); margin: 0; max-width: 560px; }
 .cost-backup { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 6px; }
 
+/* Budget Anthropic (estimativa) */
+.cost-budget__set { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.cost-budget__prefix { font-size: 13px; color: var(--areia); }
+.cost-budget__set input {
+  width: 130px; background: var(--sepia); border: 1px solid var(--areia-22);
+  border-radius: 8px; color: var(--creme); padding: 9px 11px; font-family: inherit; font-size: 16px;
+}
+.cost-budget__set input:focus { outline: none; border-color: var(--areia-40); }
+.cost-budget { display: flex; flex-direction: column; gap: 9px; margin-top: 4px; }
+.cost-budget__nums { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.cost-budget__rem { font-family: var(--font-title); font-weight: 600; font-size: 30px; color: var(--branco); line-height: 1; }
+.cost-budget__rem small { font-family: var(--font-body); font-weight: 400; font-size: 13px; color: var(--areia); }
+.cost-budget__of { font-size: 12px; color: rgba(245,239,230,0.55); }
+.cost-budget__bar { height: 7px; border-radius: 999px; background: var(--areia-12); overflow: hidden; }
+.cost-budget__bar span { display: block; height: 100%; background: var(--areia); border-radius: 999px; transition: width .35s ease; }
+.cost-budget__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--areia); }
+.cost-budget--low .cost-budget__bar span { background: #e0a08f; }
+.cost-budget--low .cost-budget__rem { color: #e7b6a7; }
+
 /* ============================== CONFIGURAÇÕES ============================== */
 #settingsView[hidden] { display: none; }
 .settings { display: flex; flex-direction: column; height: calc(100vh - 84px); height: calc(100dvh - var(--pad-top) - var(--pad-bottom)); min-height: 0; }
@@ -1397,6 +1416,15 @@ body::before {
   transition: border-color 0.18s ease, transform 0.18s ease;
 }
 .nucleo-card:hover { border-color: var(--areia-40); transform: translateY(-2px); }
+/* rosto do agente nos cards de Contextos */
+.nucleo-card__face {
+  width: 42px; height: 42px; border-radius: 50%; overflow: hidden;
+  display: grid; place-items: center; flex-shrink: 0;
+  background: var(--onix); border: 1px solid var(--areia-40);
+  color: var(--areia); font-family: var(--font-title); font-weight: 600; font-size: 15px;
+  margin-bottom: 6px;
+}
+.nucleo-card__face img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .nucleo-card__kicker {
   font-size: 11px; font-weight: 400; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--areia);
@@ -1619,7 +1647,7 @@ body::before {
   .ponteiro__q { font-size: 21px; }
   .ponteiro__hoje { font-size: 14.5px; margin-bottom: 14px; }
   .ponteiro__sub { grid-template-columns: 1fr; gap: 12px; }
-  .div-ornament { margin: 2px 0 22px; }
+  .div-ornament { margin: 0 0 10px; }
   .div-ornament__svg { max-width: 240px; }
 
   /* 2 cards por linha no mobile (agentes e métricas) */

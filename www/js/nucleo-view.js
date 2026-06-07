@@ -45,9 +45,10 @@ const NucleoView = (() => {
   }
 
   /* ------------------------------- Cards -------------------------------- */
-  function cardHtml(doc, kicker, title, desc) {
+  function cardHtml(doc, kicker, title, desc, face) {
     return `
-      <button class="nucleo-card" data-doc="${doc}" type="button">
+      <button class="nucleo-card${face ? " nucleo-card--agent" : ""}" data-doc="${doc}" type="button">
+        ${face ? `<span class="nucleo-card__face">${face}</span>` : ""}
         <span class="nucleo-card__kicker">${kicker}</span>
         <span class="nucleo-card__title">${title}</span>
         <span class="nucleo-card__desc">${desc}</span>
@@ -68,7 +69,7 @@ const NucleoView = (() => {
       const adj = Context.isEscopoPublished(a.id)
         ? ' <span class="lib-badge">publicado</span>'
         : (Context.isEscopoOverridden(a.id) ? ' <span class="lib-badge">ajustado (só aqui)</span>' : "");
-      return cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}${adj}`, a.nome || a.name, a.blurb || "Prompt-escopo do agente.");
+      return cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}${adj}`, a.nome || a.name, a.blurb || "Prompt-escopo do agente.", agentAvatarHTML(a));
     }).join("");
     const pessoas = cardHtml("cartilha", "Guardada por IAra", "Cartilha de Nomes",
       "Quem já opera, quem é a próxima a entrar e o banco de nomes dos próximos agentes.");

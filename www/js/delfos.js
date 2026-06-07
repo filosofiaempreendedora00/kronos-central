@@ -10,7 +10,6 @@ const Delfos = (() => {
   const KEY_THREAD = "kronos.delfos.thread";
   const KEY_ROSTER = "kronos.delfos.roster";
   const KEY_HISTORY = "kronos.delfos.history";
-  const HISTORY_MAX = 10;
 
   let thread = [];     // [{speaker:'user'|agentId, name, initials, content}]
   let roster = [];     // ids dos agentes sentados à mesa
@@ -39,11 +38,23 @@ const Delfos = (() => {
   function saveRoster() { localStorage.setItem(KEY_ROSTER, JSON.stringify(roster)); }
 
   /* ----------------------- Histórico de reuniões ------------------------- */
-  /* Guarda as últimas 10 reuniões no aparelho (localStorage). É só registro —
+  /* Guarda TODAS as reuniões no aparelho (localStorage). É só registro —
      reuniões antigas NUNCA são enviadas à API, então não geram custo. */
   function loadHistoryList() {
     try { const s = JSON.parse(localStorage.getItem(KEY_HISTORY)); if (Array.isArray(s)) return s; } catch (_) {}
     return [];
+  }
+  /* Salva tudo. Texto é leve; mas se a cota do navegador estourar, descarta só
+     as reuniões mais antigas até caber — o registro nunca trava nem some sozinho. */
+  function saveHistoryList(list) {
+    const arr = list.slice();
+    for (;;) {
+      try { localStorage.setItem(KEY_HISTORY, JSON.stringify(arr)); return; }
+      catch (_) {
+        if (arr.length <= 1) return;
+        arr.pop(); // remove a reunião mais antiga (final do array)
+      }
+    }
   }
   function archiveCurrent() {
     if (!thread.length) return;
@@ -54,7 +65,7 @@ const Delfos = (() => {
     const entry = { ts: Date.now(), title, participants, cost, thread: thread.slice() };
     const list = loadHistoryList();
     list.unshift(entry);
-    localStorage.setItem(KEY_HISTORY, JSON.stringify(list.slice(0, HISTORY_MAX)));
+    saveHistoryList(list);
   }
 
   /* ------------------------------- Abrir --------------------------------- */
@@ -466,7 +477,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
   function renderHistoryList() {
     histMode = "list";
     document.getElementById("delfosHistTitle").textContent = "Histórico";
-    document.getElementById("delfosHistSub").textContent = "últimas reuniões (até 10)";
+    document.getElementById("delfosHistSub").textContent = "todas as reuniões";
     const body = document.getElementById("delfosHistoryBody");
     const list = loadHistoryList();
     if (!list.length) {
