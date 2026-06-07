@@ -125,16 +125,8 @@ function makeAgentCard(agent) {
       openEasyDirect(agent.id);
     });
 
-    // clique na FOTO → amplia (sem entrar no chat)
-    const avImg = card.querySelector(".agent-card__avatar img");
-    if (avImg && agent.photo) {
-      const av = card.querySelector(".agent-card__avatar");
-      av.classList.add("avatar--zoomable");
-      av.addEventListener("click", (e) => {
-        e.stopPropagation();
-        openLightbox(agent.photoFull || agent.photo, agent.nome || agent.name);
-      });
-    }
+    // A foto no card NÃO abre lightbox (evita missclick) — clicar em qualquer
+    // ponto do card leva ao chat. Lá dentro, sim, a foto amplia.
 
   return card;
 }

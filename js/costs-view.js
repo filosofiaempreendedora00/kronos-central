@@ -99,6 +99,11 @@ const CostsView = (() => {
       <div class="cost-cards">${periodCards}</div>
 
       <section class="cost-section">
+        <h3 class="cost-section__title">Budget na Anthropic</h3>
+        ${budgetBlock()}
+      </section>
+
+      <section class="cost-section">
         <h3 class="cost-section__title">Por modo</h3>
         <div class="cost-list">${ctxRows}</div>
       </section>
@@ -139,6 +144,50 @@ const CostsView = (() => {
       renderFull();
     });
     bindBackup();
+    bindBudget();
+  }
+
+  /* ----------------------------- Budget Anthropic ------------------------ */
+  let budgetEditing = false;
+  function fmtShortDate(ts) {
+    const d = new Date(ts);
+    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }
+  function budgetBlock() {
+    const s = Cost.budgetStatus();
+    if (!s || budgetEditing) {
+      return `
+        <p class="cost-note">A Anthropic não expõe o saldo pela API (a chave de mensagens não lê o saldo da organização). Registre aqui quanto você colocou de crédito — a Central desconta o gasto rastreado e estima o que resta, pra você saber quando realimentar.</p>
+        <div class="cost-budget__set">
+          <span class="cost-budget__prefix">US$</span>
+          <input type="number" step="1" min="0" id="budgetInput" placeholder="ex.: 50" value="${s ? s.amountUSD : ""}" />
+          <button class="btn-solid" id="budgetSaveBtn" type="button">Registrar</button>
+        </div>`;
+    }
+    const lowClass = s.pct >= 80 ? " cost-budget--low" : "";
+    return `
+      <div class="cost-budget${lowClass}">
+        <div class="cost-budget__nums">
+          <span class="cost-budget__rem">${Cost.brl(s.remainingUSD)} <small>${Cost.usd(s.remainingUSD)}</small></span>
+          <span class="cost-budget__of">restam de ${Cost.usd(s.amountUSD)} colocados · marcado em ${fmtShortDate(s.sinceTs)}</span>
+        </div>
+        <div class="cost-budget__bar"><span style="width:${s.pct.toFixed(1)}%"></span></div>
+        <div class="cost-budget__foot">
+          <span>Gasto desde então: ${Cost.usd(s.spentUSD)} · ${Cost.brl(s.spentUSD)}</span>
+          <button class="btn-ghost btn-ghost--sm" id="budgetEditBtn" type="button">Atualizar saldo</button>
+        </div>
+        <p class="cost-note">Estimativa pelo uso rastreado neste app. Ao recolocar crédito, toque em “Atualizar saldo”.</p>
+      </div>`;
+  }
+  function bindBudget() {
+    const save = document.getElementById("budgetSaveBtn");
+    if (save) {
+      const doSave = () => { Cost.setBudget(document.getElementById("budgetInput").value); budgetEditing = false; renderFull(); };
+      save.addEventListener("click", doSave);
+      document.getElementById("budgetInput").addEventListener("keydown", (e) => { if (e.key === "Enter") doSave(); });
+    }
+    const edit = document.getElementById("budgetEditBtn");
+    if (edit) edit.addEventListener("click", () => { budgetEditing = true; renderFull(); });
   }
 
   function backupNote() {
