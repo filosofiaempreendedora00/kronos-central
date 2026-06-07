@@ -65,7 +65,9 @@ const NucleoView = (() => {
       cardHtml("briefing", `Camada 2 · você atualiza${date ? ` · ${date}` : ""}`, "Briefing Vivo",
         "O cenário atual da empresa. Todos os agentes leem por cima do Núcleo.");
     const agentes = AGENTS.map((a) => {
-      const adj = Context.isEscopoOverridden(a.id) ? ' <span class="lib-badge">ajustado</span>' : "";
+      const adj = Context.isEscopoPublished(a.id)
+        ? ' <span class="lib-badge">publicado</span>'
+        : (Context.isEscopoOverridden(a.id) ? ' <span class="lib-badge">ajustado (só aqui)</span>' : "");
       return cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}${adj}`, a.nome || a.name, a.blurb || "Prompt-escopo do agente.");
     }).join("");
     const pessoas = cardHtml("cartilha", "Guardada por IAra", "Cartilha de Nomes",
@@ -160,12 +162,25 @@ const NucleoView = (() => {
   function renderAgentDoc(a) {
     const body = document.getElementById("docBody");
     const overridden = Context.isEscopoOverridden(a.id);
+    const published = Context.isEscopoPublished(a.id);
+    const tag = published
+      ? "⟳ Ajustado pelo fundador via IAgo · publicado (todos os aparelhos)."
+      : "⟳ Ajustado pelo fundador via IAgo · só neste aparelho.";
     const banner = overridden
-      ? `<div class="doc-revert"><span>⟳ Ajustado pelo fundador (via IAgo).</span><button id="revertEscopoBtn" type="button">Reverter ao original</button></div>`
+      ? `<div class="doc-revert"><span>${tag}</span><button id="revertEscopoBtn" type="button">Reverter ao original</button></div>`
       : "";
     body.innerHTML = banner + mdToHtml(Context.effectiveEscopo(a) || "_Sem escopo definido._");
     const rb = document.getElementById("revertEscopoBtn");
-    if (rb) rb.addEventListener("click", () => { Context.revertEscopo(a.id); renderAgentDoc(a); });
+    if (rb) rb.addEventListener("click", async () => {
+      if (published) {
+        rb.disabled = true; rb.textContent = "revertendo…";
+        const r = await Context.revertEscopoPermanent(a.id);
+        if (!r.ok) { rb.disabled = false; rb.textContent = "Reverter ao original"; alert("Não consegui reverter: " + r.error); return; }
+      } else {
+        Context.revertEscopo(a.id);
+      }
+      renderAgentDoc(a);
+    });
   }
 
   function toDashboard() { App.navGo("dash"); }

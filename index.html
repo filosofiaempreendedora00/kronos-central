@@ -334,6 +334,22 @@
             <span class="settings__status" id="apiKeyStatus"></span>
           </section>
 
+          <!-- Publicar mudanças de inteligência (GitHub) -->
+          <section class="settings__section">
+            <h3 class="settings__title">Publicar mudanças (GitHub)</h3>
+            <p class="settings__desc">
+              Cole um <strong>token do GitHub</strong> com escrita no repositório
+              <strong>kronos-central</strong>. Com ele, quando você aprovar um ajuste do IAgo —
+              inclusive pelo celular — a mudança é <strong>publicada</strong> e passa a valer em
+              <strong>todos os aparelhos</strong>, na hora, sem rebuild. Fica salvo só neste dispositivo.
+            </p>
+            <div class="settings__keyrow">
+              <input type="password" id="ghTokenInput" class="field__input" placeholder="github_pat_… ou ghp_…" autocomplete="off" />
+              <button class="btn-solid" id="saveGhTokenBtn" type="button">Salvar</button>
+            </div>
+            <span class="settings__status" id="ghTokenStatus"></span>
+          </section>
+
           <!-- Acesso mobile -->
           <section class="settings__section">
             <h3 class="settings__title">Instalar no celular</h3>
@@ -432,6 +448,7 @@
 
   <script src="js/vendor/qrcode.js"></script>
   <script src="js/agents.js"></script>
+  <script src="js/sync.js"></script>
   <script src="js/context.js"></script>
   <script src="js/api.js"></script>
   <script src="js/cost.js"></script>

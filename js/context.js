@@ -28,20 +28,25 @@ const Context = (() => {
 
   function load() {
     readyPromise = (async () => {
-      try {
-        const [n, b] = await Promise.all([
-          fetchText("contexto/nucleo.md"),
-          fetchText("contexto/briefing.md"),
-        ]);
-        nucleoRaw = n;
-        briefingRaw = b;
-        localStorage.setItem(LS_N, n);
-        localStorage.setItem(LS_B, b);
-      } catch (_) {
-        // Offline / falha: usa o que estiver no cache do localStorage.
-        nucleoRaw = localStorage.getItem(LS_N) || nucleoRaw;
-        briefingRaw = localStorage.getItem(LS_B) || briefingRaw;
-      }
+      const base = (async () => {
+        try {
+          const [n, b] = await Promise.all([
+            fetchText("contexto/nucleo.md"),
+            fetchText("contexto/briefing.md"),
+          ]);
+          nucleoRaw = n;
+          briefingRaw = b;
+          localStorage.setItem(LS_N, n);
+          localStorage.setItem(LS_B, b);
+        } catch (_) {
+          // Offline / falha: usa o que estiver no cache do localStorage.
+          nucleoRaw = localStorage.getItem(LS_N) || nucleoRaw;
+          briefingRaw = localStorage.getItem(LS_B) || briefingRaw;
+        }
+      })();
+      // Carrega, em paralelo, os ajustes de prompt publicados (cross-device).
+      const sync = (typeof Sync !== "undefined") ? Sync.ready().catch(() => {}) : Promise.resolve();
+      await Promise.all([base, sync]);
     })();
     return readyPromise;
   }
@@ -94,40 +99,77 @@ const Context = (() => {
   /* O escopo de um agente pode ter um override (aplicado pelo fundador via
      proposta do IAgo). A versão efetiva = override (se houver) OU o do código. */
   const escopoKey = (id) => "kronos.escopo." + id;
+  /* Prioridade da versão efetiva do escopo:
+       1. ajuste PUBLICADO (Sync/GitHub) — vale em todos os aparelhos
+       2. ajuste só-deste-aparelho (localStorage) — usado quando não há token
+       3. o escopo do código (agents.js) */
   function effectiveEscopo(agent) {
     if (!agent) return "";
+    if (typeof Sync !== "undefined") { const r = Sync.getEscopo(agent.id); if (r != null) return r; }
     try { const o = localStorage.getItem(escopoKey(agent.id)); if (o != null) return o; } catch (_) {}
     return agent.escopo || "";
   }
   function isEscopoOverridden(id) {
+    if (typeof Sync !== "undefined" && Sync.has(id)) return true;
     try { return localStorage.getItem(escopoKey(id)) != null; } catch (_) { return false; }
   }
-  /* Aplica uma edição proposta (append ou replace). Retorna {ok, error}. */
+  /* "ajustado" publicado (cross-device) vs só neste aparelho — p/ rotular a UI. */
+  function isEscopoPublished(id) {
+    return typeof Sync !== "undefined" && Sync.has(id);
+  }
+
+  /* Calcula o texto resultante de uma edição (append/replace). {next} | {error}. */
+  function computeNext(base, mode, find, content) {
+    if (mode === "append") {
+      if (!content || !content.trim()) return { error: "Nada para adicionar." };
+      return { next: base.trimEnd() + "\n\n" + content.trim() };
+    }
+    if (mode === "replace") {
+      if (!find || !base.includes(find)) {
+        return { error: "O trecho a substituir não foi encontrado no prompt atual (precisa ser uma cópia exata)." };
+      }
+      return { next: base.replace(find, content || "") };
+    }
+    return { error: "Operação inválida: " + mode };
+  }
+
+  /* Aplica uma edição APENAS neste aparelho (fallback sem token). {ok, error}. */
   function applyEscopoEdit(agentId, mode, find, content) {
     const agent = (typeof AGENTS !== "undefined" ? AGENTS : []).find((a) => a.id === agentId);
     if (!agent) return { ok: false, error: "Agente não encontrado: " + agentId };
-    const base = effectiveEscopo(agent);
-    let next;
-    if (mode === "append") {
-      if (!content || !content.trim()) return { ok: false, error: "Nada para adicionar." };
-      next = base.trimEnd() + "\n\n" + content.trim();
-    } else if (mode === "replace") {
-      if (!find || !base.includes(find)) {
-        return { ok: false, error: "O trecho a substituir não foi encontrado no prompt atual (precisa ser uma cópia exata)." };
-      }
-      next = base.replace(find, content || "");
-    } else {
-      return { ok: false, error: "Operação inválida: " + mode };
-    }
+    const r = computeNext(effectiveEscopo(agent), mode, find, content);
+    if (r.error) return { ok: false, error: r.error };
     try {
-      localStorage.setItem(escopoKey(agentId), next);
+      localStorage.setItem(escopoKey(agentId), r.next);
       return { ok: true };
     } catch (e) {
       return { ok: false, error: "Falha ao salvar: " + e.message };
     }
   }
+
+  /* Aplica e PUBLICA (GitHub) — vale em todos os aparelhos. Promise<{ok,error}>. */
+  async function applyEscopoPermanent(agentId, mode, find, content, resumo) {
+    if (typeof Sync === "undefined") return { ok: false, error: "Sincronização indisponível." };
+    const agent = (typeof AGENTS !== "undefined" ? AGENTS : []).find((a) => a.id === agentId);
+    if (!agent) return { ok: false, error: "Agente não encontrado: " + agentId };
+    const r = computeNext(effectiveEscopo(agent), mode, find, content);
+    if (r.error) return { ok: false, error: r.error };
+    const res = await Sync.commit(agentId, r.next, resumo);
+    // publicado vira a fonte da verdade: remove o ajuste só-local pra não sombrear.
+    if (res.ok) { try { localStorage.removeItem(escopoKey(agentId)); } catch (_) {} }
+    return res;
+  }
+
+  /* Reverte só neste aparelho. */
   function revertEscopo(id) {
     try { localStorage.removeItem(escopoKey(id)); } catch (_) {}
+  }
+  /* Reverte e PUBLICA a reversão (some em todos os aparelhos). Promise<{ok,error}>. */
+  async function revertEscopoPermanent(id, resumo) {
+    let res = { ok: true };
+    if (typeof Sync !== "undefined" && Sync.has(id)) res = await Sync.remove(id, resumo);
+    if (res.ok) { try { localStorage.removeItem(escopoKey(id)); } catch (_) {} }
+    return res;
   }
 
   /* Biblioteca de prompts (acesso de leitura) — injetada no contexto do IAgo,
@@ -169,6 +211,7 @@ const Context = (() => {
 
   return {
     load, ready, systemFor, rawNucleo, rawBriefing, briefingDate,
-    effectiveEscopo, isEscopoOverridden, applyEscopoEdit, revertEscopo,
+    effectiveEscopo, isEscopoOverridden, isEscopoPublished,
+    applyEscopoEdit, applyEscopoPermanent, revertEscopo, revertEscopoPermanent,
   };
 })();

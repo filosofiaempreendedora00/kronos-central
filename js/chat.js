@@ -228,17 +228,37 @@ const Chat = (() => {
     const renderApplied = (msg, ok) => {
       actions.innerHTML = `<span class="propose__done ${ok ? "" : "propose__done--err"}">${msg}</span>`;
     };
-    if (already) {
-      renderApplied("✓ já aplicado", true);
-    } else {
-      actions.innerHTML = `<button class="propose__apply" type="button">Aplicar</button><button class="propose__discard" type="button">Descartar</button>`;
-      actions.querySelector(".propose__apply").addEventListener("click", () => {
+
+    const canPublish = () => typeof Sync !== "undefined" && Sync.configured();
+
+    async function onApply() {
+      if (canPublish()) {
+        // aprovar = publicar no GitHub → vale em TODOS os aparelhos, na hora.
+        renderApplied("⟳ publicando…", true);
+        const r = await Context.applyEscopoPermanent(json.agent, json.mode, json.find, json.content, json.resumo);
+        if (r.ok) { markApplied(raw); renderApplied(`✓ Publicado em ${targetName} · vale em todos os aparelhos`, true); }
+        else { renderActions(r.error); }
+      } else {
+        // sem token: aplica só neste aparelho (com dica de como publicar).
         const r = Context.applyEscopoEdit(json.agent, json.mode, json.find, json.content);
-        if (r.ok) { markApplied(raw); renderApplied(`✓ Aplicado ao prompt de ${targetName}`, true); }
-        else { renderApplied("⚠ " + r.error, false); }
-      });
+        if (r.ok) { markApplied(raw); renderApplied(`✓ Aplicado em ${targetName} (só neste aparelho)`, true); }
+        else { renderActions(r.error); }
+      }
+    }
+
+    function renderActions(errMsg) {
+      const publish = canPublish();
+      actions.innerHTML =
+        (errMsg ? `<span class="propose__err">⚠ ${escapeHtml(errMsg)}</span>` : "") +
+        `<button class="propose__apply" type="button">${publish ? "Aplicar e publicar" : "Aplicar (só aqui)"}</button>` +
+        `<button class="propose__discard" type="button">Descartar</button>` +
+        (publish ? "" : `<span class="propose__hint">Configure o token do GitHub em Configurar para publicar em todos os aparelhos.</span>`);
+      actions.querySelector(".propose__apply").addEventListener("click", onApply);
       actions.querySelector(".propose__discard").addEventListener("click", () => card.remove());
     }
+
+    if (already) renderApplied("✓ já aplicado", true);
+    else renderActions();
     return card;
   }
   function escapeHtml(s) {
