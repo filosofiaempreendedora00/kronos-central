@@ -165,6 +165,9 @@ const Settings = (() => {
     document.getElementById("ghTokenInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") saveGhToken();
     });
+    document.getElementById("logoutBtn")?.addEventListener("click", () => {
+      if (typeof Auth !== "undefined" && confirm("Sair e bloquear a Central neste aparelho?")) Auth.logout();
+    });
     ["mobileHost", "mobilePort"].forEach((id) =>
       document.getElementById(id).addEventListener("input", saveMobile)
     );

@@ -381,6 +381,13 @@ function renderPonteiro() {
 }
 
 function init() {
+  // Portão de acesso: nada é carregado/renderizado antes de logar.
+  if (typeof Auth !== "undefined") {
+    const gate = document.getElementById("authGate");
+    if (!Auth.ok()) { Auth.showGate(() => location.reload()); return; }
+    if (gate) gate.hidden = true;
+  }
+
   Context.load(); // carrega Núcleo + Briefing (alimenta todos os agentes)
   Context.ready().then(renderPonteiro).catch(() => {}); // atualiza com a versão da rede
   // Funde o histórico de custos publicado no GitHub (se houver token) — cross-device.

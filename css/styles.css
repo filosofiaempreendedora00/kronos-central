@@ -1474,6 +1474,41 @@ body::before {
 }
 .cart-chip:hover { color: var(--creme); border-color: var(--areia-40); }
 .cart-chip[hidden] { display: none; }
+
+/* Portão de acesso (login) */
+.authgate {
+  position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px;
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(120,90,60,0.18), transparent 60%),
+    linear-gradient(rgba(15,9,4,0.86), rgba(12,7,3,0.94)),
+    url("../assets/areia-onix.png");
+  background-size: cover; background-position: center;
+}
+.authgate[hidden] { display: none; }
+.authgate__panel {
+  width: min(380px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center;
+  background: linear-gradient(rgba(21,12,6,0.55), rgba(21,12,6,0.78)), url("../assets/areia-sepia.png");
+  background-size: cover; background-position: center;
+  border: 1px solid var(--areia-22); border-radius: 18px; padding: 34px 28px 28px;
+}
+.authgate__logo { height: 30px; width: auto; margin-bottom: 18px; }
+.authgate__title { margin: 0; font-family: var(--font-title); font-weight: 600; font-size: 26px; color: var(--branco); }
+.authgate__sub { margin: 6px 0 22px; font-size: 13px; color: var(--areia); }
+.authgate__field { width: 100%; display: flex; flex-direction: column; gap: 5px; text-align: left; margin-bottom: 12px; }
+.authgate__field span { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--areia); }
+.authgate__field input {
+  width: 100%; box-sizing: border-box; background: var(--onix); border: 1px solid var(--areia-22);
+  border-radius: 10px; color: var(--creme); padding: 12px 13px; font-family: inherit; font-size: 16px;
+}
+.authgate__field input:focus { outline: none; border-color: var(--areia-40); }
+.authgate__btn {
+  width: 100%; margin-top: 8px; background: var(--areia); color: var(--onix); border: none; border-radius: 999px;
+  padding: 13px; font-size: 14.5px; font-weight: 600; font-family: inherit; cursor: pointer;
+}
+.authgate__btn:hover { background: var(--creme); }
+.authgate__btn:disabled { opacity: 0.6; cursor: default; }
+.authgate__err { min-height: 16px; margin-top: 10px; font-size: 12.5px; color: #e0a08f; }
+.authgate__hint { font-size: 11px; color: rgba(245,239,230,0.4); margin-top: 4px; }
 #docBody .cart-chip { margin-bottom: 14px; }
 
 /* Cartilha — modal sobre qualquer ambiente */
