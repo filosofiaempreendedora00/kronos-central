@@ -44,11 +44,50 @@ const NucleoView = (() => {
     return html;
   }
 
+  /* --------- Camada de VIDA dos cards especiais (anim. via CSS) ---------- */
+  const BFLY = `<svg class="bfly__svg" viewBox="-56 -42 112 88" aria-hidden="true">
+    <line class="bfly__body" x1="0" y1="-16" x2="0" y2="24"/>
+    <path class="bfly__ant" d="M0 -16 C -6 -28 -12 -30 -17 -28"/>
+    <path class="bfly__ant" d="M0 -16 C 6 -28 12 -30 17 -28"/>
+    <g class="bfly__wings">
+      <path d="M0 0 C -34 -30 -52 -22 -46 6 C -42 24 -18 18 0 0 Z"/>
+      <path d="M0 0 C 34 -30 52 -22 46 6 C 42 24 18 18 0 0 Z"/>
+      <path d="M0 0 C -24 6 -34 22 -22 36 C -8 34 -2 16 0 0 Z"/>
+      <path d="M0 0 C 24 6 34 22 22 36 C 8 34 2 16 0 0 Z"/>
+    </g>
+  </svg>`;
+  const LEAF = `<svg class="leaf__svg" viewBox="0 0 40 60" aria-hidden="true">
+    <path class="leaf__stem" d="M20 60 C 18 42 20 26 28 12"/>
+    <path class="leaf__blade" d="M22 42 C 8 40 2 28 4 16 C 20 18 28 30 22 42 Z"/>
+    <path class="leaf__blade" d="M26 30 C 14 28 8 16 10 6 C 24 10 32 22 26 30 Z"/>
+  </svg>`;
+  const POLLEN = [[14,80,0,11,3],[30,90,3,13,2],[48,74,6,10,3.5],[64,86,1.5,12,2.5],[78,68,4.5,14,3],[88,82,8,11,2],[22,62,9,15,2.5]];
+  const EMBERS = [[24,84,0,9,2.5],[40,92,3,11,2],[58,80,6,8,3],[72,88,1.5,10,2],[86,76,4,12,2.5]];
+  const dots = (cls, arr) => arr.map(([l, t, d, u, s]) =>
+    `<span class="${cls}" style="left:${l}%;top:${t}%;width:${s}px;height:${s}px;--d:${d}s;--u:${u}s"></span>`).join("");
+  function decorHtml(variant) {
+    if (variant === "living") {
+      return `<span class="card-decor" aria-hidden="true">
+        <span class="cd-sun"></span>
+        <span class="leaf leaf--a">${LEAF}</span>
+        <span class="leaf leaf--b">${LEAF}</span>
+        <span class="bfly bfly--a"><span class="bfly__bob">${BFLY}</span></span>
+        <span class="bfly bfly--b"><span class="bfly__bob">${BFLY}</span></span>
+        ${dots("pollen", POLLEN)}
+      </span>`;
+    }
+    if (variant === "core") {
+      return `<span class="card-decor" aria-hidden="true"><span class="cd-glow"></span>${dots("ember", EMBERS)}</span>`;
+    }
+    return "";
+  }
+
   /* ------------------------------- Cards -------------------------------- */
   function cardHtml(doc, kicker, title, desc, face, variant) {
     const cls = "nucleo-card" + (face ? " nucleo-card--agent" : "") + (variant ? " nucleo-card--" + variant : "");
     return `
       <button class="${cls}" data-doc="${doc}" type="button">
+        ${decorHtml(variant)}
         ${face ? `<span class="nucleo-card__face">${face}</span>` : ""}
         <span class="nucleo-card__kicker">${kicker}</span>
         <span class="nucleo-card__title">${title}</span>

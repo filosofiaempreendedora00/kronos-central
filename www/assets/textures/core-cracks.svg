@@ -11,7 +11,7 @@
   </defs>
   <g fill="none" stroke="url(#ember)" stroke-linecap="round" stroke-linejoin="round">
     <!-- glow pass -->
-    <g filter="url(#glow)" opacity="0.5">
+    <g filter="url(#glow)" opacity="0.32">
       <path d="M-10 250 L70 232 L120 250 L168 214 L210 226 L150 250" stroke-width="2.4"/>
       <path d="M168 214 L196 150 L240 120 L262 56 L300 30" stroke-width="2.2"/>
       <path d="M240 120 L320 132 L372 96 L440 110 L500 84" stroke-width="2"/>
@@ -20,7 +20,7 @@
       <path d="M120 250 L132 300" stroke-width="1.4"/>
     </g>
     <!-- sharp pass -->
-    <g opacity="0.72">
+    <g opacity="0.5">
       <path d="M-10 250 L70 232 L120 250 L168 214 L210 226 L150 250" stroke-width="1.1"/>
       <path d="M168 214 L196 150 L240 120 L262 56 L300 30" stroke-width="1"/>
       <path d="M240 120 L320 132 L372 96 L440 110 L500 84" stroke-width="0.9"/>

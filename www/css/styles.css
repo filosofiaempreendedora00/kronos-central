@@ -1416,7 +1416,9 @@ body::before {
   border: 1px solid var(--areia-22); border-radius: var(--radius);
   color: var(--creme); font-family: var(--font-body);
   transition: border-color 0.18s ease, transform 0.18s ease;
+  position: relative; overflow: hidden;
 }
+.nucleo-card > span { position: relative; z-index: 1; } /* conteúdo acima da decoração */
 .nucleo-card:hover { border-color: var(--areia-40); transform: translateY(-2px); }
 /* rosto do agente nos cards de Contextos */
 .nucleo-card__face {
@@ -1452,20 +1454,90 @@ body::before {
 .nucleo-card--core .nucleo-card__kicker { color: #cf8a6a; }
 .nucleo-card--core:hover { border-color: rgba(205,92,52,0.55); }
 
-/* Briefing Vivo — natureza: verde, borboletas, vida e paz */
+/* Briefing Vivo — natureza viva (verde; borboletas/folhas/pólen animados via decor) */
 .nucleo-card--living {
   background:
-    url("../assets/textures/briefing-nature.svg"),
-    radial-gradient(95% 85% at 85% 14%, rgba(126,176,96,0.20), transparent 56%),
+    radial-gradient(95% 85% at 85% 14%, rgba(126,176,96,0.18), transparent 56%),
     linear-gradient(155deg, #1d2614, #14180e 72%);
-  background-size: cover, cover, cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
   border-color: rgba(126,164,94,0.30);
 }
 .nucleo-card--living .nucleo-card__title { color: #e9f1da; }
 .nucleo-card--living .nucleo-card__kicker { color: #abc795; }
 .nucleo-card--living:hover { border-color: rgba(156,196,116,0.5); }
+
+/* ===== Camada de VIDA (decoração animada, suave/transparente) ===== */
+.card-decor { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+
+/* — Briefing: sol respirando, folhas balançando, borboletas e pólen — */
+.cd-sun {
+  position: absolute; right: -14%; top: -24%; width: 64%; height: 78%;
+  background: radial-gradient(closest-side, rgba(196,228,150,0.20), rgba(196,228,150,0.05) 55%, transparent 76%);
+  filter: blur(2px); animation: cd-sun 9s ease-in-out infinite;
+}
+@keyframes cd-sun { 0%,100% { opacity: .65; transform: scale(1); } 50% { opacity: 1; transform: scale(1.07); } }
+
+.leaf { position: absolute; bottom: -8px; transform-origin: bottom center; opacity: .4; }
+.leaf--a { left: -8px; width: 56px; animation: sway 5.5s ease-in-out infinite; }
+.leaf--b { left: 30px; width: 38px; opacity: .26; animation: sway 6.8s ease-in-out -1.6s infinite; }
+.leaf__svg { width: 100%; height: auto; display: block; }
+.leaf__stem { fill: none; stroke: #84b06e; stroke-width: 1.4; stroke-linecap: round; }
+.leaf__blade { fill: #6fa65e; }
+@keyframes sway { 0%,100% { transform: rotate(-2.5deg); } 50% { transform: rotate(3deg); } }
+
+.bfly { position: absolute; opacity: .5; }
+.bfly--a { left: 58%; top: 22%; animation: drift-a 15s ease-in-out infinite; }
+.bfly--b { left: 28%; top: 50%; opacity: .4; animation: drift-b 19s ease-in-out infinite; }
+.bfly__bob { display: block; animation: bob .62s ease-in-out infinite; }
+.bfly--b .bfly__bob { animation-duration: .74s; }
+.bfly__svg { width: 30px; height: auto; display: block; overflow: visible; }
+.bfly--b .bfly__svg { width: 22px; }
+.bfly__wings { transform-box: fill-box; transform-origin: center; animation: flap .62s ease-in-out infinite; }
+.bfly--b .bfly__wings { animation-duration: .74s; }
+.bfly__wings path { fill: rgba(150,200,120,0.78); stroke: rgba(63,107,60,0.7); stroke-width: .7; }
+.bfly__body { stroke: rgba(52,80,47,0.85); stroke-width: 2.6; stroke-linecap: round; }
+.bfly__ant { fill: none; stroke: rgba(52,80,47,0.75); stroke-width: 1; }
+@keyframes flap { 0%,100% { transform: scaleX(1); } 48% { transform: scaleX(.32); } }
+@keyframes bob { 0%,100% { transform: translateY(0); } 48% { transform: translateY(1.6px); } }
+@keyframes drift-a {
+  0% { transform: translate(0,0) rotate(-5deg); } 25% { transform: translate(-26px,14px) rotate(4deg); }
+  50% { transform: translate(-46px,-8px) rotate(-3deg); } 75% { transform: translate(-18px,20px) rotate(5deg); }
+  100% { transform: translate(0,0) rotate(-5deg); }
+}
+@keyframes drift-b {
+  0% { transform: translate(0,0) rotate(4deg); } 33% { transform: translate(30px,-16px) rotate(-4deg); }
+  66% { transform: translate(10px,12px) rotate(3deg); } 100% { transform: translate(0,0) rotate(4deg); }
+}
+.pollen {
+  position: absolute; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle, rgba(214,236,172,0.9), rgba(180,210,130,0.2));
+  animation: rise var(--u,12s) linear var(--d,0s) infinite;
+}
+
+/* — Núcleo: brasa respirando + faíscas subindo — */
+.cd-glow {
+  position: absolute; left: 8%; bottom: -32%; width: 84%; height: 84%;
+  background: radial-gradient(closest-side, rgba(204,72,30,0.26), rgba(150,45,20,0.07) 55%, transparent 76%);
+  filter: blur(3px); animation: cd-glow 6s ease-in-out infinite;
+}
+@keyframes cd-glow { 0%,100% { opacity: .55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+.ember {
+  position: absolute; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle, rgba(255,150,70,0.95), rgba(200,70,20,0.2));
+  animation: rise var(--u,10s) linear var(--d,0s) infinite;
+}
+@keyframes rise {
+  0% { transform: translate(0,0); opacity: 0; }
+  12% { opacity: .75; }
+  55% { transform: translate(7px,-38px); opacity: .5; }
+  100% { transform: translate(-4px,-66px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cd-sun, .cd-glow, .leaf, .bfly, .bfly__bob, .bfly__wings, .pollen, .ember { animation: none !important; }
+  .pollen, .ember { opacity: .4; }
+  .bfly__wings { transform: scaleX(.9); }
+}
 
 /* Chip da Cartilha (no chat da IAra e no doc dela) */
 .cart-chip {
