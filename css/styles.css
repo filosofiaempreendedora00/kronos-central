@@ -1487,36 +1487,39 @@ body::before {
 }
 @keyframes cd-sun { 0%,100% { opacity: .65; transform: scale(1); } 50% { opacity: 1; transform: scale(1.07); } }
 
-.leaf { position: absolute; bottom: -8px; transform-origin: bottom center; opacity: .5; }
-.leaf--a { left: -8px; width: 56px; animation: sway 5.5s ease-in-out infinite; }
-.leaf--b { left: 30px; width: 38px; opacity: .34; animation: sway 6.8s ease-in-out -1.6s infinite; }
-.leaf__svg { width: 100%; height: auto; display: block; }
-.leaf__stem { fill: none; stroke: #84b06e; stroke-width: 1.4; stroke-linecap: round; }
-.leaf__blade { fill: #6fa65e; }
-@keyframes sway { 0%,100% { transform: rotate(-2.5deg); } 50% { transform: rotate(3deg); } }
+/* graminhas e florzinhas finas, balançando com o vento (sway escalonado) */
+.flora { position: absolute; bottom: -3px; transform-origin: bottom center; opacity: .56;
+  animation: sway var(--sw,6s) ease-in-out var(--sd,0s) infinite; }
+.flora--grass { width: 26px; }
+.flora--flower { width: 22px; opacity: .62; }
+.grass__svg, .flower__svg { width: 100%; height: auto; display: block; }
+.grass__svg path { fill: none; stroke: #7cab66; stroke-width: 1.2; stroke-linecap: round; }
+.flower__stem { fill: none; stroke: #7cab66; stroke-width: 1.2; stroke-linecap: round; }
+.flower__leaf { fill: #6fa65e; }
+.flower__petal { fill: rgba(232,224,186,0.9); }
+.flower__center { fill: #d9a85a; }
+@keyframes sway { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3.5deg); } }
 
-.bfly { position: absolute; opacity: .66; }
-.bfly--a { left: 58%; top: 22%; animation: drift-a 15s ease-in-out infinite; }
-.bfly--b { left: 28%; top: 50%; opacity: .52; animation: drift-b 19s ease-in-out infinite; }
-.bfly__bob { display: block; animation: bob .62s ease-in-out infinite; }
-.bfly--b .bfly__bob { animation-duration: .74s; }
+/* UMA borboleta: passeia por todo o card (preferindo as áreas com menos texto,
+   à direita), inclinando mais ao voar — sensação de movimento direcionado */
+.bfly { position: absolute; left: 60%; top: 18%; opacity: .68; animation: flyabout 18s ease-in-out infinite; }
+.bfly__bob { display: block; animation: bob .6s ease-in-out infinite; }
 .bfly__svg { width: 30px; height: auto; display: block; overflow: visible; }
-.bfly--b .bfly__svg { width: 22px; }
-.bfly__wings { transform-box: fill-box; transform-origin: center; animation: flap .62s ease-in-out infinite; }
-.bfly--b .bfly__wings { animation-duration: .74s; }
+.bfly__wings { transform-box: fill-box; transform-origin: center; animation: flap .6s ease-in-out infinite; }
 .bfly__wings path { fill: rgba(182,224,142,0.85); stroke: rgba(70,112,64,0.7); stroke-width: .7; }
 .bfly__body { stroke: rgba(52,80,47,0.85); stroke-width: 2.6; stroke-linecap: round; }
 .bfly__ant { fill: none; stroke: rgba(52,80,47,0.75); stroke-width: 1; }
 @keyframes flap { 0%,100% { transform: scaleX(1); } 48% { transform: scaleX(.32); } }
 @keyframes bob { 0%,100% { transform: translateY(0); } 48% { transform: translateY(1.6px); } }
-@keyframes drift-a {
-  0% { transform: translate(0,0) rotate(-5deg); } 25% { transform: translate(-26px,14px) rotate(4deg); }
-  50% { transform: translate(-46px,-8px) rotate(-3deg); } 75% { transform: translate(-18px,20px) rotate(5deg); }
-  100% { transform: translate(0,0) rotate(-5deg); }
-}
-@keyframes drift-b {
-  0% { transform: translate(0,0) rotate(4deg); } 33% { transform: translate(30px,-16px) rotate(-4deg); }
-  66% { transform: translate(10px,12px) rotate(3deg); } 100% { transform: translate(0,0) rotate(4deg); }
+@keyframes flyabout {
+  0%   { transform: translate(0,0) rotate(11deg); }
+  14%  { transform: translate(22px,-12px) rotate(17deg); }
+  28%  { transform: translate(42px,12px) rotate(-7deg); }
+  42%  { transform: translate(8px,30px) rotate(-13deg); }
+  56%  { transform: translate(-46px,18px) rotate(-17deg); }
+  70%  { transform: translate(-74px,-10px) rotate(-10deg); }
+  82%  { transform: translate(-26px,-26px) rotate(14deg); }
+  100% { transform: translate(0,0) rotate(11deg); }
 }
 .pollen {
   position: absolute; border-radius: 50%; opacity: 0;
@@ -1544,7 +1547,7 @@ body::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cd-sun, .cd-glow, .leaf, .bfly, .bfly__bob, .bfly__wings, .pollen, .ember { animation: none !important; }
+  .cd-sun, .cd-glow, .flora, .bfly, .bfly__bob, .bfly__wings, .pollen, .ember { animation: none !important; }
   .pollen, .ember { opacity: .4; }
   .bfly__wings { transform: scaleX(.9); }
 }
