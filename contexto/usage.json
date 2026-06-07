@@ -1,0 +1,27 @@
+{
+  "type": "kronos.usage",
+  "version": 1,
+  "updatedAt": "2026-06-07T23:14:55.246Z",
+  "entries": [
+    {
+      "ts": 1780793269560,
+      "context": "chat",
+      "agentId": "head-rh",
+      "agentName": "Chief Agent Officer",
+      "input": 2831,
+      "output": 65,
+      "costUSD": 0.009468,
+      "id": "L1780793269560-head-rh-chat-9468"
+    },
+    {
+      "id": "mq4efuph5t8tbeb",
+      "ts": 1780874069813,
+      "context": "chat",
+      "agentId": "prompt-engineer",
+      "agentName": "Engenheiro de Prompt",
+      "input": 34,
+      "output": 407,
+      "costUSD": 0.0525945
+    }
+  ]
+}
