@@ -44,6 +44,9 @@ const Settings = (() => {
     document.getElementById("apiKeyInput").value = localStorage.getItem(LS_KEY) || "";
     updateKeyStatus();
 
+    document.getElementById("ghTokenInput").value = (typeof Sync !== "undefined") ? Sync.token() : "";
+    updateGhStatus();
+
     document.getElementById("mobileHost").value = hostDefault();
     document.getElementById("mobilePort").value = portDefault();
     renderMobile();
@@ -66,6 +69,31 @@ const Settings = (() => {
     const has = !!localStorage.getItem(LS_KEY);
     el.textContent = has ? "Chave configurada ✓" : "Nenhuma chave salva.";
     el.classList.toggle("settings__status--ok", has);
+  }
+
+  /* --------------------- Token do GitHub (publicar) --------------------- */
+  function saveGhToken() {
+    const v = document.getElementById("ghTokenInput").value.trim();
+    if (typeof Sync !== "undefined") {
+      Sync.setToken(v);
+      Sync.load().then(updateGhStatus); // valida o token buscando o arquivo
+    }
+    updateGhStatus();
+  }
+  function updateGhStatus() {
+    const el = document.getElementById("ghTokenStatus");
+    if (!el) return;
+    if (typeof Sync === "undefined") { el.textContent = ""; return; }
+    const s = Sync.status();
+    if (!s.configured) {
+      el.textContent = "Sem token — os ajustes do IAgo ficam só neste aparelho.";
+      el.classList.remove("settings__status--ok");
+      return;
+    }
+    el.textContent = s.error
+      ? ("Token salvo, mas houve um erro de acesso: " + s.error)
+      : `Token configurado ✓ · ${s.count} ajuste(s) publicado(s).`;
+    el.classList.toggle("settings__status--ok", !s.error);
   }
 
   /* ----------------------------- Acesso mobile --------------------------- */
@@ -132,6 +160,10 @@ const Settings = (() => {
     document.getElementById("saveApiKeyBtn").addEventListener("click", saveKey);
     document.getElementById("apiKeyInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") saveKey();
+    });
+    document.getElementById("saveGhTokenBtn").addEventListener("click", saveGhToken);
+    document.getElementById("ghTokenInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") saveGhToken();
     });
     ["mobileHost", "mobilePort"].forEach((id) =>
       document.getElementById(id).addEventListener("input", saveMobile)

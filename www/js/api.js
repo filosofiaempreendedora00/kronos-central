@@ -4,12 +4,16 @@
 
 const ANTHROPIC = {
   url: "https://api.anthropic.com/v1/messages",
-  model: "claude-sonnet-4-20250514",
+  // Sonnet 4.6 = mesma geração que você fala direto no Claude (NÃO é capado).
+  // Mesmo preço do Sonnet anterior, porém mais inteligente e com raciocínio
+  // estendido (thinking adaptativo) — o agente "pensa antes de responder".
+  model: "claude-sonnet-4-6",
   version: "2023-06-01",
-  maxTokens: 2048,
+  // teto generoso: thinking + resposta cabem com folga (só cobra o que usar).
+  maxTokens: 8192,
 };
 
-// Preço por 1 milhão de tokens (USD) — claude-sonnet-4
+// Preço por 1 milhão de tokens (USD) — claude-sonnet-4-6 (igual ao 4 anterior)
 const PRICING = {
   input: 3.0,
   output: 15.0,
@@ -79,6 +83,10 @@ async function streamMessage({ system, messages, onText, signal }) {
     body: JSON.stringify({
       model: ANTHROPIC.model,
       max_tokens: ANTHROPIC.maxTokens,
+      // RACIOCÍNIO ADAPTATIVO: o Claude decide sozinho quando (e quanto) pensar
+      // antes de responder. Em pergunta simples quase não pensa (não encarece);
+      // em pergunta difícil, raciocina a fundo — é o que tira o ar de "cru".
+      thinking: { type: "adaptive" },
       system: systemBlocks,
       messages: cachedMessages,
       stream: true,
