@@ -972,11 +972,13 @@ body::before {
   background-size: cover; background-position: center;
 }
 .ponteiro[hidden] { display: none; }
-.ponteiro__head { display: flex; align-items: center; gap: 13px; margin-bottom: 12px; }
-.ponteiro__icon { height: 38px; width: auto; display: block; flex-shrink: 0; }
+.ponteiro__head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+/* ponteiro deitado, apontando para o título (tip à direita) */
+.ponteiro__iconwrap { width: 48px; height: 26px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ponteiro__icon { height: 46px; width: auto; display: block; transform: rotate(90deg); }
 .ponteiro__q {
   margin: 0; font-family: var(--font-title); font-weight: 600;
-  font-size: 23px; color: var(--branco); line-height: 1.1;
+  font-size: 27px; color: var(--branco); line-height: 1.08;
 }
 .ponteiro__hoje {
   margin: 0 0 18px; font-size: 16px; line-height: 1.62; color: var(--creme); max-width: 780px;
@@ -989,6 +991,11 @@ body::before {
 .ponteiro__item[hidden] { display: none; }
 .ponteiro__lbl { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--areia); }
 .ponteiro__txt { font-size: 12.5px; font-weight: 300; line-height: 1.5; color: rgba(245,239,230,0.6); }
+
+/* divisor ornamental entre o ponteiro e a Delfos */
+.div-ornament { display: flex; justify-content: center; color: var(--areia); margin: 4px 0 26px; }
+.div-ornament__svg { width: 100%; max-width: 300px; height: 26px; }
+.ponteiro[hidden] + .div-ornament { display: none; }
 
 /* ============================== DELFOS — BANNER ============================== */
 .delfos-banner {
@@ -1605,12 +1612,15 @@ body::before {
   /* blocos */
   .block__hint { display: none; }
 
-  /* ponteiro: compacto e empilhado no mobile */
-  .ponteiro { padding: 18px 18px 16px; }
-  .ponteiro__icon { height: 32px; }
-  .ponteiro__q { font-size: 19px; }
+  /* ponteiro: respiro do topo + compacto e empilhado no mobile */
+  .ponteiro { margin-top: 16px; padding: 18px 18px 16px; }
+  .ponteiro__iconwrap { width: 42px; height: 24px; }
+  .ponteiro__icon { height: 40px; }
+  .ponteiro__q { font-size: 21px; }
   .ponteiro__hoje { font-size: 14.5px; margin-bottom: 14px; }
   .ponteiro__sub { grid-template-columns: 1fr; gap: 12px; }
+  .div-ornament { margin: 2px 0 22px; }
+  .div-ornament__svg { max-width: 240px; }
 
   /* 2 cards por linha no mobile (agentes e métricas) */
   .agents-grid, .metrics-grid { grid-template-columns: 1fr 1fr; gap: 12px; }

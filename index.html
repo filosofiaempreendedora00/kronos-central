@@ -84,7 +84,7 @@
           <!-- O QUE MOVE O PONTEIRO -->
           <section class="ponteiro" id="ponteiroSection" hidden>
             <div class="ponteiro__head">
-              <img class="ponteiro__icon" src="assets/icons/ponteiro-areia.png" alt="" aria-hidden="true" />
+              <span class="ponteiro__iconwrap"><img class="ponteiro__icon" src="assets/icons/ponteiro-areia.png" alt="" aria-hidden="true" /></span>
               <h2 class="ponteiro__q">O que move o ponteiro hoje?</h2>
             </div>
             <p class="ponteiro__hoje" id="ponteiroHoje"></p>
@@ -99,6 +99,31 @@
               </div>
             </div>
           </section>
+
+          <!-- divisor ornamental (pegada grega): curvas nas laterais + ponto no meio -->
+          <div class="div-ornament" aria-hidden="true">
+            <svg class="div-ornament__svg" viewBox="0 0 320 28" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <linearGradient id="ornFade" gradientUnits="userSpaceOnUse" x1="34" y1="0" x2="150" y2="0">
+                  <stop offset="0" stop-color="currentColor" stop-opacity="0"/>
+                  <stop offset="1" stop-color="currentColor" stop-opacity="0.6"/>
+                </linearGradient>
+              </defs>
+              <!-- losango central -->
+              <path d="M160 7.5 l6.5 6.5 l-6.5 6.5 l-6.5 -6.5 z" fill="currentColor"/>
+              <circle cx="160" cy="14" r="1.5" fill="#150C06"/>
+              <!-- metade esquerda: linha que esmaece + voluta -->
+              <g fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round">
+                <line x1="58" y1="14" x2="151.5" y2="14" stroke="url(#ornFade)"/>
+                <path d="M58 14 c -10 0 -14 -6.5 -7 -9.5 c 3.8 -1.6 6.6 2 3.2 3.9" opacity="0.6"/>
+              </g>
+              <!-- metade direita: espelho da esquerda -->
+              <g fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" transform="translate(320,0) scale(-1,1)">
+                <line x1="58" y1="14" x2="151.5" y2="14" stroke="url(#ornFade)"/>
+                <path d="M58 14 c -10 0 -14 -6.5 -7 -9.5 c 3.8 -1.6 6.6 2 3.2 3.9" opacity="0.6"/>
+              </g>
+            </svg>
+          </div>
 
           <!-- ACESSO — DELFOS (sala de reuniões) -->
           <button class="delfos-banner" id="delfosEnter" type="button">
