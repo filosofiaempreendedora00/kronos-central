@@ -17,6 +17,7 @@ const AGENTS = [
     id: "ceo",
     nome: "TIAgo",
     name: "CEO",
+    cargoCurto: "CEO",
     role: "Estratégia & Visão",
     initials: "CE",
     status: "online",
@@ -31,6 +32,7 @@ const AGENTS = [
     id: "coo",
     nome: "MatIAs",
     name: "COO",
+    cargoCurto: "COO",
     role: "Operações & Execução",
     initials: "CO",
     status: "online",
@@ -45,6 +47,7 @@ const AGENTS = [
     id: "cfo",
     nome: "FabIAno",
     name: "CFO",
+    cargoCurto: "CFO",
     role: "Finanças & Capital",
     initials: "CF",
     status: "online",
@@ -59,6 +62,7 @@ const AGENTS = [
     id: "cro",
     nome: "DamIAno",
     name: "CRO Expert",
+    cargoCurto: "CRO",
     role: "Otimização de Conversão",
     initials: "CR",
     status: "online",
@@ -87,6 +91,7 @@ const AGENTS = [
     id: "prompt-engineer",
     nome: "IAgo",
     name: "Engenheiro de Prompt",
+    cargoCurto: "Prompt Eng.",
     role: "IA & Automação",
     initials: "EP",
     status: "online",
@@ -152,6 +157,7 @@ const AGENTS = [
     id: "head-rh",
     nome: "IAra",
     name: "Chief Agent Officer",
+    cargoCurto: "CAO",
     role: "Time de Agentes & Cultura",
     initials: "CA",
     photo: "assets/agents/iara.jpg",
@@ -201,6 +207,13 @@ const NIVEIS = [
 /* MODO DE CONVERSA — complementa o Núcleo no que ele não cobre: a ALTURA da
    conversa. Anexado ao prompt de todo agente pelo Context. */
 const CONVERSATION_DOCTRINE = `Responda na altura da conversa: papo aberto pede papo, não relatório. Não force a sua especialidade nem despeje conhecimento da sua área quando o assunto não pede — só aprofunde no técnico quando de fato importa. Se falta contexto para responder bem, pergunte antes de presumir: fique na mesma página que o fundador. Nunca liste suas referências ou credenciais — elas aparecem no seu julgamento, não no seu texto.`;
+
+/* Cargo curto (sigla) p/ lugares apertados — ex.: a sala Delfos. Convenção:
+   todo agente deve ter `cargoCurto`; sem ele, cai no cargo completo (name).
+   O cargo completo (name) segue nos cards e na Biblioteca (locais com espaço). */
+function cargoCurtoOf(agent) {
+  return (agent && (agent.cargoCurto || agent.name)) || "";
+}
 
 /* Avatar de um agente: foto (se houver) ou as iniciais. */
 function agentAvatarHTML(agent) {

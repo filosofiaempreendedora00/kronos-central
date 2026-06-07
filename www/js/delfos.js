@@ -174,7 +174,7 @@ const Delfos = (() => {
         <span class="member__avatar">${agentAvatarHTML(a)}</span>
         <span class="member__text">
           <span class="member__name">${a.nome || a.name}</span>
-          <span class="member__cargo">${a.name}</span>
+          <span class="member__cargo">${cargoCurtoOf(a)}</span>
         </span>
       </button>`;
 
