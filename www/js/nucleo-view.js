@@ -180,7 +180,8 @@ const NucleoView = (() => {
     const r = (typeof NAME_ROSTER !== "undefined") ? NAME_ROSTER : { prontos: { femininos: [], masculinos: [] }, backup: { nomes: [], nota: "" } };
     let h = "";
     h += `<div class="cart-sec"><h3 class="cart-sec__h">Em operação <span class="cart-sec__count">${op.length}</span></h3>` +
-      `<div class="namechips">${op.map((a) => chip(a.nome || a.name, "namechip--op", a.name)).join("")}</div></div>`;
+      `<div class="namechips">${op.map((a) => chip(a.nome || a.name, "namechip--op", a.name)).join("")}</div>` +
+      (r.excecao ? `<p class="cart-note">✦ ${esc(r.excecao)}</p>` : "") + `</div>`;
     if (r.proxima) {
       h += `<div class="cart-sec"><h3 class="cart-sec__h">Próxima a entrar</h3>` +
         `<div class="namechips">${chip(r.proxima.nome, "namechip--next", r.proxima.cargo)}</div>` +

@@ -153,7 +153,8 @@ const Context = (() => {
       `BANCO DE NOMES — prontos: femininos — ${r.prontos.femininos.join(", ")}; masculinos — ${r.prontos.masculinos.join(", ")}.`,
       `BANCO DE NOMES — backup (${r.backup.nota}): ${r.backup.nomes.join(", ")}.`,
       'Convenção: "IA" sempre maiúsculo no nome. Ao promover um nome reserva a agente ativo, ele sai do Banco e entra em "Em operação" com o cargo.',
-    ].join("\n");
+      r.excecao ? `EXCEÇÃO REGISTRADA: ${r.excecao}` : "",
+    ].filter(Boolean).join("\n");
   }
 
   /* ----------------------- Escopo efetivo + edições --------------------- */
