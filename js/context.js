@@ -209,8 +209,25 @@ const Context = (() => {
     return m ? m[1] : "";
   }
 
+  /* Resumo "O que move o ponteiro" — extraído do bloco PONTEIRO do Briefing.
+     Retorna { hoje, medio, longo }. Mantido pelo fundador/IAgo no briefing.md. */
+  function ponteiro() {
+    const t = briefingRaw || "";
+    const sec = t.match(/##\s*PONTEIRO[^\n]*\n([\s\S]*?)(?=\n##\s|$)/i);
+    const block = sec ? sec[1] : t;
+    const grab = (key) => {
+      const m = block.match(new RegExp("^[\\s>*-]*" + key + "\\s*[:：]\\s*(.+)$", "im"));
+      return m ? m[1].trim() : "";
+    };
+    return {
+      hoje: grab("HOJE"),
+      medio: grab("M[ÉE]DIO(?:\\s*PRAZO)?"),
+      longo: grab("LONGO(?:\\s*PRAZO)?"),
+    };
+  }
+
   return {
-    load, ready, systemFor, rawNucleo, rawBriefing, briefingDate,
+    load, ready, systemFor, rawNucleo, rawBriefing, briefingDate, ponteiro,
     effectiveEscopo, isEscopoOverridden, isEscopoPublished,
     applyEscopoEdit, applyEscopoPermanent, revertEscopo, revertEscopoPermanent,
   };

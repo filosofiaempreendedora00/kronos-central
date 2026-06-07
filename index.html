@@ -81,6 +81,25 @@
       <!-- ===================== VIEW: DASH CENTRAL ==================== -->
       <div id="dashboardView" class="view">
         <div class="view__inner">
+          <!-- O QUE MOVE O PONTEIRO -->
+          <section class="ponteiro" id="ponteiroSection" hidden>
+            <div class="ponteiro__head">
+              <img class="ponteiro__icon" src="assets/icons/ponteiro-areia.png" alt="" aria-hidden="true" />
+              <h2 class="ponteiro__q">O que move o ponteiro hoje?</h2>
+            </div>
+            <p class="ponteiro__hoje" id="ponteiroHoje"></p>
+            <div class="ponteiro__sub">
+              <div class="ponteiro__item" id="ponteiroMedioItem">
+                <span class="ponteiro__lbl">Médio prazo</span>
+                <span class="ponteiro__txt" id="ponteiroMedio"></span>
+              </div>
+              <div class="ponteiro__item" id="ponteiroLongoItem">
+                <span class="ponteiro__lbl">Longo prazo</span>
+                <span class="ponteiro__txt" id="ponteiroLongo"></span>
+              </div>
+            </div>
+          </section>
+
           <!-- ACESSO — DELFOS (sala de reuniões) -->
           <button class="delfos-banner" id="delfosEnter" type="button">
             <span class="delfos-banner__mark" id="delfosBannerMark" aria-hidden="true"></span>
