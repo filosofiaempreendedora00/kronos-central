@@ -363,7 +363,11 @@ function toggleCollapse() {
   localStorage.setItem("kronos.sidebarCollapsed", collapsed ? "1" : "0");
 }
 
-/* "O que move o ponteiro" — lê o bloco PONTEIRO do Briefing Vivo. */
+/* "O que move o ponteiro" — lê o bloco PONTEIRO do Briefing Vivo.
+   Começa FECHADO a cada entrada no app (estado só em memória): aparece só a
+   pergunta gigante; ao clicar, revela o conteúdo — o "efeito wow" de toda vez.
+   Trocar de aba mantém aberto (o DOM não é recriado); recarregar fecha de novo. */
+let ponteiroOpen = false;
 function renderPonteiro() {
   const sec = document.getElementById("ponteiroSection");
   if (!sec || typeof Context === "undefined" || !Context.ponteiro) return;
@@ -378,6 +382,15 @@ function renderPonteiro() {
   };
   setItem("ponteiroMedioItem", "ponteiroMedio", p.medio);
   setItem("ponteiroLongoItem", "ponteiroLongo", p.longo);
+  sec.classList.toggle("ponteiro--closed", !ponteiroOpen);
+  if (!sec.dataset.bound) {
+    sec.dataset.bound = "1";
+    sec.addEventListener("click", () => {
+      if (ponteiroOpen) return;        // já aberto: clicar não fecha
+      ponteiroOpen = true;
+      sec.classList.remove("ponteiro--closed");
+    });
+  }
 }
 
 function init() {

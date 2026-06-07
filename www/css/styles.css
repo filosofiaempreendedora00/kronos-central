@@ -656,6 +656,7 @@ body::before {
   gap: 14px;
   flex: 1;
 }
+.chat__avatar[hidden] { display: none; }
 .chat__avatar {
   width: 44px;
   height: 44px;
@@ -993,6 +994,27 @@ body::before {
 .ponteiro__item[hidden] { display: none; }
 .ponteiro__lbl { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--areia); }
 .ponteiro__txt { font-size: 12.5px; font-weight: 300; line-height: 1.5; color: rgba(245,239,230,0.6); }
+
+/* dica de "toque para revelar" — só no estado fechado */
+.ponteiro__hint { display: none; align-items: center; gap: 6px; font-size: 12px; letter-spacing: 0.06em; color: var(--areia); margin-top: 4px; }
+
+/* FECHADO: só a pergunta gigante preenchendo o container; conteúdo escondido */
+.ponteiro--closed {
+  cursor: pointer; min-height: 190px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.ponteiro--closed .ponteiro__hoje,
+.ponteiro--closed .ponteiro__sub { display: none; }
+.ponteiro--closed .ponteiro__hint { display: inline-flex; }
+.ponteiro--closed .ponteiro__head { margin-bottom: 12px; }
+.ponteiro--closed .ponteiro__q { font-size: clamp(30px, 5vw, 52px); line-height: 1.05; }
+.ponteiro--closed .ponteiro__iconwrap { width: 62px; height: 36px; }
+.ponteiro--closed .ponteiro__icon { height: 60px; }
+.ponteiro--closed:hover { border-color: var(--areia-40); }
+/* abrindo: revelação suave do conteúdo */
+.ponteiro:not(.ponteiro--closed) .ponteiro__hoje,
+.ponteiro:not(.ponteiro--closed) .ponteiro__sub { animation: ponteiroReveal 0.45s ease; }
+@keyframes ponteiroReveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 /* divisor ornamental entre o ponteiro e a Delfos */
 .div-ornament { display: flex; justify-content: center; color: var(--areia); margin: 2px 0 12px; }
