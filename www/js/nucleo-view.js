@@ -144,14 +144,22 @@ const NucleoView = (() => {
       cardHtml(`agent:${a.id}`, `${a.name} · ${a.role}${extraKicker || ""}${adjBadge(a)}`,
         a.nome || a.name, a.blurb || "Prompt-escopo do agente.", agentAvatarHTML(a), variant);
 
-    // IAgo — guardião dos prompts: vem primeiro, em destaque, com o aviso.
+    // IAgo — guardião dos prompts: card-herói horizontal (foto grande à esquerda,
+    // textos à direita, tag brilhante no canto), antes dos demais.
     const iago = AGENTS.find((a) => a.id === "prompt-engineer");
     const others = AGENTS.filter((a) => a.id !== "prompt-engineer");
-    const guardian = iago ? `
-      <div class="lib-guardian">
-        ${agentCard(iago, "guardian", ' <span class="lib-badge lib-badge--guardian">guardião dos prompts</span>')}
-        <p class="lib-guardian__note"><strong>Só o IAgo edita prompts.</strong> Pelas regras da KRONOS, ele é o <strong>único agente autorizado</strong> a alterar o prompt-escopo dos outros — e sempre com a <strong>sua aprovação</strong>. Os demais cards abaixo são leitura.</p>
-      </div>` : "";
+    const guardianCard = (a) => `
+      <button class="nucleo-card nucleo-card--guardian" data-doc="agent:${a.id}" type="button">
+        <span class="guard-badge"><span class="guard-badge__star" aria-hidden="true">✦</span>Guardião dos prompts</span>
+        <span class="guard-face">${agentAvatarHTML(a)}</span>
+        <span class="guard-body">
+          <span class="guard-name">${a.nome || a.name}</span>
+          <span class="guard-role">${a.name}${adjBadge(a)}</span>
+          <span class="guard-note">Único agente autorizado, pelas regras da KRONOS, a mexer no prompt-escopo dos outros — e sempre com a <strong>sua aprovação</strong>. Os demais cards abaixo são leitura.</span>
+          <span class="nucleo-card__cta">Abrir prompt <span aria-hidden="true">&rarr;</span></span>
+        </span>
+      </button>`;
+    const guardian = iago ? `<div class="lib-guardian">${guardianCard(iago)}</div>` : "";
     const rest = others.map((a) => agentCard(a)).join("");
 
     hub.innerHTML =
