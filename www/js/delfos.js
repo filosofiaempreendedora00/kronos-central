@@ -163,7 +163,7 @@ const Delfos = (() => {
       present.innerHTML = started
         ? `<span class="present__label">Na mesa</span>` +
           `<span class="present__av present__av--you" title="Você">VC</span>` +
-          inRoom.map((a) => `<span class="present__av" title="${(a.nome || a.name)} — ${a.name}">${a.initials}</span>`).join("")
+          inRoom.map((a) => `<span class="present__av" title="${(a.nome || a.name)} — ${a.name}">${agentAvatarHTML(a)}</span>`).join("")
         : "";
     }
     const bench = AGENTS.filter((a) => !roster.includes(a.id));
@@ -171,7 +171,7 @@ const Delfos = (() => {
     const member = (a, zone) => `
       <button class="member member--${zone}" data-id="${a.id}" type="button" ${busy ? "disabled" : ""}
         title="${(a.nome || a.name)} (${a.name}) — ${zone === "in" ? "remover da sala" : "trazer para a sala"}" aria-pressed="${zone === "in"}">
-        <span class="member__avatar">${a.initials}</span>
+        <span class="member__avatar">${agentAvatarHTML(a)}</span>
         <span class="member__name">${a.nome || a.name}</span>
       </button>`;
 
@@ -239,7 +239,7 @@ const Delfos = (() => {
     } else {
       wrap.innerHTML = `
         <div class="dmsg__head">
-          <span class="dmsg__avatar">${m.initials}</span>
+          <span class="dmsg__avatar">${agentAvatarHTML(AGENTS.find((x) => x.id === m.speaker)) || m.initials}</span>
           <span class="dmsg__name">${m.name}</span>
         </div>
         <div class="dmsg__bubble"></div>
@@ -445,7 +445,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
   function avatarsHtml(ids) {
     return (ids || []).map((id) => {
       const a = AGENTS.find((x) => x.id === id);
-      return a ? `<span class="present__av" title="${a.name}">${a.initials}</span>` : "";
+      return a ? `<span class="present__av" title="${a.name}">${agentAvatarHTML(a)}</span>` : "";
     }).join("");
   }
   function openHistory() {

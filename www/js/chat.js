@@ -54,7 +54,7 @@ const Chat = (() => {
     }
     history = loadHistory(agent.id);
 
-    document.getElementById("chatAvatar").textContent = agent.initials;
+    document.getElementById("chatAvatar").innerHTML = agentAvatarHTML(agent);
     document.getElementById("chatName").textContent = agent.nome || agent.name;
     document.getElementById("chatRole").textContent = `${agent.name} · ${agent.role}`;
 

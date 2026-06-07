@@ -34,7 +34,7 @@ function renderAgents() {
 
     card.innerHTML = `
       <div class="agent-card__top">
-        <span class="agent-card__avatar">${agent.initials}</span>
+        <span class="agent-card__avatar">${agentAvatarHTML(agent)}</span>
         <span class="agent-card__status agent-card__status--${agent.status}">
           <span class="dot"></span>${agent.status === "online" ? "Disponível" : "Offline"}
         </span>
