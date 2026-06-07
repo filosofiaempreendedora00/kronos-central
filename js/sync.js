@@ -165,5 +165,54 @@ const Sync = (() => {
 
   const status = () => ({ configured: configured(), count: Object.keys(overrides).length, error: lastError });
 
-  return { load, ready, getEscopo, has, all, commit, remove, setToken, token, configured, status, REPO };
+  /* -------- Leitura/escrita genérica de um arquivo JSON do repositório ------
+     Usado por outros módulos (ex.: backup do histórico de custos em usage.json).
+     Mantém o próprio sha por chamada (o chamador passa de volta no write). */
+  const apiUrlFor = (path) => `https://api.github.com/repos/${REPO.owner}/${REPO.name}/contents/${encodeURI(path)}`;
+  const rawUrlFor = (path) => `https://raw.githubusercontent.com/${REPO.owner}/${REPO.name}/${REPO.branch}/${encodeURI(path)}`;
+
+  async function readJson(path) {
+    const tk = token();
+    if (tk) {
+      const r = await fetch(apiUrlFor(path) + "?ref=" + REPO.branch, {
+        headers: { Authorization: "Bearer " + tk, Accept: "application/vnd.github+json" },
+        cache: "no-store",
+      });
+      if (r.status === 404) return { json: null, sha: null };
+      if (!r.ok) throw new Error("GitHub " + r.status);
+      const j = await r.json();
+      let parsed = null; try { parsed = JSON.parse(b64decode(j.content || "")); } catch (_) {}
+      return { json: parsed, sha: j.sha || null };
+    }
+    const r = await fetch(rawUrlFor(path) + "?t=" + Date.now(), { cache: "no-store" });
+    if (r.status === 404) return { json: null, sha: null };
+    if (!r.ok) throw new Error("raw " + r.status);
+    let parsed = null; try { parsed = JSON.parse(await r.text()); } catch (_) {}
+    return { json: parsed, sha: null };
+  }
+
+  async function writeJson(path, obj, sha, message) {
+    const tk = token();
+    if (!tk) return { ok: false, error: "Sem token do GitHub." };
+    const body = { message: message || "update", content: b64encode(JSON.stringify(obj, null, 2)), branch: REPO.branch };
+    if (sha) body.sha = sha;
+    let r;
+    try {
+      r = await fetch(apiUrlFor(path), {
+        method: "PUT",
+        headers: { Authorization: "Bearer " + tk, Accept: "application/vnd.github+json", "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch (_) { return { ok: false, error: "Falha de conexão com o GitHub." }; }
+    if (r.status === 409) return { ok: false, conflict: true, error: "conflito de versão" };
+    if (r.status === 401 || r.status === 403) return { ok: false, error: "Token sem permissão de escrita neste repositório." };
+    if (!r.ok) { let d = ""; try { d = (await r.json())?.message || ""; } catch (_) {} return { ok: false, error: "GitHub " + r.status + (d ? ": " + d : "") }; }
+    let nsha = null; try { nsha = (await r.json())?.content?.sha || null; } catch (_) {}
+    return { ok: true, sha: nsha };
+  }
+
+  return {
+    load, ready, getEscopo, has, all, commit, remove, setToken, token, configured, status, REPO,
+    readJson, writeJson,
+  };
 })();

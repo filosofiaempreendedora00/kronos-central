@@ -16,10 +16,38 @@ const Cost = (() => {
     return [];
   }
 
+  function save(list) {
+    localStorage.setItem(KEY, JSON.stringify(list));
+  }
+
+  /* id único por interação — base do merge cross-device (sem duplicar). */
+  function genId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+  }
+  /* chave estável p/ entradas antigas (sem id), pra não duplicarem no merge. */
+  function legacyKey(e) {
+    return `L${e.ts || 0}-${e.agentId || ""}-${e.context || ""}-${Math.round((e.costUSD || 0) * 1e6)}`;
+  }
+  /* União por id de duas listas — o coração do backup que NÃO perde dado. */
+  function mergeInto(base, incoming) {
+    const byId = new Map();
+    const add = (e) => {
+      if (!e || typeof e !== "object") return;
+      const id = e.id || legacyKey(e);
+      if (!byId.has(id)) byId.set(id, { ...e, id });
+    };
+    (Array.isArray(base) ? base : []).forEach(add);
+    (Array.isArray(incoming) ? incoming : []).forEach(add);
+    const merged = [...byId.values()].sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    if (merged.length > MAX_ENTRIES) merged.splice(0, merged.length - MAX_ENTRIES);
+    return merged;
+  }
+
   /* Registra uma interação. ts em ms. */
   function log({ context, agentId, agentName, usage, costUSD }) {
     const list = all();
     list.push({
+      id: genId(),
       ts: Date.now(),
       context: context || "chat",     // 'chat' | 'delfos'
       agentId: agentId || "",
@@ -29,11 +57,90 @@ const Cost = (() => {
       costUSD: costUSD || 0,
     });
     if (list.length > MAX_ENTRIES) list.splice(0, list.length - MAX_ENTRIES);
-    localStorage.setItem(KEY, JSON.stringify(list));
+    save(list);
+    scheduleBackup();
   }
 
   function reset() {
     localStorage.removeItem(KEY);
+  }
+
+  /* ---------------- Backup manual (Exportar / Importar .json) ------------- */
+  function exportJSON() {
+    return JSON.stringify(
+      { type: "kronos.usage", version: 1, exportedAt: new Date().toISOString(), entries: all() },
+      null, 2
+    );
+  }
+  function importJSON(text) {
+    let data;
+    try { data = JSON.parse(text); } catch (_) { return { ok: false, error: "Arquivo inválido (não é JSON)." }; }
+    const incoming = Array.isArray(data) ? data : (Array.isArray(data && data.entries) ? data.entries : null);
+    if (!incoming) return { ok: false, error: "Formato não reconhecido (esperado um histórico KRONOS)." };
+    const before = all().length;
+    const merged = mergeInto(all(), incoming);
+    save(merged);
+    scheduleBackup();
+    return { ok: true, added: merged.length - before, total: merged.length };
+  }
+
+  /* -------------- Backup automático no GitHub (cross-device) -------------- */
+  const USAGE_PATH = "www/contexto/usage.json";
+  const SHA_KEY = "kronos.usageSha";
+  let backupTimer = null;
+
+  const syncOn = () => typeof Sync !== "undefined" && Sync.configured();
+
+  function scheduleBackup() {
+    if (!syncOn()) return; // sem token: fica só local (use Exportar pra não perder)
+    if (backupTimer) clearTimeout(backupTimer);
+    backupTimer = setTimeout(() => { backupTimer = null; flushBackup(); }, 25000);
+  }
+  function entriesOf(json) {
+    if (json && Array.isArray(json.entries)) return json.entries;
+    return Array.isArray(json) ? json : [];
+  }
+  /* Puxa o histórico do GitHub e funde no local (ao abrir o app). */
+  async function pullBackup() {
+    if (!syncOn()) return { ok: false, error: "sem token" };
+    let res;
+    try { res = await Sync.readJson(USAGE_PATH); } catch (e) { return { ok: false, error: e.message || String(e) }; }
+    try { if (res.sha) localStorage.setItem(SHA_KEY, res.sha); } catch (_) {}
+    const remote = entriesOf(res.json);
+    if (remote.length) save(mergeInto(all(), remote));
+    return { ok: true, total: all().length };
+  }
+  /* Funde local+remoto e publica — nunca sobrescreve o de outro aparelho. */
+  async function flushBackup() {
+    if (!syncOn()) return { ok: false, error: "Sem token do GitHub." };
+    let res;
+    try { res = await Sync.readJson(USAGE_PATH); } catch (e) { return { ok: false, error: e.message || String(e) }; }
+    let sha = res.sha || null;
+    let merged = mergeInto(entriesOf(res.json), all());
+    save(merged);
+    const mkDoc = () => ({ type: "kronos.usage", version: 1, updatedAt: new Date().toISOString(), entries: all() });
+    let w = await Sync.writeJson(USAGE_PATH, mkDoc(), sha, "custos: backup do histórico");
+    if (w && w.conflict) {
+      // outro aparelho publicou antes — re-puxa, funde e tenta 1x
+      try {
+        const r2 = await Sync.readJson(USAGE_PATH);
+        sha = r2.sha || null;
+        save(mergeInto(entriesOf(r2.json), all()));
+        w = await Sync.writeJson(USAGE_PATH, mkDoc(), sha, "custos: backup do histórico");
+      } catch (_) {}
+    }
+    try { if (w && w.ok && w.sha) localStorage.setItem(SHA_KEY, w.sha); } catch (_) {}
+    return w || { ok: false, error: "falha desconhecida" };
+  }
+  const syncStatus = () => ({ configured: syncOn(), count: all().length });
+
+  // Best-effort: sobe o que faltou ao ocultar/sair (não perde o último uso).
+  if (typeof document !== "undefined") {
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden" && backupTimer) {
+        clearTimeout(backupTimer); backupTimer = null; flushBackup();
+      }
+    });
   }
 
   /* Câmbio USD→BRL (editável). */
@@ -126,5 +233,8 @@ const Cost = (() => {
     return String(n || 0);
   }
 
-  return { log, reset, all, summary, brlRate, setBrlRate, usd, brl, tok };
+  return {
+    log, reset, all, summary, brlRate, setBrlRate, usd, brl, tok,
+    mergeInto, exportJSON, importJSON, pullBackup, flushBackup, syncStatus,
+  };
 })();

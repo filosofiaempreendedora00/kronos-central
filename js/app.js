@@ -346,6 +346,10 @@ function toggleCollapse() {
 
 function init() {
   Context.load(); // carrega Núcleo + Briefing (alimenta todos os agentes)
+  // Funde o histórico de custos publicado no GitHub (se houver token) — cross-device.
+  if (typeof Cost !== "undefined" && Cost.pullBackup) {
+    Cost.pullBackup().then((r) => { if (r && r.ok) CostsView.renderMini(); }).catch(() => {});
+  }
   fitViewportToKeyboard();
   renderAgents();
   renderMetrics();
