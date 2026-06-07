@@ -1721,6 +1721,30 @@ body::before {
 .doc-revert button { background: transparent; border: 1px solid var(--areia-40); color: var(--areia); border-radius: 999px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
 .doc-revert button:hover { color: var(--creme); border-color: var(--areia); }
 .lib-badge { font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--onix); background: var(--areia); padding: 1px 7px; border-radius: 999px; margin-left: 8px; }
+.lib-badge--guardian { background: var(--creme); color: var(--onix); font-weight: 600; }
+
+/* IAgo — guardião dos prompts: destaque + aviso, antes dos demais */
+.lib-guardian { grid-column: 1 / -1; display: flex; gap: 18px; align-items: stretch; margin-bottom: 6px; }
+.lib-guardian .nucleo-card { flex: 0 0 auto; width: min(360px, 50%); }
+.lib-guardian__note { flex: 1; align-self: center; font-size: 13.5px; line-height: 1.65; color: rgba(245,239,230,0.7); margin: 0; }
+.lib-guardian__note strong { color: var(--creme); font-weight: 600; }
+.nucleo-card--guardian {
+  border-color: var(--areia);
+  box-shadow: 0 0 0 1px rgba(196,170,130,0.45), 0 10px 34px rgba(150,120,80,0.16);
+  background:
+    radial-gradient(120% 120% at 80% -10%, rgba(196,170,130,0.16), transparent 55%),
+    linear-gradient(rgba(21,12,6,0.5), rgba(21,12,6,0.68)),
+    url("../assets/areia-sepia.png");
+  background-size: cover; background-position: center;
+}
+.nucleo-card--guardian .nucleo-card__title { color: var(--branco); }
+.nucleo-card--guardian:hover { border-color: var(--creme); }
+
+@media (max-width: 640px) {
+  .lib-guardian { flex-direction: column; gap: 12px; }
+  .lib-guardian .nucleo-card { width: 100%; }
+  .lib-guardian__note { font-size: 12.5px; }
+}
 
 /* ============================== LIGHTBOX =============================== */
 .avatar--zoomable { cursor: zoom-in; }
