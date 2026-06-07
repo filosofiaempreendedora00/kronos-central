@@ -35,3 +35,6 @@ ios/DerivedData/
 
 # Pasta de entrega dos materiais (canônico vive em www/contexto/)
 contextos md/
+_backup/
+www/_src/
+Contextos Agentes/

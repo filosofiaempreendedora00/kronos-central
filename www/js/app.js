@@ -381,14 +381,8 @@ function renderPonteiro() {
 }
 
 function init() {
-  // Portão de acesso: nada é carregado/renderizado antes de logar.
-  if (typeof Auth !== "undefined") {
-    const gate = document.getElementById("authGate");
-    if (!Auth.ok()) { Auth.showGate(() => location.reload()); return; }
-    if (gate) gate.hidden = true;
-  }
-
-  Context.load(); // carrega Núcleo + Briefing (alimenta todos os agentes)
+  // Chegou aqui = já logado e cofre destravado (Auth.boot aplicou os dados).
+  Context.load(); // ajustes publicados + briefing editado (núcleo/briefing já semeados)
   Context.ready().then(renderPonteiro).catch(() => {}); // atualiza com a versão da rede
   // Funde o histórico de custos publicado no GitHub (se houver token) — cross-device.
   if (typeof Cost !== "undefined" && Cost.pullBackup) {
@@ -456,4 +450,8 @@ window.App = {
   refreshBriefing,
 };
 
-document.addEventListener("DOMContentLoaded", init);
+// Boot: destrava o cofre (senha guardada) ou pede login; só então inicia o app.
+document.addEventListener("DOMContentLoaded", () => {
+  if (typeof Auth !== "undefined" && Auth.boot) Auth.boot(init);
+  else init();
+});
