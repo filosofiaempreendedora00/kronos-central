@@ -12,6 +12,12 @@ Pré-receita, sem clientes, operação solo. Landing page do Gerador de Proposta
 ## FOCO DO MOMENTO — o que move o ponteiro AGORA
 Antes de ler métrica: resolver a vinculação do Instagram ao Meta Ads — sem isso, os números de anúncio estão contaminados. Com a distribuição corrigida, ler os primeiros números (CTR, CPC, conversão da landing) para decidir o próximo ajuste no criativo ou na página. Em paralelo, ler o mapa de calor da landing. Decisão guiada por dado, não por achismo.
 
+## PONTEIRO — resumo cirúrgico para o fundador
+> Aparece no topo da Central. HOJE é o destaque; médio e longo só orientam a direção. O IAgo mantém este bloco em sintonia com o Briefing — uma linha cada, cirúrgica.
+- HOJE: Vincule o Instagram ao Meta Ads — sem isso, todo número de anúncio está contaminado e você decide no escuro. Resolvido isso, leia CTR, CPC e a conversão da landing + o mapa de calor, e faça UM ajuste guiado por dado.
+- MÉDIO: Sair do zero — as primeiras assinaturas pagas. Validar o funil anúncio → landing → assinatura com dado real e iterar criativo/página até a conversão se pagar.
+- LONGO: Transformar o Gerador de Propostas numa máquina de aquisição previsível e lucrativa, e expandir a linha KRONOS sobre essa base.
+
 ## OFERTA VIGENTE
 Gerador de Propostas — SaaS por assinatura. Landing page no ar.
 - Individual Mensal: R$67

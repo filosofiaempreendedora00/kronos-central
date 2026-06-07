@@ -959,6 +959,37 @@ body::before {
   margin: 10px 0 0;
 }
 
+/* ===================== O QUE MOVE O PONTEIRO (home) ===================== */
+.ponteiro {
+  position: relative; overflow: hidden;
+  margin-bottom: var(--gap);
+  padding: 24px 28px 22px;
+  border: 1px solid var(--areia-22); border-radius: var(--radius);
+  background:
+    radial-gradient(60% 130% at 90% -25%, rgba(180,152,116,0.18), transparent 60%),
+    linear-gradient(rgba(21,12,6,0.56), rgba(21,12,6,0.74)),
+    url("../assets/areia-sepia.png");
+  background-size: cover; background-position: center;
+}
+.ponteiro[hidden] { display: none; }
+.ponteiro__head { display: flex; align-items: center; gap: 13px; margin-bottom: 12px; }
+.ponteiro__icon { height: 38px; width: auto; display: block; flex-shrink: 0; }
+.ponteiro__q {
+  margin: 0; font-family: var(--font-title); font-weight: 600;
+  font-size: 23px; color: var(--branco); line-height: 1.1;
+}
+.ponteiro__hoje {
+  margin: 0 0 18px; font-size: 16px; line-height: 1.62; color: var(--creme); max-width: 780px;
+}
+.ponteiro__sub {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px 30px;
+  border-top: 1px solid var(--areia-12); padding-top: 14px;
+}
+.ponteiro__item { display: flex; flex-direction: column; gap: 4px; }
+.ponteiro__item[hidden] { display: none; }
+.ponteiro__lbl { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--areia); }
+.ponteiro__txt { font-size: 12.5px; font-weight: 300; line-height: 1.5; color: rgba(245,239,230,0.6); }
+
 /* ============================== DELFOS — BANNER ============================== */
 .delfos-banner {
   width: 100%;
@@ -1573,6 +1604,13 @@ body::before {
 
   /* blocos */
   .block__hint { display: none; }
+
+  /* ponteiro: compacto e empilhado no mobile */
+  .ponteiro { padding: 18px 18px 16px; }
+  .ponteiro__icon { height: 32px; }
+  .ponteiro__q { font-size: 19px; }
+  .ponteiro__hoje { font-size: 14.5px; margin-bottom: 14px; }
+  .ponteiro__sub { grid-template-columns: 1fr; gap: 12px; }
 
   /* 2 cards por linha no mobile (agentes e métricas) */
   .agents-grid, .metrics-grid { grid-template-columns: 1fr 1fr; gap: 12px; }

@@ -344,8 +344,26 @@ function toggleCollapse() {
   localStorage.setItem("kronos.sidebarCollapsed", collapsed ? "1" : "0");
 }
 
+/* "O que move o ponteiro" — lê o bloco PONTEIRO do Briefing Vivo. */
+function renderPonteiro() {
+  const sec = document.getElementById("ponteiroSection");
+  if (!sec || typeof Context === "undefined" || !Context.ponteiro) return;
+  const p = Context.ponteiro();
+  if (!p.hoje && !p.medio && !p.longo) { sec.hidden = true; return; }
+  sec.hidden = false;
+  document.getElementById("ponteiroHoje").textContent = p.hoje || "—";
+  const setItem = (itemId, txtId, val) => {
+    document.getElementById(txtId).textContent = val || "";
+    const item = document.getElementById(itemId);
+    if (item) item.hidden = !val;
+  };
+  setItem("ponteiroMedioItem", "ponteiroMedio", p.medio);
+  setItem("ponteiroLongoItem", "ponteiroLongo", p.longo);
+}
+
 function init() {
   Context.load(); // carrega Núcleo + Briefing (alimenta todos os agentes)
+  Context.ready().then(renderPonteiro).catch(() => {}); // atualiza com a versão da rede
   // Funde o histórico de custos publicado no GitHub (se houver token) — cross-device.
   if (typeof Cost !== "undefined" && Cost.pullBackup) {
     Cost.pullBackup().then((r) => { if (r && r.ok) CostsView.renderMini(); }).catch(() => {});
@@ -353,6 +371,7 @@ function init() {
   fitViewportToKeyboard();
   renderAgents();
   renderMetrics();
+  renderPonteiro(); // usa o briefing em cache (se houver) na hora; rede atualiza depois
   tickClock();
   setInterval(tickClock, 10_000);
 
