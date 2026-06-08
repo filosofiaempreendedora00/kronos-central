@@ -391,7 +391,11 @@ body::before {
 .chat__avatar:has(.avatar-img),
 .present__av:has(.avatar-img),
 .member__avatar:has(.avatar-img),
+.dmsg__avatar:has(.avatar-img),
 .nucleo-card__face:has(.avatar-img) { padding: 0; background: var(--onix); position: relative; }
+/* trava de segurança: a foto NUNCA escapa do seu contêiner redondo, mesmo que
+   o :has não pegue (navegador antigo) — evita a "foto gigante" na Delfos. */
+.agent-card__avatar, .chat__avatar, .present__av, .member__avatar, .dmsg__avatar, .nucleo-card__face { position: relative; }
 
 .agent-card__status {
   display: inline-flex;
@@ -997,6 +1001,8 @@ body::before {
 }
 .ponteiro[hidden] { display: none; }
 .ponteiro__head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+/* pergunta + dica numa coluna: começam no MESMO x (à direita do ícone) */
+.ponteiro__qcol { display: flex; flex-direction: column; min-width: 0; }
 /* ponteiro deitado, apontando para o título (tip à direita) */
 .ponteiro__iconwrap { width: 48px; height: 26px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: visible; }
 /* fechado/destaque: aponta para a pergunta (à direita); aberto: gira p/ baixo,
