@@ -1,8 +1,38 @@
 {
   "type": "kronos.usage",
   "version": 1,
-  "updatedAt": "2026-06-07T23:14:55.246Z",
+  "updatedAt": "2026-06-08T00:17:27.345Z",
   "entries": [
+    {
+      "ts": 1780775693889,
+      "context": "delfos",
+      "agentId": "ceo",
+      "agentName": "CEO",
+      "input": 1894,
+      "output": 116,
+      "costUSD": 0.007422,
+      "id": "L1780775693889-ceo-delfos-7422"
+    },
+    {
+      "ts": 1780775698123,
+      "context": "delfos",
+      "agentId": "cfo",
+      "agentName": "CFO",
+      "input": 1981,
+      "output": 111,
+      "costUSD": 0.007608,
+      "id": "L1780775698123-cfo-delfos-7608"
+    },
+    {
+      "ts": 1780788290295,
+      "context": "chat",
+      "agentId": "cro",
+      "agentName": "CRO Expert",
+      "input": 2454,
+      "output": 15,
+      "costUSD": 0.007587,
+      "id": "L1780788290295-cro-chat-7587"
+    },
     {
       "ts": 1780793269560,
       "context": "chat",
@@ -14,6 +44,96 @@
       "id": "L1780793269560-head-rh-chat-9468"
     },
     {
+      "id": "mq3turw5ndusbni",
+      "ts": 1780839494069,
+      "context": "delfos",
+      "agentId": "ceo",
+      "agentName": "CEO",
+      "input": 62,
+      "output": 13,
+      "costUSD": 0.0080235
+    },
+    {
+      "id": "mq3tut0ydz0uhbc",
+      "ts": 1780839495538,
+      "context": "delfos",
+      "agentId": "coo",
+      "agentName": "COO",
+      "input": 77,
+      "output": 10,
+      "costUSD": 0.00785475
+    },
+    {
+      "id": "mq3tuu4tgzx1rm2",
+      "ts": 1780839496973,
+      "context": "delfos",
+      "agentId": "cfo",
+      "agentName": "CFO",
+      "input": 90,
+      "output": 7,
+      "costUSD": 0.0079125
+    },
+    {
+      "id": "mq3tve9ug6ufbok",
+      "ts": 1780839523074,
+      "context": "delfos",
+      "agentId": "ceo",
+      "agentName": "CEO",
+      "input": 113,
+      "output": 19,
+      "costUSD": 0.0012354
+    },
+    {
+      "id": "mq3tvfgrvv55pa7",
+      "ts": 1780839524619,
+      "context": "delfos",
+      "agentId": "coo",
+      "agentName": "COO",
+      "input": 134,
+      "output": 14,
+      "costUSD": 0.0012099
+    },
+    {
+      "id": "mq3tvgjms8yj5i0",
+      "ts": 1780839526018,
+      "context": "delfos",
+      "agentId": "cfo",
+      "agentName": "CFO",
+      "input": 151,
+      "output": 11,
+      "costUSD": 0.001221
+    },
+    {
+      "id": "mq3txbh2vcekr4n",
+      "ts": 1780839612758,
+      "context": "delfos",
+      "agentId": "ceo",
+      "agentName": "CEO",
+      "input": 186,
+      "output": 173,
+      "costUSD": 0.0037644
+    },
+    {
+      "id": "mq3txefs1madq2a",
+      "ts": 1780839616600,
+      "context": "delfos",
+      "agentId": "coo",
+      "agentName": "COO",
+      "input": 290,
+      "output": 91,
+      "costUSD": 0.0028329
+    },
+    {
+      "id": "mq3txq6doz6wa0r",
+      "ts": 1780839631813,
+      "context": "delfos",
+      "agentId": "cfo",
+      "agentName": "CFO",
+      "input": 384,
+      "output": 262,
+      "costUSD": 0.005685
+    },
+    {
       "id": "mq4efuph5t8tbeb",
       "ts": 1780874069813,
       "context": "chat",
@@ -22,6 +142,26 @@
       "input": 34,
       "output": 407,
       "costUSD": 0.0525945
+    },
+    {
+      "id": "mq4go8xzezi4o99",
+      "ts": 1780877820743,
+      "context": "delfos",
+      "agentId": "ceo",
+      "agentName": "CEO",
+      "input": 65,
+      "output": 9,
+      "costUSD": 0.00793875
+    },
+    {
+      "id": "mq4go9vx485m0mv",
+      "ts": 1780877821965,
+      "context": "delfos",
+      "agentId": "coo",
+      "agentName": "COO",
+      "input": 76,
+      "output": 9,
+      "costUSD": 0.007803
     }
   ]
 }
