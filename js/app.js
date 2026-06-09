@@ -277,6 +277,21 @@ function navGo(key) {
   closeDrawer();
 }
 
+/* "Atualizar": re-puxa do GitHub os ajustes publicados (IAgo) e o Briefing Vivo
+   editado em outros aparelhos, e re-renderiza — SEM chamar a API (custo zero). */
+async function syncNow(btn) {
+  if (btn) { btn.classList.add("is-spinning"); btn.disabled = true; }
+  const minSpin = new Promise((r) => setTimeout(r, 550)); // giro visível mesmo se for rápido
+  try {
+    if (typeof Sync !== "undefined" && Sync.load) await Sync.load().catch(() => {});
+    if (typeof Context !== "undefined" && Context.load) await Context.load();
+  } catch (_) {}
+  await minSpin;
+  try { renderPonteiro(); renderAgents(); } catch (_) {}
+  closeDrawer();
+  if (btn) { btn.classList.remove("is-spinning"); btn.disabled = false; }
+}
+
 /* -------------------------------- Lightbox -------------------------------- */
 function openLightbox(src, alt) {
   const lb = document.getElementById("lightbox");
@@ -495,6 +510,8 @@ function init() {
   document.getElementById("menuToggle").addEventListener("click", openDrawer);
   document.getElementById("sidebarBackdrop").addEventListener("click", closeDrawer);
   document.getElementById("sidebarCollapse").addEventListener("click", toggleCollapse);
+  document.getElementById("syncNowBtn")?.addEventListener("click", (e) => syncNow(e.currentTarget));
+  document.getElementById("syncNowSidebar")?.addEventListener("click", (e) => syncNow(e.currentTarget));
   if (localStorage.getItem("kronos.sidebarCollapsed") === "1") {
     document.getElementById("shell").classList.add("sidebar-collapsed");
   }
