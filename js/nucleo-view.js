@@ -320,17 +320,54 @@ const NucleoView = (() => {
         <div class="briefing-doc__top">
           <span class="briefing-doc__vig">Vigente · <strong>${esc(vigente)}</strong></span>
           <div class="briefing-doc__actions">
-            <button class="btn-solid btn-solid--sm" id="briefEditBtn" type="button">Editar</button>
+            <button class="btn-solid btn-solid--sm" id="briefPonteiroBtn" type="button">✦ Gerar ponteiro (IA)</button>
+            <button class="btn-ghost btn-ghost--sm" id="briefEditBtn" type="button">Editar</button>
             <button class="btn-ghost btn-ghost--sm" id="briefDupBtn" type="button">Duplicar p/ hoje</button>
             <button class="btn-ghost btn-ghost--sm" id="briefVersBtn" type="button">Histórico (${vers.length})</button>
           </div>
         </div>
-        <p class="cost-note">${note}</p>
+        <p class="cost-note">${note} O <strong>ponteiro</strong> (HOJE/MÉDIO/LONGO) é escrito por IA a partir deste cenário — toque em “Gerar ponteiro”.</p>
         <div id="briefMain" class="doc">${mdToHtml(Context.effectiveBriefing() || "_Material ainda não carregado._")}</div>
       </div>`;
     document.getElementById("briefEditBtn").addEventListener("click", openBriefEditor);
     document.getElementById("briefVersBtn").addEventListener("click", openBriefVersions);
     document.getElementById("briefDupBtn").addEventListener("click", duplicateToday);
+    document.getElementById("briefPonteiroBtn").addEventListener("click", generatePonteiroAI);
+  }
+
+  /* Regenera o bloco ## PONTEIRO via IA (Haiku) a partir do cenário atual e salva. */
+  function replacePonteiroBlock(md, p) {
+    const { preamble, sections } = parseBriefingSections(md);
+    const body =
+      "> Escrito por IA a partir do Briefing. HOJE é o destaque; médio e longo orientam a direção.\n" +
+      `- HOJE: ${p.hoje}\n- MÉDIO: ${p.medio}\n- LONGO: ${p.longo}`;
+    let found = false;
+    const merged = sections.map((s) => {
+      if (/^PONTEIRO\b/i.test(s.title)) { found = true; return { title: s.title, body }; }
+      return s;
+    });
+    if (!found) merged.push({ title: "PONTEIRO — resumo cirúrgico para o fundador", body });
+    return buildBriefing(preamble, merged);
+  }
+  async function generatePonteiroAI() {
+    const btn = document.getElementById("briefPonteiroBtn");
+    if (typeof generatePonteiro !== "function") { if (window.App && App.toast) App.toast("⚠ IA indisponível."); return; }
+    if (btn) { btn.disabled = true; btn.textContent = "✦ gerando…"; }
+    try {
+      const r = await generatePonteiro(Context.effectiveBriefing());
+      if (!r || (!r.hoje && !r.medio && !r.longo)) throw new Error("resposta vazia");
+      const next = replacePonteiroBlock(Context.effectiveBriefing(), r);
+      await Context.saveTodayBriefing(next);
+      try { if (typeof Cost !== "undefined" && Cost.log) Cost.log({ context: "ponteiro", agentName: "Ponteiro (IA)", usage: r.usage, costUSD: r.costUSD }); } catch (_) {}
+      if (window.App && App.refreshBriefing) App.refreshBriefing();
+      renderBriefingDoc();
+      scrollDocTop();
+      const custo = (typeof Cost !== "undefined" && Cost.brl) ? " · " + Cost.brl(r.costUSD) : "";
+      if (window.App && App.toast) App.toast("✦ Ponteiro gerado pela IA" + custo);
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = "✦ Gerar ponteiro (IA)"; }
+      if (window.App && App.toast) App.toast("⚠ Não consegui gerar: " + (e.message || e));
+    }
   }
 
   async function duplicateToday() {
@@ -349,19 +386,22 @@ const NucleoView = (() => {
     requestAnimationFrame(fit);
   }
 
+  const isPonteiroTitle = (t) => /^PONTEIRO\b/i.test(t || "");
+
   function openBriefEditor() {
     const main = document.getElementById("briefMain");
     if (!main) return;
     const { preamble, sections } = parseBriefingSections(Context.effectiveBriefing());
-    briefEdit = { preamble, titles: sections.map((s) => s.title) };
+    briefEdit = { preamble, sections: sections.map((s) => ({ title: s.title, body: s.body })) };
     main.innerHTML =
       `<div class="brief-fields">` +
-      sections.map((s, i) => `
+      sections.map((s, i) => isPonteiroTitle(s.title) ? "" : `
         <div class="brief-field">
           <label class="brief-field__label" for="bf_${i}">${esc(s.title)}</label>
           <textarea class="brief-field__input" id="bf_${i}" data-i="${i}" spellcheck="false">${esc(s.body)}</textarea>
         </div>`).join("") +
       `</div>
+      <p class="cost-note">O <strong>ponteiro</strong> (HOJE/MÉDIO/LONGO) não se edita aqui — é gerado pela IA no botão “Gerar ponteiro”.</p>
       <div class="brief-editor__actions">
         <button class="btn-solid" id="briefSaveBtn" type="button">Salvar versão de hoje</button>
         <button class="btn-ghost btn-ghost--sm" id="briefCancelBtn" type="button">Cancelar</button>
@@ -379,9 +419,14 @@ const NucleoView = (() => {
     const save = document.getElementById("briefSaveBtn");
     if (st) { st.textContent = "salvando…"; st.classList.remove("settings__status--ok"); }
     if (save) save.disabled = true;
-    const bodies = [...document.querySelectorAll(".brief-field__input")]
-      .sort((a, b) => (+a.dataset.i) - (+b.dataset.i)).map((t) => t.value);
-    const content = buildBriefing(briefEdit.preamble, briefEdit.titles.map((title, i) => ({ title, body: bodies[i] || "" })));
+    // pega o valor de cada campo por índice; o PONTEIRO não tem campo → mantém o bloco atual
+    const vals = {};
+    document.querySelectorAll(".brief-field__input").forEach((t) => { vals[t.dataset.i] = t.value; });
+    const merged = briefEdit.sections.map((s, i) => ({
+      title: s.title,
+      body: (vals[String(i)] !== undefined ? vals[String(i)] : s.body),
+    }));
+    const content = buildBriefing(briefEdit.preamble, merged);
     const r = await Context.saveTodayBriefing(content);
     if (!r.ok) { if (save) save.disabled = false; if (st) st.textContent = "⚠ " + r.error; return; }
     // saída limpa: tira o foco (fecha o teclado e devolve a viewport), re-renderiza no topo
