@@ -25,6 +25,59 @@ function getApiKey() {
   return localStorage.getItem("kronos.apiKey") || "";
 }
 
+/* Modelo barato p/ tarefas pequenas (ex.: destilar o ponteiro do Briefing). */
+const HAIKU = { model: "claude-haiku-4-5", input: 1.0, output: 5.0 };
+
+function parsePonteiroJSON(text) {
+  try {
+    const m = (text || "").match(/\{[\s\S]*\}/);
+    const j = JSON.parse(m ? m[0] : text);
+    return { hoje: String(j.hoje || "").trim(), medio: String(j.medio || "").trim(), longo: String(j.longo || "").trim() };
+  } catch (_) { return { hoje: "", medio: "", longo: "" }; }
+}
+
+/* Gera o "ponteiro" (HOJE/MÉDIO/LONGO) a partir do Briefing, com o modelo barato.
+   Uma chamada curta e não-streaming. Devolve {hoje,medio,longo,usage,costUSD}. */
+async function generatePonteiro(briefing) {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error("NO_API_KEY");
+  const system =
+    "Você é o motor do \"ponteiro\" da KRONOS — a inteligência que destila, do cenário atual, o que de fato move o negócio.\n" +
+    "Régua: \"isto move o ponteiro?\" = progresso mensurável rumo a receita/cliente/resultado.\n" +
+    "Tom: seco, afirmativo, frase curta, sem hype, sem jargão, sem adjetivo de venda. Proibido a palavra \"empoderar\".\n" +
+    "Tarefa: lendo o BRIEFING VIVO, escreva três linhas cirúrgicas:\n" +
+    "- HOJE: a ÚNICA prioridade que mais move o ponteiro agora (a ação concreta do dia).\n" +
+    "- MEDIO: o que precisa acontecer no médio prazo para o negócio avançar.\n" +
+    "- LONGO: a direção de longo prazo.\n" +
+    "Baseie-se SÓ no briefing; não invente número nem fato que não esteja lá.\n" +
+    "Responda APENAS com JSON puro, sem markdown: {\"hoje\":\"...\",\"medio\":\"...\",\"longo\":\"...\"}";
+  const res = await fetch(ANTHROPIC.url, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": ANTHROPIC.version,
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: HAIKU.model,
+      max_tokens: 600,
+      system,
+      messages: [{ role: "user", content: "BRIEFING VIVO:\n\n" + String(briefing || "") }],
+    }),
+  });
+  if (!res.ok) {
+    let detail = ""; try { detail = (await res.json())?.error?.message || ""; } catch (_) {}
+    throw new Error(`API_${res.status}: ${detail}`);
+  }
+  const data = await res.json();
+  const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
+  const u = data.usage || {};
+  const usage = { input: u.input_tokens || 0, output: u.output_tokens || 0, cacheWrite: 0, cacheRead: 0 };
+  const costUSD = (usage.input * HAIKU.input + usage.output * HAIKU.output) / 1_000_000;
+  return { ...parsePonteiroJSON(text), usage, costUSD, raw: text };
+}
+
 /* Calcula o custo em USD a partir do uso de tokens. */
 function costFromUsage(u) {
   if (!u) return 0;
