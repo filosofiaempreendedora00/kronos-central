@@ -130,6 +130,16 @@ body::before {
 .appbar { display: none; }
 /* barra inferior (tab bar) — só aparece no mobile (ver @media) */
 .tabbar { display: none; }
+/* botão "Atualizar" (puxa do GitHub — sem custo) — aparência + giro ao sincronizar */
+.appbar__sync {
+  background: transparent; border: none; color: var(--areia);
+  display: flex; align-items: center; padding: 6px; margin-left: 4px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.appbar__sync svg { stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.appbar__sync:active { color: var(--creme); }
+.is-spinning svg { animation: syncSpin 0.8s linear infinite; transform-origin: 50% 50%; }
+@keyframes syncSpin { to { transform: rotate(360deg); } }
 
 /* área principal */
 .app {
