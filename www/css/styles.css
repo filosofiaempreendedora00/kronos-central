@@ -140,6 +140,16 @@ body::before {
 .appbar__sync:active { color: var(--creme); }
 .is-spinning svg { animation: syncSpin 0.8s linear infinite; transform-origin: 50% 50%; }
 @keyframes syncSpin { to { transform: rotate(360deg); } }
+/* toast efêmero (confirmações) */
+.ktoast {
+  position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom)); z-index: 80;
+  transform: translate(-50%, 16px);
+  background: var(--sepia); color: var(--creme); border: 1px solid var(--areia-40); border-radius: 999px;
+  padding: 10px 18px; font-size: 13px; max-width: 88vw; text-align: center;
+  box-shadow: 0 12px 34px rgba(0,0,0,0.45);
+  opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.ktoast--show { opacity: 1; transform: translate(-50%, 0); }
 
 /* área principal */
 .app {
@@ -1689,13 +1699,25 @@ body::before {
 
 /* Briefing Vivo — editor + versões */
 .briefing-doc__bar { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-.brief-editor {
-  width: 100%; min-height: 340px; resize: vertical; box-sizing: border-box;
-  background: var(--onix); border: 1px solid var(--areia-22); border-radius: 10px; color: var(--creme);
-  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; line-height: 1.55; padding: 14px;
+.briefing-doc__top { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; flex-wrap: wrap; margin-bottom: 6px; }
+.briefing-doc__vig { font-size: 12.5px; color: var(--areia); }
+.briefing-doc__vig strong { color: var(--creme); font-weight: 600; }
+.briefing-doc__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-solid--sm { padding: 6px 13px; font-size: 12.5px; }
+
+/* editor por blocos: cada tópico (## do briefing) vira um campo separado */
+.brief-fields { display: flex; flex-direction: column; gap: 16px; }
+.brief-field { display: flex; flex-direction: column; gap: 6px; }
+.brief-field__label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--areia);
 }
-.brief-editor:focus { outline: none; border-color: var(--areia-40); }
-.brief-editor__actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.brief-field__input {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 60px;
+  background: var(--onix); border: 1px solid var(--areia-22); border-radius: 10px; color: var(--creme);
+  font-family: var(--font-body); font-size: 14px; line-height: 1.6; padding: 12px 13px; overflow: hidden;
+}
+.brief-field__input:focus { outline: none; border-color: var(--areia-40); }
+.brief-editor__actions { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
 .brief-vers { display: flex; flex-direction: column; gap: 8px; }
 .brief-vers__row {
   text-align: left; background: var(--sepia); border: 1px solid var(--areia-22); border-radius: 10px;
@@ -1863,7 +1885,13 @@ body::before {
 @media (max-width: 640px) {
   /* iOS dá zoom automático em campo com fonte < 16px ao focar — o que
      "desconfigura" a tela. 16px elimina esse zoom. */
-  .composer__input, .field__input, #apiKeyInput { font-size: 16px; }
+  .composer__input, .field__input, #apiKeyInput, .brief-field__input { font-size: 16px; }
+  /* header do doc fica fixo no topo → o botão "Biblioteca" (voltar) é sempre
+     alcançável, mesmo depois de salvar com o teclado aberto. */
+  #nucleoDocView .chat__head {
+    position: sticky; top: 0; z-index: 6; background: var(--onix);
+    padding-top: calc(6px + env(safe-area-inset-top));
+  }
 
   /* ---- App de TELA FIXA (mobile) -------------------------------------
      Trava o corpo da página: acaba o "rubber-band" (fundo infinito ao
