@@ -90,6 +90,46 @@ const Context = (() => {
     return saveBriefing(r.next);
   }
 
+  const sameLocalDay = (a, b) => {
+    const x = new Date(a), y = new Date(b);
+    return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate();
+  };
+  /* Salva como a versão de HOJE: se a vigente já é de hoje, atualiza no lugar;
+     senão cria uma nova versão datada de hoje (que vira vigente). Resultado:
+     UMA entrada por dia no histórico, e a de hoje sempre vigente p/ os agentes. */
+  async function saveTodayBriefing(content) {
+    const text = String(content == null ? "" : content);
+    if (!text.trim()) return { ok: false, error: "O briefing não pode ficar vazio." };
+    const now = Date.now();
+    const top = briefingVers[0];
+    if (top && top.ts && sameLocalDay(top.ts, now)) {
+      briefingVers = [{ content: text, ts: now }, ...briefingVers.slice(1)].slice(0, 60); // atualiza hoje
+    } else {
+      briefingVers = [{ content: text, ts: now }, ...briefingVers].slice(0, 60); // novo dia
+    }
+    persistBlive();
+    if (!briefingSynced()) return { ok: true, scope: "local" };
+    try {
+      const res = await Sync.readJson(BLIVE_PATH);
+      const sha = res.sha || null;
+      const remoteVers = res.json && Array.isArray(res.json.versions) ? res.json.versions : [];
+      briefingVers = mergeBriefingVers(briefingVers, remoteVers);
+      persistBlive();
+      const doc = { type: "kronos.briefing", version: 1, updatedAt: new Date().toISOString(), versions: briefingVers };
+      const w = await Sync.writeJson(BLIVE_PATH, doc, sha, "briefing: versão do dia");
+      return w.ok ? { ok: true, scope: "remote" } : { ok: true, scope: "local", warn: w.error };
+    } catch (e) { return { ok: true, scope: "local", warn: e.message || String(e) }; }
+  }
+  /* Duplica a vigente como a versão de hoje (ponto de partida p/ editar o dia). */
+  async function duplicateBriefingAsToday() {
+    return saveTodayBriefing(effectiveBriefing());
+  }
+  /* A versão vigente já é de hoje? (p/ a UI decidir "editar hoje" vs "novo dia") */
+  function vigenteIsToday() {
+    const top = briefingVers[0];
+    return !!(top && top.ts && sameLocalDay(top.ts, Date.now()));
+  }
+
   function load() {
     readyPromise = (async () => {
       // Núcleo/Briefing já foram semeados (seedBase) a partir do cofre no login.
@@ -296,5 +336,6 @@ const Context = (() => {
     effectiveEscopo, isEscopoOverridden, isEscopoPublished,
     applyEscopoEdit, applyEscopoPermanent, revertEscopo, revertEscopoPermanent,
     effectiveBriefing, briefingVersions, saveBriefing, restoreBriefingVersion, briefingSynced, applyBriefingEdit,
+    saveTodayBriefing, duplicateBriefingAsToday, vigenteIsToday,
   };
 })();

@@ -258,64 +258,152 @@ const NucleoView = (() => {
     }
   }
 
-  /* --------------------------- Briefing Vivo: doc + editor + versões -------- */
-  function fmtVer(ts) {
+  /* --------------------- Briefing Vivo: doc + editor por blocos + histórico --- */
+  function fmtVerDay(ts) {
     if (!ts) return "base (deploy)";
     const d = new Date(ts);
     const p = (n) => String(n).padStart(2, "0");
-    return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+    return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
   }
+  function fmtVerFull(ts) {
+    if (!ts) return "base (deploy)";
+    const d = new Date(ts);
+    const p = (n) => String(n).padStart(2, "0");
+    return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} · ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  /* Quebra o briefing em cabeçalho + seções (## TÍTULO) só para EDITAR em campos
+     separados. Na hora de salvar, remonta o MESMO markdown (títulos preservados),
+     então os agentes recebem exatamente a mesma coisa — zero impacto na inteligência. */
+  function parseBriefingSections(md) {
+    const text = String(md || "").replace(/\r/g, "");
+    const i = text.indexOf("\n## ");
+    const preamble = i === -1 ? text : text.slice(0, i);
+    const rest = i === -1 ? "" : text.slice(i + 1);
+    const sections = [];
+    if (rest) {
+      rest.split(/\n(?=## )/).forEach((chunk) => {
+        const nl = chunk.indexOf("\n");
+        const title = (nl === -1 ? chunk : chunk.slice(0, nl)).replace(/^##\s+/, "").trim();
+        const bodyRaw = nl === -1 ? "" : chunk.slice(nl + 1);
+        sections.push({ title, body: bodyRaw.replace(/\s+$/, "") });
+      });
+    }
+    return { preamble: preamble.replace(/\s+$/, ""), sections };
+  }
+  function buildBriefing(preamble, sections) {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, "0");
+    const hoje = `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+    let pre = String(preamble || "");
+    // mantém a linha "Última atualização" coerente (cosmético; a data real é a da versão)
+    if (/Última atualização/i.test(pre)) {
+      pre = pre.replace(/(Última atualização\s*:?\s*\**\s*)([^\n]*)/i, `$1${hoje}`);
+    }
+    let out = pre.replace(/\s+$/, "") + "\n";
+    sections.forEach((s) => { out += `\n## ${s.title}\n${String(s.body || "").trim()}\n`; });
+    return out.replace(/\s+$/, "") + "\n";
+  }
+
+  let briefEdit = null; // {preamble, titles[]}
+
   function renderBriefingDoc() {
     const body = document.getElementById("docBody");
     const synced = Context.briefingSynced();
     const vers = Context.briefingVersions();
+    const top = vers[0];
+    const vigente = top.base ? "base (deploy)" : fmtVerDay(top.ts);
     const note = synced
-      ? "As edições são publicadas (GitHub) e passam a valer para todos os agentes, em todos os aparelhos, na hora."
-      : "Sem token do GitHub: a edição vale já neste aparelho. Configure o token em Configurar para publicar em todos.";
+      ? "Ao salvar, vira a versão de HOJE e passa a valer para todos os agentes, em todos os aparelhos."
+      : "Sem token do GitHub: vale só neste aparelho. Configure em Configurar para publicar em todos.";
     body.innerHTML = `
       <div class="briefing-doc">
-        <div class="briefing-doc__bar">
-          <button class="btn-ghost btn-ghost--sm" id="briefEditBtn" type="button">Editar</button>
-          <button class="btn-ghost btn-ghost--sm" id="briefVersBtn" type="button">Versões (${vers.length})</button>
+        <div class="briefing-doc__top">
+          <span class="briefing-doc__vig">Vigente · <strong>${esc(vigente)}</strong></span>
+          <div class="briefing-doc__actions">
+            <button class="btn-solid btn-solid--sm" id="briefEditBtn" type="button">Editar</button>
+            <button class="btn-ghost btn-ghost--sm" id="briefDupBtn" type="button">Duplicar p/ hoje</button>
+            <button class="btn-ghost btn-ghost--sm" id="briefVersBtn" type="button">Histórico (${vers.length})</button>
+          </div>
         </div>
-        <p class="cost-note">${note} Entre os agentes, só o IAgo altera o Briefing (você aprova) — ou você edita aqui.</p>
+        <p class="cost-note">${note}</p>
         <div id="briefMain" class="doc">${mdToHtml(Context.effectiveBriefing() || "_Material ainda não carregado._")}</div>
       </div>`;
     document.getElementById("briefEditBtn").addEventListener("click", openBriefEditor);
     document.getElementById("briefVersBtn").addEventListener("click", openBriefVersions);
+    document.getElementById("briefDupBtn").addEventListener("click", duplicateToday);
   }
+
+  async function duplicateToday() {
+    const btn = document.getElementById("briefDupBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "duplicando…"; }
+    const r = await Context.duplicateBriefingAsToday();
+    if (window.App && App.refreshBriefing) App.refreshBriefing();
+    if (!r.ok) { renderBriefingDoc(); if (window.App && App.toast) App.toast("⚠ " + r.error); return; }
+    openBriefEditor(); // já entra editando a versão de hoje recém-criada
+    if (window.App && App.toast) App.toast("Versão de hoje criada — ajuste o que mudou.");
+  }
+
+  function autoGrow(ta) {
+    const fit = () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight + 2, 1400) + "px"; };
+    ta.addEventListener("input", fit);
+    requestAnimationFrame(fit);
+  }
+
   function openBriefEditor() {
     const main = document.getElementById("briefMain");
-    main.innerHTML = `
-      <textarea class="brief-editor" id="briefTextarea" spellcheck="false"></textarea>
+    if (!main) return;
+    const { preamble, sections } = parseBriefingSections(Context.effectiveBriefing());
+    briefEdit = { preamble, titles: sections.map((s) => s.title) };
+    main.innerHTML =
+      `<div class="brief-fields">` +
+      sections.map((s, i) => `
+        <div class="brief-field">
+          <label class="brief-field__label" for="bf_${i}">${esc(s.title)}</label>
+          <textarea class="brief-field__input" id="bf_${i}" data-i="${i}" spellcheck="false">${esc(s.body)}</textarea>
+        </div>`).join("") +
+      `</div>
       <div class="brief-editor__actions">
-        <button class="btn-solid" id="briefSaveBtn" type="button">Salvar nova versão</button>
+        <button class="btn-solid" id="briefSaveBtn" type="button">Salvar versão de hoje</button>
         <button class="btn-ghost btn-ghost--sm" id="briefCancelBtn" type="button">Cancelar</button>
         <span class="settings__status" id="briefStatus"></span>
       </div>`;
-    const ta = document.getElementById("briefTextarea");
-    ta.value = Context.effectiveBriefing();
-    document.getElementById("briefSaveBtn").addEventListener("click", async () => {
-      const st = document.getElementById("briefStatus");
-      st.textContent = "salvando…"; st.classList.remove("settings__status--ok");
-      const r = await Context.saveBriefing(ta.value);
-      if (!r.ok) { st.textContent = "⚠ " + r.error; return; }
-      if (window.App && App.refreshBriefing) App.refreshBriefing();
-      renderBriefingDoc();
-    });
-    document.getElementById("briefCancelBtn").addEventListener("click", renderBriefingDoc);
-    setTimeout(() => ta.focus(), 30);
+    main.querySelectorAll(".brief-field__input").forEach(autoGrow);
+    document.getElementById("briefSaveBtn").addEventListener("click", saveBriefFields);
+    document.getElementById("briefCancelBtn").addEventListener("click", () => { briefEdit = null; renderBriefingDoc(); scrollDocTop(); });
+    scrollDocTop();
   }
+
+  async function saveBriefFields() {
+    if (!briefEdit) return;
+    const st = document.getElementById("briefStatus");
+    const save = document.getElementById("briefSaveBtn");
+    if (st) { st.textContent = "salvando…"; st.classList.remove("settings__status--ok"); }
+    if (save) save.disabled = true;
+    const bodies = [...document.querySelectorAll(".brief-field__input")]
+      .sort((a, b) => (+a.dataset.i) - (+b.dataset.i)).map((t) => t.value);
+    const content = buildBriefing(briefEdit.preamble, briefEdit.titles.map((title, i) => ({ title, body: bodies[i] || "" })));
+    const r = await Context.saveTodayBriefing(content);
+    if (!r.ok) { if (save) save.disabled = false; if (st) st.textContent = "⚠ " + r.error; return; }
+    // saída limpa: tira o foco (fecha o teclado e devolve a viewport), re-renderiza no topo
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    briefEdit = null;
+    if (window.App && App.refreshBriefing) App.refreshBriefing();
+    renderBriefingDoc();
+    scrollDocTop();
+    if (window.App && App.toast) App.toast("✓ Salvo" + (r.scope === "remote" ? " · todos os aparelhos" : " (só neste aparelho)"));
+  }
+
   function openBriefVersions() {
     const main = document.getElementById("briefMain");
     const vers = Context.briefingVersions();
     main.innerHTML = `<div class="brief-vers">` + vers.map((v, i) => `
       <button class="brief-vers__row" data-ts="${v.ts == null ? "" : v.ts}" type="button">
-        <span class="brief-vers__when">${fmtVer(v.ts)}${i === 0 ? ' <span class="brief-vers__cur">vigente</span>' : ""}</span>
+        <span class="brief-vers__when">${fmtVerFull(v.ts)}${i === 0 ? ' <span class="brief-vers__cur">vigente</span>' : ""}</span>
         <span class="brief-vers__prev">${esc((v.content || "").replace(/[#>*`]/g, "").replace(/\s+/g, " ").trim().slice(0, 96))}…</span>
       </button>`).join("") + `</div>`;
     main.querySelectorAll(".brief-vers__row").forEach((row) =>
       row.addEventListener("click", () => viewBriefVersion(row.dataset.ts)));
+    scrollDocTop();
   }
   function viewBriefVersion(tsStr) {
     const vers = Context.briefingVersions();
@@ -325,18 +413,20 @@ const NucleoView = (() => {
     const main = document.getElementById("briefMain");
     main.innerHTML = `
       <div class="brief-vers__head">
-        <button class="btn-ghost btn-ghost--sm" id="briefBackVers" type="button">← versões</button>
-        <span class="brief-vers__date">${fmtVer(v.ts)}</span>
-        ${isCurrent ? '<span class="settings__status settings__status--ok">vigente</span>' : '<button class="btn-solid" id="briefRestoreBtn" type="button">Tornar vigente</button>'}
+        <button class="btn-ghost btn-ghost--sm" id="briefBackVers" type="button">← histórico</button>
+        <span class="brief-vers__date">${fmtVerFull(v.ts)}</span>
+        ${isCurrent ? '<span class="settings__status settings__status--ok">vigente</span>' : '<button class="btn-solid btn-solid--sm" id="briefRestoreBtn" type="button">Tornar vigente (hoje)</button>'}
       </div>
       <div class="doc">${mdToHtml(v.content)}</div>`;
     document.getElementById("briefBackVers").addEventListener("click", openBriefVersions);
     const rb = document.getElementById("briefRestoreBtn");
     if (rb) rb.addEventListener("click", async () => {
       rb.disabled = true; rb.textContent = "…";
-      await Context.restoreBriefingVersion(v.ts);
+      await Context.saveTodayBriefing(v.content);
       if (window.App && App.refreshBriefing) App.refreshBriefing();
       renderBriefingDoc();
+      scrollDocTop();
+      if (window.App && App.toast) App.toast("✓ Versão de hoje criada a partir desta data.");
     });
   }
 

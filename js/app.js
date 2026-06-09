@@ -292,6 +292,18 @@ async function syncNow(btn) {
   if (btn) { btn.classList.remove("is-spinning"); btn.disabled = false; }
 }
 
+/* Toast efêmero (confirmações curtas, ex.: "✓ Salvo"). */
+let toastTimer = null;
+function toast(msg) {
+  let el = document.getElementById("kToast");
+  if (!el) { el = document.createElement("div"); el.id = "kToast"; el.className = "ktoast"; document.body.appendChild(el); }
+  el.textContent = msg;
+  void el.offsetWidth; // reinicia a animação se já estava visível
+  el.classList.add("ktoast--show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("ktoast--show"), 2600);
+}
+
 /* -------------------------------- Lightbox -------------------------------- */
 function openLightbox(src, alt) {
   const lb = document.getElementById("lightbox");
@@ -540,6 +552,7 @@ window.App = {
   openLightbox,
   openCartilha,
   refreshBriefing,
+  toast,
 };
 
 // Boot: destrava o cofre (senha guardada) ou pede login; só então inicia o app.
