@@ -490,9 +490,15 @@ const NucleoView = (() => {
     const cartChip = a.id === "head-rh"
       ? `<button class="cart-chip" id="docCartChip" type="button"><span class="cart-chip__mark">✦</span> Cartilha de Nomes</button>`
       : "";
-    body.innerHTML = cartChip + banner + mdToHtml(Context.effectiveEscopo(a) || "_Sem escopo definido._");
+    // O TIAgo segura o item "Benchmarking de Mercado" (documento de consulta, não entra no prompt).
+    const benchChip = (a.id === "ceo" && a.knowledge)
+      ? `<button class="cart-chip" id="docBenchChip" type="button"><span class="cart-chip__mark">✦</span> Benchmarking de Mercado</button>`
+      : "";
+    body.innerHTML = cartChip + benchChip + banner + mdToHtml(Context.effectiveEscopo(a) || "_Sem escopo definido._");
     const cc = document.getElementById("docCartChip");
     if (cc) cc.addEventListener("click", () => { if (window.App && App.openCartilha) App.openCartilha(); });
+    const bc = document.getElementById("docBenchChip");
+    if (bc) bc.addEventListener("click", () => { if (window.App && App.openBenchmark) App.openBenchmark(); });
     const rb = document.getElementById("revertEscopoBtn");
     if (rb) rb.addEventListener("click", async () => {
       if (published) {
@@ -519,5 +525,5 @@ const NucleoView = (() => {
     });
   }
 
-  return { open: openHub, openDoc, bind, cartilhaHTML };
+  return { open: openHub, openDoc, bind, cartilhaHTML, mdToHtml };
 })();
