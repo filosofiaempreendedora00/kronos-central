@@ -298,9 +298,8 @@ const Context = (() => {
     if (doctrine) parts.push("---", `## MODO DE CONVERSA\n${doctrine}`);
     if (agent.id === "head-rh") { const c = cartilhaBlock(); if (c) parts.push("---", c); }
     if (agent.id === "prompt-engineer") parts.push("---", promptsLibraryBlock());
-    // conhecimento fixo do agente (ex.: benchmarking de mercado do TIAgo) — referência
-    // estável, vem antes do Briefing Vivo (que é o cenário que muda toda semana).
-    if (agent.knowledge && String(agent.knowledge).trim()) parts.push("---", String(agent.knowledge).trim());
+    // NOTA: agent.knowledge (ex.: benchmarking do TIAgo) NÃO entra no prompt — é só
+    // um "item" que o agente segura para você consultar (não custa token na conversa).
     const brief = briefingForPrompt();
     if (brief) parts.push("---", brief);
     return parts.join("\n\n");

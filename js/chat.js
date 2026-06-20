@@ -61,6 +61,9 @@ const Chat = (() => {
     // Cartilha de Nomes é da IAra — atalho só no chat dela.
     const cartChip = document.getElementById("chatCartChip");
     if (cartChip) cartChip.hidden = agent.id !== "head-rh";
+    // Benchmarking de Mercado é o "item" do TIAgo — só no chat dele (e só se existir).
+    const benchChip = document.getElementById("chatBenchChip");
+    if (benchChip) benchChip.hidden = !(agent.id === "ceo" && agent.knowledge);
 
     App.showView("chatView");
 
@@ -423,6 +426,7 @@ const Chat = (() => {
     document.getElementById("chatClearBtn").addEventListener("click", clear);
     document.getElementById("chatSendBtn").addEventListener("click", send);
     document.getElementById("chatCartChip")?.addEventListener("click", () => { if (window.App && App.openCartilha) App.openCartilha(); });
+    document.getElementById("chatBenchChip")?.addEventListener("click", () => { if (window.App && App.openBenchmark) App.openBenchmark(); });
 
     document.getElementById("modeEasyBtn").addEventListener("click", () => applyMode("easy"));
     document.getElementById("modeHardBtn").addEventListener("click", () => {

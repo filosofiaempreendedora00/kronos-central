@@ -352,12 +352,27 @@ function bindLightbox() {
 /* ------------------------------- Cartilha (modal) ------------------------ */
 /* A Cartilha de Nomes é da IAra — abre como modal sobre qualquer ambiente
    (chat com a IAra, ou doc dela na Biblioteca), sem perder o lugar. */
-function openCartilha() {
+/* Modal genérico de leitura (Cartilha da IAra, Benchmarking do TIAgo, etc.). */
+function openDocModal(title, sub, html) {
   const modal = document.getElementById("cartilhaModal");
   const body = document.getElementById("cartilhaBody");
   if (!modal || !body) return;
-  body.innerHTML = (typeof NucleoView !== "undefined" && NucleoView.cartilhaHTML) ? NucleoView.cartilhaHTML() : "";
+  const t = document.getElementById("cartmodalTitle"); if (t) t.textContent = title;
+  const s = document.getElementById("cartmodalSub"); if (s) s.textContent = sub;
+  body.innerHTML = html || "";
+  body.scrollTop = 0;
   modal.hidden = false;
+}
+function openCartilha() {
+  openDocModal("Cartilha de Nomes", "guardada por IAra · CAO",
+    (typeof NucleoView !== "undefined" && NucleoView.cartilhaHTML) ? NucleoView.cartilhaHTML() : "");
+}
+/* O TIAgo "segura" o Benchmarking — documento de consulta, NÃO entra no prompt dele. */
+function openBenchmark() {
+  const ceo = (typeof AGENTS !== "undefined" ? AGENTS : []).find((a) => a.id === "ceo");
+  if (!ceo || !ceo.knowledge) return;
+  const html = (typeof NucleoView !== "undefined" && NucleoView.mdToHtml) ? NucleoView.mdToHtml(ceo.knowledge) : "";
+  openDocModal("Benchmarking de Mercado", `guardado por ${ceo.nome || ceo.name} · ${ceo.name}`, html);
 }
 function closeCartilha() {
   const modal = document.getElementById("cartilhaModal");
@@ -551,6 +566,7 @@ window.App = {
   closeDrawer,
   openLightbox,
   openCartilha,
+  openBenchmark,
   refreshBriefing,
   toast,
 };
