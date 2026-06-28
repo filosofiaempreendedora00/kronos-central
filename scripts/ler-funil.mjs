@@ -89,9 +89,9 @@ if (metaTok) {
       return r;
     };
     const acc = (await get("me/adaccounts", { fields: "id", limit: 1 })).data[0];
-    const ins = (await get(`${acc.id}/insights`, { level: "account", date_preset: "maximum", fields: "spend,actions" })).data[0] || {};
+    const ins = (await get(`${acc.id}/insights`, { level: "account", date_preset: "maximum", fields: "spend,clicks,actions" })).data[0] || {};
     const reg = Number((ins.actions || []).find((a) => a.action_type === "complete_registration")?.value || 0);
-    meta = { spend: Math.round(Number(ins.spend || 0)), cadastros: reg };
+    meta = { spend: Math.round(Number(ins.spend || 0)), clicks: Number(ins.clicks || 0), cadastros: reg };
   } catch (e) { console.error("Meta indisponível (segue sem):", e.message); }
 }
 
