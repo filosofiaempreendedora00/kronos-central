@@ -1,117 +1,156 @@
 /* ===========================================================================
    FUNIL — visualização do funil do SaaS na home (entre Métricas e Custos).
 
-   Lê www/contexto/funil.json (sincronizado, PÚBLICO mas CIFRADO) e decifra com a
-   chave do cofre — mesmo padrão do histórico da Delfos (meetings.json). Mostra o
-   funil de ponta a ponta (tráfego → cadastro → ativação → pagante) como um funil
-   de verdade: número absoluto por fase, a CONVERSÃO e o DROP entre cada fase, e a
-   variação vs a leitura anterior (estamos melhorando ou piorando?).
+   Lê www/contexto/funil.json (sincronizado, CIFRADO) e decifra com a chave do
+   cofre. Mostra o funil ponta a ponta (tráfego → cadastro → ativação → pagante)
+   como um FUNIL de verdade (trapézios que estreitam), com filtro de DATA e de
+   FONTE, focado 100% no Freemium (piso = início da campanha freemium).
 
-   Snapshots gerados por `node scripts/ler-funil.mjs` (Supabase só-leitura + Meta
-   best-effort). Cada execução grava um snapshot do dia e mantém o histórico.
+   Dados: série DIÁRIA gerada por `node scripts/ler-funil.mjs` (Supabase só-leitura
+   + Meta da campanha freemium). O filtro de data soma a série no cliente.
    =========================================================================== */
 const Funil = (() => {
   const PATH = "www/contexto/funil.json";
+  let DOC = null;
+  const state = { range: "freemium", source: "todos" };
 
+  const nf = (n) => Number(n).toLocaleString("pt-BR");
+  const brl = (n) => "R$ " + Math.round(n).toLocaleString("pt-BR");
   const ratio = (a, b) => (b ? a / b : 0);
   const pctInt = (a, b) => Math.round(ratio(a, b) * 100);
   const fmtPct = (a, b) => { const v = ratio(a, b) * 100; return (v > 0 && v < 1 ? v.toFixed(1) : Math.round(v)) + "%"; };
-  const nf = (n) => Number(n).toLocaleString("pt-BR");
-  const brl = (n) => "R$ " + Math.round(n).toLocaleString("pt-BR");
   const fmtDate = (iso) => { if (!iso) return ""; const p = iso.split("-"); return p[2] + "/" + p[1]; };
+  const addDays = (iso, n) => { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 
   async function load() {
     if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return null;
     let res;
     try { res = await Sync.readJson(PATH); } catch (_) { return null; }
-    const env = res && res.json; // Sync.readJson devolve { json, sha } — o envelope está em .json
+    const env = res && res.json;
     if (!env) return null;
     try {
       const doc = (env.v && env.ct) ? await Auth.decryptJSON(env) : env;
-      return (doc && Array.isArray(doc.snapshots) && doc.snapshots.length) ? doc : null;
+      return (doc && Array.isArray(doc.daily)) ? doc : null;
     } catch (_) { return null; }
   }
 
-  /* Selo de variação vs leitura anterior (subir é sempre bom nestas fases). */
-  function deltaTag(cur, prev) {
-    if (prev == null || cur == null) return "";
-    const d = cur - prev;
-    if (d === 0) return `<span class="funnel__delta funnel__delta--flat">→</span>`;
-    const up = d > 0;
-    return `<span class="funnel__delta funnel__delta--${up ? "up" : "down"}">${up ? "▲ +" : "▼ "}${nf(Math.abs(d))}</span>`;
+  const sumIn = (series, key, from, to) => (series || []).filter((x) => x.date >= from && x.date <= to).reduce((s, x) => s + (x[key] || 0), 0);
+
+  function bounds(range) {
+    const to = DOC.today;
+    if (range === "freemium") return [DOC.freemiumStart, to];
+    const days = { "7d": 7, "14d": 14, "30d": 30 }[range] || 7;
+    let from = addDays(to, -(days - 1));
+    if (from < DOC.freemiumStart) from = DOC.freemiumStart;
+    return [from, to];
+  }
+
+  function compute(from, to) {
+    const cadastros = sumIn(DOC.daily, "cadastros", from, to);
+    const ativacao = sumIn(DOC.daily, "ativacoes", from, to);
+    const ativacaoReal = sumIn(DOC.daily, "ativacoesReal", from, to);
+    const metaClicks = sumIn(DOC.metaDaily, "linkClicks", from, to);
+    const spend = sumIn(DOC.metaDaily, "spend", from, to);
+    const google = 0; // leitura do Google ainda não conectada
+    const traffic = state.source === "meta" ? metaClicks : state.source === "google" ? google : metaClicks + google;
+    return { cadastros, ativacao, ativacaoReal, metaClicks, google, traffic, spend, pagantes: DOC.pagantesTotal || 0 };
+  }
+
+  /* ----- controles (data + fonte) ----- */
+  function chip(group, val, label, active, extra) {
+    return `<button type="button" class="funil-chip${active ? " funil-chip--on" : ""}" data-g="${group}" data-v="${val}"${extra || ""}>${label}</button>`;
+  }
+  function buildControls() {
+    const el = document.getElementById("funilControls");
+    if (!el) return;
+    const dates = [["freemium", "Freemium"], ["30d", "30d"], ["14d", "14d"], ["7d", "7d"]]
+      .map(([v, l]) => chip("range", v, l, state.range === v)).join("");
+    const srcs = [["todos", "Todos"], ["meta", "Meta"], ["google", "Google"]]
+      .map(([v, l]) => chip("source", v, l + (v === "google" ? " ·conectar" : ""), state.source === v)).join("");
+    el.innerHTML = `<div class="funil-ctlgroup">${dates}</div><div class="funil-ctlgroup funil-ctlgroup--src">${srcs}</div>`;
+    el.querySelectorAll(".funil-chip").forEach((b) => b.addEventListener("click", () => {
+      state[b.dataset.g === "range" ? "range" : "source"] = b.dataset.v;
+      buildControls(); draw();
+    }));
+  }
+
+  function draw() {
+    const grid = document.getElementById("funilGrid");
+    const head = document.getElementById("funilHeadline");
+    const stats = document.getElementById("funilStats");
+    const metaEl = document.getElementById("funilMeta");
+    if (!grid) return;
+    const [from, to] = bounds(state.range);
+    const d = compute(from, to);
+
+    // fases do funil (monotônicas)
+    const srcNote = state.source === "google" ? "leitura do Google não conectada" : state.source === "meta" ? "cliques no link · Meta" : "cliques no link · Meta (Google em breve)";
+    const stages = [
+      { label: "Tráfego", value: d.traffic, note: srcNote },
+      { label: "Cadastros", value: d.cadastros, verb: "se cadastram" },
+      { label: "Ativação · 1ª proposta", value: d.ativacao, verb: "ativam", note: `${d.ativacaoReal} catálogo real · ${d.ativacao - d.ativacaoReal} exemplo` },
+      { label: "Pagantes", value: d.pagantes, verb: "assinam" },
+    ];
+
+    const top = stages[0].value || stages[1].value || 1;
+    const frac = (v) => (v > 0 ? Math.min(0.96, Math.max(0.18, 0.18 + 0.80 * Math.sqrt(v / top))) : 0.12);
+
+    let html = '<div class="fnl">';
+    stages.forEach((s, i) => {
+      const topF = i === 0 ? frac(stages[0].value) : frac(stages[i - 1].value);
+      const botF = frac(s.value);
+      const poly = `polygon(${50 - topF * 50}% 0, ${50 + topF * 50}% 0, ${50 + botF * 50}% 100%, ${50 - botF * 50}% 100%)`;
+      html += `<div class="fnl__band${s.value === 0 ? " fnl__band--zero" : ""}">
+        <div class="fnl__shape" style="clip-path:${poly};-webkit-clip-path:${poly}"></div>
+        <div class="fnl__c">
+          <span class="fnl__label">${s.label}</span>
+          <span class="fnl__num">${nf(s.value)}</span>
+          ${s.note ? `<span class="fnl__note">${s.note}</span>` : ""}
+        </div>
+      </div>`;
+      if (i < stages.length - 1) {
+        const n = stages[i + 1];
+        html += `<div class="fnl__conv"><b>${fmtPct(n.value, s.value)}</b> ${n.verb}<span class="fnl__conv-sep">·</span><span class="fnl__conv-drop">−${nf(s.value - n.value)} saem</span></div>`;
+      }
+    });
+    html += "</div>";
+    grid.innerHTML = html;
+
+    // headline (1 frase) — o gargalo
+    if (head) {
+      const tA = pctInt(d.ativacao, d.cadastros);
+      head.innerHTML = `<span class="funil-headline__dot"></span> <b>Gargalo na ativação:</b> só <b>${tA}%</b> dos cadastros geram a 1ª proposta — ${d.cadastros - d.ativacao} de ${d.cadastros} não geram nada.${d.pagantes === 0 ? " Ainda <b>0 pagantes</b> (gate de escala = 1ª assinatura)." : ""}`;
+      head.hidden = false;
+    }
+
+    // stats compactos (refletem o filtro)
+    if (stats) {
+      const chips = [
+        ["Gasto", d.spend ? brl(d.spend) : "—"],
+        ["Custo / ativação", d.ativacao ? brl(d.spend / d.ativacao) : "—"],
+        ["Custo / cadastro", d.cadastros ? brl(d.spend / d.cadastros) : "—"],
+        ["Ativação real", `${d.ativacaoReal} de ${d.ativacao}`],
+      ];
+      stats.innerHTML = chips.map(([k, v]) => `<div class="funil-stat"><span class="funil-stat__k">${k}</span><span class="funil-stat__v">${v}</span></div>`).join("");
+    }
+
+    if (state.source !== "todos") {
+      grid.insertAdjacentHTML("beforeend", `<p class="funil-src-note">Obs: a fonte filtra só o tráfego. Cadastro→ativação→pagante ainda não são atribuídos por fonte (sem UTM/click-id ligando clique→conta).</p>`);
+    }
+
+    if (metaEl) metaEl.textContent = `${state.range === "freemium" ? "Freemium" : state.range} · ${fmtDate(from)}–${fmtDate(to)}${DOC.freemiumCampaign ? " · campanha isolada" : ""}`;
   }
 
   function render() {
-    const grid = document.getElementById("funilGrid");
-    const metaEl = document.getElementById("funilMeta");
-    const insEl = document.getElementById("funilInsight");
-    if (!grid) return;
-
     load().then((doc) => {
+      const grid = document.getElementById("funilGrid");
       if (!doc) {
-        if (metaEl) metaEl.textContent = "";
-        if (insEl) insEl.hidden = true;
-        grid.innerHTML = `<p class="funil-empty">Sem leitura do funil ainda. Rode <code>node scripts/ler-funil.mjs</code> para gerar o 1º retrato.</p>`;
+        if (grid) grid.innerHTML = `<p class="funil-empty">Sem leitura do funil ainda. Rode <code>node scripts/ler-funil.mjs</code> para gerar.</p>`;
         return;
       }
-      const cur = doc.snapshots[0];
-      const prev = doc.snapshots[1] || null;
-      const pMeta = prev && prev.meta;
-
-      // Fases do funil (monotônicas: cada uma ⊆ a anterior). O tráfego entra só
-      // se houver Meta; o verbo descreve a conversão PARA aquela fase.
-      const stages = [];
-      const clicks = cur.meta && cur.meta.clicks;
-      if (clicks) stages.push({ label: "Tráfego · cliques pagos", value: clicks, prev: pMeta && pMeta.clicks, note: "Meta Ads · Google em breve" });
-      stages.push({ label: "Cadastros", value: cur.cadastros, prev: prev && prev.cadastros, verb: "se cadastram" });
-      stages.push({
-        label: "Ativação · 1ª proposta", value: cur.ativacao, prev: prev && prev.ativacao, verb: "ativam",
-        note: `${cur.ativacaoReal} com catálogo real · ${cur.ativacao - cur.ativacaoReal} com exemplo`,
-      });
-      stages.push({ label: "Pagantes", value: cur.pagantes, prev: prev && prev.pagantes, verb: "assinam" });
-
-      // Largura da barra: escala sqrt (preserva a ordem e mantém todas as fases
-      // visíveis mesmo com tráfego ordens de grandeza acima). Os números e as
-      // conversões ao lado são exatos — a barra é só o gestalt do funil.
-      const top = stages[0].value || 1;
-      const widthOf = (v) => (v > 0 ? Math.max(6, Math.sqrt(v / top) * 100) : 0);
-
-      let html = `<div class="funnel">`;
-      stages.forEach((s, i) => {
-        if (i > 0) {
-          const prevV = stages[i - 1].value;
-          const drop = prevV - s.value;
-          html += `<div class="funnel__link">
-            <span class="funnel__conv">${fmtPct(s.value, prevV)}</span> ${s.verb}
-            <span class="funnel__dropsep">·</span>
-            <span class="funnel__drop">−${nf(drop)} saem</span>
-          </div>`;
-        }
-        html += `<div class="funnel__stage">
-          <div class="funnel__head">
-            <span class="funnel__label">${s.label}${s.note ? `<span class="funnel__note">${s.note}</span>` : ""}</span>
-            <span class="funnel__numwrap"><span class="funnel__num">${nf(s.value)}</span>${deltaTag(s.value, s.prev == null ? null : s.prev)}</span>
-          </div>
-          <div class="funnel__track"><div class="funnel__bar" style="width:${widthOf(s.value)}%"></div></div>
-        </div>`;
-      });
-      html += `</div>`;
-      grid.innerHTML = html;
-
-      if (metaEl) metaEl.textContent = `leitura de ${fmtDate(cur.date)} · contas de ${fmtDate(cur.period && cur.period.from)} a ${fmtDate(cur.period && cur.period.to)} · ${doc.snapshots.length} ${doc.snapshots.length === 1 ? "registro" : "registros"}`;
-
-      if (insEl) {
-        const ins = [];
-        const tAtiv = pctInt(cur.ativacao, cur.cadastros);
-        ins.push(`<b>Gargalo = ativação:</b> só <b>${tAtiv}%</b> dos cadastros geram a 1ª proposta — ${cur.cadastros - cur.ativacao} de ${cur.cadastros} não geram nada.`);
-        if (cur.ativacaoReal < cur.ativacao) ins.push(`Qualidade: das ${cur.ativacao} ativações, só <b>${cur.ativacaoReal}</b> usou catálogo real — o resto gerou proposta de exemplo (lixo).`);
-        if (clicks) ins.push(`Topo: ${nf(clicks)} cliques pagos → ${cur.cadastros} cadastros (<b>${fmtPct(cur.cadastros, clicks)}</b>). ⚠️ tráfego é ~97% mobile e o produto é desktop.`);
-        if (cur.pagantes === 0) ins.push(`<b>0 pagantes</b> — o funil ainda não fechou. Gate de escala = a 1ª assinatura.`);
-        else ins.push(`<b>${cur.pagantes} pagante(s)</b> · ${pctInt(cur.pagantes, cur.cadastros)}% dos cadastros.`);
-        if (cur.meta && cur.meta.spend) ins.push(`Custo: ${brl(cur.meta.spend)} gastos → <b>${brl(cur.ativacao ? cur.meta.spend / cur.ativacao : 0)}/ativação</b> · ${brl(cur.cadastros ? cur.meta.spend / cur.cadastros : 0)}/cadastro.`);
-        insEl.innerHTML = ins.map((s) => `<span class="funil-insight__line">${s}</span>`).join("");
-        insEl.hidden = false;
-      }
+      DOC = doc;
+      buildControls();
+      draw();
     });
   }
 

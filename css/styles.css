@@ -557,120 +557,45 @@ body::before {
 .metric-card__label-input:focus,
 .metric-card__value-input:focus { outline: 2px solid var(--areia); outline-offset: 1px; }
 
-/* ---- Funil (bloco entre Métricas e Custos) ------------------------------- */
-.funil-card { gap: 7px; }
-.funil-card--key {
-  border-color: var(--areia-40);
-  box-shadow: inset 0 0 0 1px var(--areia-22);
-}
-.funil-card__sub {
-  font-size: 12px;
-  color: var(--areia);
-  letter-spacing: 0.01em;
-}
-.funil-card__delta {
-  margin-top: auto;
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-}
-.funil-card__delta--up { color: #8FB573; }     /* melhora — verde-musgo discreto */
-.funil-card__delta--down { color: #D98A6E; }   /* piora — terracota discreto */
-.funil-card__delta--flat { color: var(--areia); }
-
-.funil-insight {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  background: var(--areia-12);
-  border: 1px solid var(--areia-22);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: var(--gap);
-}
-.funil-insight[hidden] { display: none; } /* o atributo hidden precisa vencer o display:flex */
-.funil-insight__line {
-  color: var(--creme);
-  font-size: 13.5px;
-  line-height: 1.5;
-}
-.funil-insight__line b { color: var(--branco); font-weight: 600; }
+/* ---- Funil (entre Métricas e Custos) ------------------------------------- */
 .funil-empty { color: var(--areia); font-size: 14px; }
-.funil-empty code {
-  background: var(--areia-12);
-  border: 1px solid var(--areia-22);
-  border-radius: 6px;
-  padding: 2px 7px;
-  font-size: 12.5px;
-}
+.funil-empty code { background: var(--areia-12); border: 1px solid var(--areia-22); border-radius: 6px; padding: 2px 7px; font-size: 12.5px; }
 
-/* ---- Funil visual (fases + conversão/drop) ------------------------------- */
-.funnel { display: flex; flex-direction: column; }
-.funnel__stage { padding: 2px 0; }
-.funnel__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 14px;
-  margin-bottom: 8px;
-}
-.funnel__label {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--areia);
-}
-.funnel__note {
-  display: block;
-  margin-top: 3px;
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 400;
-  font-size: 11.5px;
-  color: var(--areia);
-  opacity: 0.85;
-}
-.funnel__numwrap { display: flex; align-items: baseline; gap: 9px; white-space: nowrap; }
-.funnel__num {
-  font-family: var(--font-title);
-  font-weight: 600;
-  font-size: 30px;
-  line-height: 1;
-  color: var(--branco);
-}
-.funnel__delta { font-size: 12px; font-weight: 500; }
-.funnel__delta--up { color: #8FB573; }
-.funnel__delta--down { color: #D98A6E; }
-.funnel__delta--flat { color: var(--areia); }
-.funnel__track {
-  height: 26px;
-  background: var(--areia-12);
-  border: 1px solid var(--areia-22);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.funnel__bar {
-  height: 100%;
-  min-width: 2px;
-  border-radius: 7px;
-  background: linear-gradient(90deg, var(--areia-40), var(--areia));
-  transition: width 0.6s ease;
-}
-.funnel__link {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin: 7px 0 7px 11px;
-  padding: 7px 0 7px 16px;
-  border-left: 2px solid var(--areia-22);
-  font-size: 12.5px;
-  color: var(--areia);
-}
-.funnel__conv { color: var(--branco); font-weight: 600; }
-.funnel__dropsep { opacity: 0.5; }
-.funnel__drop { color: #D98A6E; }
+/* filtros (data + fonte) */
+.funil-controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.funil-ctlgroup { display: inline-flex; gap: 4px; background: var(--areia-12); border: 1px solid var(--areia-22); border-radius: 999px; padding: 4px; }
+.funil-chip { border: 0; background: transparent; color: var(--areia); font-family: var(--font-body); font-size: 12.5px; font-weight: 500; padding: 6px 15px; border-radius: 999px; cursor: pointer; transition: color .15s ease, background .15s ease; white-space: nowrap; }
+.funil-chip:hover { color: var(--creme); }
+.funil-chip--on { background: var(--areia); color: var(--onix); }
+
+/* headline (1 frase, o gargalo) */
+.funil-headline { display: flex; align-items: center; gap: 10px; margin: 0 0 22px; padding: 13px 18px; background: var(--areia-12); border: 1px solid var(--areia-22); border-left: 3px solid #D98A6E; border-radius: 11px; color: var(--creme); font-size: 13.5px; line-height: 1.5; }
+.funil-headline[hidden] { display: none; }
+.funil-headline b { color: var(--branco); font-weight: 600; }
+.funil-headline__dot { width: 7px; height: 7px; border-radius: 50%; background: #D98A6E; flex: 0 0 auto; }
+
+/* o funil (trapézios que estreitam) */
+.fnl { display: flex; flex-direction: column; align-items: center; }
+.fnl__band { position: relative; width: 100%; height: 76px; }
+.fnl__shape { position: absolute; inset: 0; background: linear-gradient(168deg, var(--creme), var(--areia)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+.fnl__band--zero .fnl__shape { background: linear-gradient(168deg, var(--areia-40), var(--areia-22)); box-shadow: none; }
+.fnl__c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; text-align: center; pointer-events: none; }
+.fnl__label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(21, 12, 6, 0.62); }
+.fnl__num { font-family: var(--font-title); font-weight: 600; font-size: 33px; line-height: 1.05; color: var(--onix); }
+.fnl__band--zero .fnl__num { color: rgba(21, 12, 6, 0.5); }
+.fnl__note { font-size: 11px; color: rgba(21, 12, 6, 0.6); margin-top: 1px; }
+.fnl__conv { display: flex; align-items: center; gap: 7px; padding: 8px 0; font-size: 12.5px; color: var(--areia); }
+.fnl__conv b { color: var(--branco); font-weight: 600; }
+.fnl__conv-sep { opacity: 0.45; }
+.fnl__conv-drop { color: #D98A6E; }
+
+/* stats compactos (refletem o filtro) */
+.funil-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 24px; }
+.funil-stat { background: var(--areia-12); border: 1px solid var(--areia-22); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 5px; }
+.funil-stat__k { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--areia); }
+.funil-stat__v { font-family: var(--font-title); font-weight: 600; font-size: 21px; color: var(--branco); }
+
+.funil-src-note { margin: 14px 0 0; font-size: 11.5px; color: var(--areia); opacity: 0.85; line-height: 1.45; }
 
 /* ============================== FOOTER ============================== */
 .foot {
