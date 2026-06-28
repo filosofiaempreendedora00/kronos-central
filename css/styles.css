@@ -588,6 +588,7 @@ body::before {
   padding: 16px 20px;
   margin-bottom: var(--gap);
 }
+.funil-insight[hidden] { display: none; } /* o atributo hidden precisa vencer o display:flex */
 .funil-insight__line {
   color: var(--creme);
   font-size: 13.5px;
