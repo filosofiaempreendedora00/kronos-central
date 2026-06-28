@@ -575,7 +575,7 @@ body::before {
 .funil-headline__dot { width: 7px; height: 7px; border-radius: 50%; background: #D98A6E; flex: 0 0 auto; }
 
 /* o funil (trapézios que estreitam) */
-.fnl { display: flex; flex-direction: column; align-items: center; }
+.fnl { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 640px; margin: 0 auto; }
 .fnl__band { position: relative; width: 100%; height: 76px; }
 .fnl__shape { position: absolute; inset: 0; background: linear-gradient(168deg, var(--creme), var(--areia)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4); }
 .fnl__band--zero .fnl__shape { background: linear-gradient(168deg, var(--areia-40), var(--areia-22)); box-shadow: none; }
@@ -596,6 +596,58 @@ body::before {
 .funil-stat__v { font-family: var(--font-title); font-weight: 600; font-size: 21px; color: var(--branco); }
 
 .funil-src-note { margin: 14px 0 0; font-size: 11.5px; color: var(--areia); opacity: 0.85; line-height: 1.45; }
+
+/* ---- Kanban (aba Atividades — dono: MatIAs) ------------------------------ */
+.kanban__head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
+.kanban__owner { display: flex; align-items: center; gap: 14px; }
+.kanban__avatar { width: 54px; height: 54px; border-radius: 50%; overflow: hidden; border: 1px solid var(--areia-40); flex: 0 0 auto; }
+.kanban__avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kanban__title { font-family: var(--font-title); font-size: 27px; font-weight: 600; color: var(--branco); margin: 0; line-height: 1.1; }
+.kanban__sub { margin: 3px 0 0; font-size: 13px; color: var(--areia); max-width: 60ch; }
+.kanban__sub b { color: var(--creme); font-weight: 600; }
+
+.kanban__board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start; }
+
+.kcol { background: var(--areia-12); border: 1px solid var(--areia-22); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; min-height: 140px; }
+.kcol__head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 2px 4px; }
+.kcol__label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--areia); }
+.kcol__count { font-size: 11px; color: var(--areia); border: 1px solid var(--areia-22); border-radius: 999px; padding: 1px 8px; }
+.kcol__add { margin-left: auto; width: 25px; height: 25px; border-radius: 7px; border: 1px solid var(--areia-22); background: transparent; color: var(--areia); font-size: 17px; line-height: 1; cursor: pointer; transition: color .15s ease, border-color .15s ease; }
+.kcol__add:hover { color: var(--creme); border-color: var(--areia); }
+.kcol__cards { display: flex; flex-direction: column; gap: 9px; flex: 1; min-height: 36px; border-radius: 10px; }
+.kcol__cards--over { outline: 2px dashed var(--areia-40); outline-offset: 2px; }
+.kcol__empty { color: var(--areia); opacity: 0.4; font-size: 13px; text-align: center; padding: 10px 0; margin: 0; }
+
+.kcard { background: var(--sepia); border: 1px solid var(--areia-22); border-radius: 10px; padding: 11px 12px; cursor: grab; }
+.kcard:active { cursor: grabbing; }
+.kcard--drag { opacity: 0.45; }
+.kcard__title { color: var(--creme); font-size: 13.5px; line-height: 1.4; word-break: break-word; white-space: pre-wrap; }
+.kcard__empty { color: var(--areia); opacity: 0.6; }
+.kcard__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 11px; }
+.kcard__dl { font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--areia-22); color: var(--areia); white-space: nowrap; }
+.kcard__dl--over { color: #E08A6E; border-color: #7a3b2c; background: rgba(217, 138, 110, 0.1); }
+.kcard__dl--due { color: #D8B36E; border-color: #6e5a2c; }
+.kcard__dl--none { opacity: 0.5; }
+.kcard__actions { display: flex; gap: 1px; flex: 0 0 auto; }
+.kbtn { width: 25px; height: 25px; border: 0; background: transparent; color: var(--areia); border-radius: 6px; cursor: pointer; font-size: 14px; line-height: 1; }
+.kbtn:hover:not(:disabled) { color: var(--creme); background: var(--areia-12); }
+.kbtn:disabled { opacity: 0.28; cursor: default; }
+
+.kcard--edit { cursor: default; background: var(--sepia); }
+.kcard__input { width: 100%; background: var(--onix); border: 1px solid var(--areia-40); border-radius: 7px; color: var(--creme); font-family: var(--font-body); font-size: 13.5px; padding: 8px 10px; resize: vertical; box-sizing: border-box; }
+.kcard__input:focus { outline: 2px solid var(--areia); outline-offset: 1px; }
+.kcard__dllabel { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--areia); margin-top: 9px; }
+.kcard__date { background: var(--onix); border: 1px solid var(--areia-40); border-radius: 7px; color: var(--creme); padding: 5px 8px; font-family: var(--font-body); color-scheme: dark; }
+.kcard__editbtns { display: flex; gap: 8px; margin-top: 11px; }
+.kbtn-save { flex: 1; background: var(--areia); color: var(--onix); border: 0; border-radius: 7px; padding: 8px; font-weight: 600; cursor: pointer; font-family: var(--font-body); font-size: 13px; }
+.kbtn-save:hover { background: var(--creme); }
+.kbtn-cancel { background: transparent; color: var(--areia); border: 1px solid var(--areia-22); border-radius: 7px; padding: 8px 13px; cursor: pointer; font-family: var(--font-body); font-size: 13px; }
+.kbtn-cancel:hover { color: var(--creme); }
+
+@media (max-width: 860px) {
+  .kanban__board { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(250px, 78vw); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .kcol { scroll-snap-align: start; }
+}
 
 /* ============================== FOOTER ============================== */
 .foot {
