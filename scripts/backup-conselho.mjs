@@ -18,12 +18,15 @@ const ROOT = "Conselho";
 const OUT = "backups/conselho.enc";
 const ITER = 150000;
 
+// Só faz backup de TEXTO (o cérebro insubstituível). Binários (PDF/imagens) são
+// originais do fundador — não vão cifrados pro repo (evita corrupção e inchaço).
+const TEXT_EXT = new Set([".md", ".json", ".txt", ".csv", ".mjs", ".js", ".yml", ".yaml", ".env"]);
 function walk(dir, acc = {}) {
   for (const name of fs.readdirSync(dir)) {
     const p = path.join(dir, name);
     const st = fs.statSync(p);
     if (st.isDirectory()) walk(p, acc);
-    else acc[p] = fs.readFileSync(p, "utf8");
+    else if (TEXT_EXT.has(path.extname(name).toLowerCase())) acc[p] = fs.readFileSync(p, "utf8");
   }
   return acc;
 }
