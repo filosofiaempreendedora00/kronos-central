@@ -1,13 +1,17 @@
 /* ===========================================================================
    KANBAN — Atividades (aba própria). Dono: MatIAs (COO, "quem toca o bumbo").
 
-   Colunas: Backlog → To Do → Doing → Complete. Cards com prazo (deadline) e
-   movimentação por arrastar (desktop) OU pelas setas ‹ › (funciona no mobile).
-   Persistência: localStorage (por aparelho). v1 — sync entre aparelhos é o
-   próximo passo (cifrar em www/contexto/kanban.json, padrão meetings/funil).
+   Colunas: Backlog → To Do → Doing → Complete. Cards com prazo, drag-drop
+   (desktop) e setas ‹ › (mobile).
+
+   PERSISTÊNCIA DURÁVEL (cross-device): as tarefas vivem CIFRADAS em
+   www/contexto/kanban.json (mesma chave do cofre). Lê de qualquer aparelho
+   (público) e grava de volta no GitHub se houver token configurado (Configurar).
+   localStorage é cache local/instantâneo + fallback offline.
    =========================================================================== */
 const Kanban = (() => {
   const LS = "kronos.kanban";
+  const PATH = "www/contexto/kanban.json";
   const COLS = [
     { key: "backlog", label: "Backlog" },
     { key: "todo", label: "To Do" },
@@ -15,21 +19,78 @@ const Kanban = (() => {
     { key: "done", label: "Complete" },
   ];
   let tasks = [];
-  let editingId = null; // id do card em edição (ou null)
+  let editingId = null;
+  let updatedAt = 0;
+  let remoteSha = null;
+  let saveTimer = null;
+  let syncState = "local"; // local | syncing | synced | error
 
   const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const uid = () => "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const canSync = () => typeof Sync !== "undefined" && Sync.configured && Sync.configured() && typeof Auth !== "undefined" && Auth.encryptJSON;
 
-  function load() { try { const d = JSON.parse(localStorage.getItem(LS)); if (d && Array.isArray(d.tasks)) tasks = d.tasks; } catch (_) { tasks = []; } }
-  function save() { try { localStorage.setItem(LS, JSON.stringify({ tasks })); } catch (_) {} }
+  function loadLocal() { try { const d = JSON.parse(localStorage.getItem(LS)); if (d && Array.isArray(d.tasks)) { tasks = d.tasks; updatedAt = d.updatedAt || 0; } } catch (_) {} }
+  function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ tasks, updatedAt })); } catch (_) {} }
+
+  /* Toda mutação passa por aqui: carimba updatedAt, salva local na hora e agenda
+     o push cifrado pro GitHub (debounced). */
+  function persist() { updatedAt = Date.now(); saveLocal(); scheduleSync(); }
+
+  function scheduleSync() {
+    if (!canSync()) { syncState = "local"; reflectSync(); return; }
+    syncState = "syncing"; reflectSync();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(pushRemote, 1200);
+  }
+  async function pushRemote() {
+    if (!canSync()) return;
+    try {
+      try { const cur = await Sync.readJson(PATH); remoteSha = (cur && cur.sha) || remoteSha; } catch (_) {} // sha fresco (last-write-wins simples)
+      const env = await Auth.encryptJSON({ type: "kronos.kanban", version: 1, updatedAt, tasks });
+      const res = await Sync.writeJson(PATH, env, remoteSha, "kronos: kanban atualizado");
+      if (res && res.ok) { remoteSha = res.sha || remoteSha; syncState = "synced"; }
+      else { syncState = "error"; }
+    } catch (_) { syncState = "error"; }
+    reflectSync();
+  }
+  async function loadRemote() {
+    if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return;
+    syncState = canSync() ? "syncing" : "local"; reflectSync();
+    try {
+      const res = await Sync.readJson(PATH);
+      remoteSha = (res && res.sha) || null;
+      const env = res && res.json;
+      if (env) {
+        const doc = (env.v && env.ct) ? await Auth.decryptJSON(env) : env;
+        if (doc && Array.isArray(doc.tasks) && (doc.updatedAt || 0) >= updatedAt) {
+          tasks = doc.tasks; updatedAt = doc.updatedAt || 0; saveLocal(); render();
+        }
+      }
+      syncState = canSync() ? "synced" : "local";
+    } catch (_) { syncState = "error"; }
+    reflectSync();
+  }
+  function reflectSync() {
+    const el = document.getElementById("kanbanSync");
+    if (!el) return;
+    const map = {
+      local: ["kanban__sync--local", "● só neste aparelho"],
+      syncing: ["kanban__sync--wait", "↻ sincronizando…"],
+      synced: ["kanban__sync--ok", "✓ sincronizado"],
+      error: ["kanban__sync--err", "⚠ falha no sync"],
+    };
+    const [cls, txt] = map[syncState] || map.local;
+    el.className = "kanban__sync " + cls;
+    el.textContent = txt;
+    el.title = syncState === "local" ? "Edições só neste aparelho. Configure um token do GitHub em Configurar para sincronizar." : "";
+  }
 
   function deadlineInfo(iso) {
     if (!iso) return null;
     const p = iso.split("-");
     const label = `${p[2]}/${p[1]}`;
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    const d = new Date(iso + "T00:00:00");
-    const days = Math.round((d - today) / 86400000);
+    const days = Math.round((new Date(iso + "T00:00:00") - today) / 86400000);
     if (days < 0) return { cls: "over", txt: `${label} · atrasada` };
     if (days === 0) return { cls: "due", txt: `${label} · hoje` };
     if (days <= 2) return { cls: "due", txt: `${label} · ${days}d` };
@@ -39,7 +100,7 @@ const Kanban = (() => {
   function cardHtml(t) {
     if (editingId === t.id) {
       return `<div class="kcard kcard--edit" data-id="${t.id}">
-        <textarea class="kcard__input" rows="2" placeholder="O que precisa ser feito?">${esc(t.title)}</textarea>
+        <textarea class="kcard__input" rows="3" placeholder="O que precisa ser feito?">${esc(t.title)}</textarea>
         <label class="kcard__dllabel">Prazo <input type="date" class="kcard__date" value="${t.deadline || ""}"></label>
         <div class="kcard__editbtns">
           <button class="kbtn-save" data-act="save" data-id="${t.id}">Salvar</button>
@@ -102,8 +163,8 @@ const Kanban = (() => {
     if (act === "add") add(b.dataset.col);
     else if (act === "edit") { editingId = id; render(); }
     else if (act === "save") saveCard(id);
-    else if (act === "cancel") { const t = tasks.find((x) => x.id === id); if (t && t._new) tasks = tasks.filter((x) => x.id !== id); editingId = null; save(); render(); }
-    else if (act === "del") { tasks = tasks.filter((x) => x.id !== id); editingId = null; save(); render(); }
+    else if (act === "cancel") { const t = tasks.find((x) => x.id === id); if (t && t._new) tasks = tasks.filter((x) => x.id !== id); editingId = null; persist(); render(); }
+    else if (act === "del") { tasks = tasks.filter((x) => x.id !== id); editingId = null; persist(); render(); }
     else if (act === "move") moveDir(id, Number(b.dataset.dir));
   }
 
@@ -120,29 +181,31 @@ const Kanban = (() => {
     const deadline = card.querySelector(".kcard__date").value || null;
     const t = tasks.find((x) => x.id === id);
     if (!t) return;
-    if (!title) { if (t._new) tasks = tasks.filter((x) => x.id !== id); editingId = null; save(); render(); return; }
+    if (!title) { if (t._new) tasks = tasks.filter((x) => x.id !== id); editingId = null; persist(); render(); return; }
     t.title = title; t.deadline = deadline; delete t._new;
-    editingId = null; save(); render();
+    editingId = null; persist(); render();
   }
   function moveDir(id, dir) {
     const t = tasks.find((x) => x.id === id);
     if (!t) return;
     const ni = COLS.findIndex((c) => c.key === t.status) + dir;
     if (ni < 0 || ni >= COLS.length) return;
-    t.status = COLS[ni].key; save(); render();
+    t.status = COLS[ni].key; persist(); render();
   }
   function moveTo(id, status) {
     const t = tasks.find((x) => x.id === id);
     if (!t || t.status === status) return;
-    t.status = status; save(); render();
+    t.status = status; persist(); render();
   }
 
   function open() {
     if (typeof App !== "undefined" && App.showView) App.showView("kanbanView");
     else { const v = document.getElementById("kanbanView"); if (v) v.hidden = false; }
     render();
+    reflectSync();
+    loadRemote(); // puxa a versão sincronizada (seed + outros aparelhos)
   }
-  function boot() { load(); }
+  function boot() { loadLocal(); }
 
   return { open, boot, render, add };
 })();

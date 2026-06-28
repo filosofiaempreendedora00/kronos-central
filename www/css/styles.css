@@ -605,6 +605,12 @@ body::before {
 .kanban__title { font-family: var(--font-title); font-size: 27px; font-weight: 600; color: var(--branco); margin: 0; line-height: 1.1; }
 .kanban__sub { margin: 3px 0 0; font-size: 13px; color: var(--areia); max-width: 60ch; }
 .kanban__sub b { color: var(--creme); font-weight: 600; }
+.kanban__headright { display: flex; align-items: center; gap: 14px; }
+.kanban__sync { font-size: 11.5px; white-space: nowrap; }
+.kanban__sync--local { color: var(--areia); }
+.kanban__sync--wait { color: var(--areia); }
+.kanban__sync--ok { color: #8FB573; }
+.kanban__sync--err { color: #D98A6E; }
 
 .kanban__board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start; }
 
