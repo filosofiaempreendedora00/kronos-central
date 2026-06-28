@@ -22,8 +22,9 @@ const Funil = (() => {
 
   async function load() {
     if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return null;
-    let env;
-    try { env = await Sync.readJson(PATH); } catch (_) { return null; }
+    let res;
+    try { res = await Sync.readJson(PATH); } catch (_) { return null; }
+    const env = res && res.json; // Sync.readJson devolve { json, sha } — o envelope está em .json
     if (!env) return null;
     try {
       const doc = (env.v && env.ct) ? await Auth.decryptJSON(env) : env;
