@@ -11,10 +11,12 @@ import fs from "fs";
 import crypto from "crypto";
 import pg from "pg";
 
+// Passphrase do cofre: ou KRONOS_PASS (valor exato do localStorage 'kronos.pass',
+// no formato email|senha) — à prova de erro de digitação — ou KRONOS_EMAIL+KRONOS_PWD.
 const email = (process.env.KRONOS_EMAIL || "").toLowerCase();
 const pwd = process.env.KRONOS_PWD || "";
-if (!email || !pwd) { console.error("Defina KRONOS_EMAIL e KRONOS_PWD."); process.exit(1); }
-const passphrase = email + "|" + pwd;
+const passphrase = process.env.KRONOS_PASS || ((email && pwd) ? email + "|" + pwd : "");
+if (!passphrase) { console.error("Defina KRONOS_PASS (a passphrase exata do cofre) OU KRONOS_EMAIL e KRONOS_PWD."); process.exit(1); }
 
 const envFile = fs.readFileSync(".env.local", "utf8");
 const dbUrl = (envFile.match(/GERADOR_DB_URL\s*=\s*"?([^"\n]+)"?/) || [])[1];
@@ -41,6 +43,18 @@ function decryptDoc(e) {
   const d = crypto.createDecipheriv("aes-256-gcm", key, Buffer.from(e.iv, "base64"));
   d.setAuthTag(tag);
   return JSON.parse(Buffer.concat([d.update(ct), d.final()]).toString("utf8"));
+}
+
+// TRAVA DE SEGURANÇA: a passphrase TEM que abrir o cofre (vault.enc) — é a mesma
+// chave que o app usa pra logar. Se não abrir, o app não conseguirá decifrar o
+// funil. Falha cedo com mensagem clara, em vez de gerar um arquivo "ilegível".
+try {
+  decryptDoc(JSON.parse(fs.readFileSync("www/vault.enc", "utf8")));
+} catch (_) {
+  console.error("✗ Esta senha NÃO abre o cofre (vault.enc) — é a senha errada.\n" +
+    "  Use o e-mail + a SENHA QUE VOCÊ DIGITA PARA LOGAR NO APP KRONOS\n" +
+    "  (não é a senha do banco/Supabase). Nada foi gravado.");
+  process.exit(1);
 }
 
 // ---- Supabase (só-leitura) ----
