@@ -463,6 +463,29 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
 
   /* --------------------- Tela: Histórico de reuniões --------------------- */
   let histMode = "list"; // 'list' | 'read'
+  let histList = [];      // lista exibida = reuniões sincronizadas (Conselho) + locais
+
+  /* Reuniões do Conselho, registradas fora do app e publicadas CIFRADAS em
+     www/contexto/meetings.json. Lê (público) e decifra com a chave do cofre. */
+  async function loadSyncedMeetings() {
+    try {
+      if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return [];
+      const res = await Sync.readJson("www/contexto/meetings.json");
+      const env = res && res.json;
+      if (!env) return [];
+      const doc = (env.v && env.ct) ? await Auth.decryptJSON(env) : env; // tolera texto puro legado
+      return doc && Array.isArray(doc.meetings) ? doc.meetings : [];
+    } catch (_) { return []; }
+  }
+  /* Funde sincronizadas (Conselho) + locais, dedup por ts, mais novas primeiro. */
+  async function loadAllHistory() {
+    const synced = await loadSyncedMeetings();
+    const local = loadHistoryList();
+    const byTs = new Map();
+    [...synced, ...local].forEach((e) => { if (e && e.ts != null && !byTs.has(e.ts)) byTs.set(e.ts, e); });
+    return [...byTs.values()].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  }
+
   function escapeHtml(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -479,9 +502,14 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
       return a ? `<span class="present__av" title="${a.name}">${agentAvatarHTML(a)}</span>` : "";
     }).join("");
   }
-  function openHistory() {
+  async function openHistory() {
     stopDust();
     App.showView("delfosHistoryView");
+    histMode = "list";
+    document.getElementById("delfosHistTitle").textContent = "Histórico";
+    document.getElementById("delfosHistSub").textContent = "carregando…";
+    document.getElementById("delfosHistoryBody").innerHTML = `<p class="settings__desc">carregando…</p>`;
+    histList = await loadAllHistory();
     renderHistoryList();
   }
   function closeHistory() {
@@ -493,7 +521,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     document.getElementById("delfosHistTitle").textContent = "Histórico";
     document.getElementById("delfosHistSub").textContent = "todas as reuniões";
     const body = document.getElementById("delfosHistoryBody");
-    const list = loadHistoryList();
+    const list = histList;
     if (!list.length) {
       body.innerHTML = `<p class="settings__desc">Nenhuma reunião arquivada ainda. Quando você encerrar uma reunião, ela aparece aqui.</p>`;
       return;
@@ -515,7 +543,7 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     );
   }
   function openHistoryItem(i) {
-    const e = loadHistoryList()[i];
+    const e = histList[i];
     if (!e) return;
     histMode = "read";
     document.getElementById("delfosHistTitle").textContent = e.title || "Reunião";
