@@ -243,13 +243,14 @@ function fitViewportToKeyboard() {
 
 /* --------------------- Navegação central (troca de telas) ----------------- */
 const VIEW_IDS = [
-  "dashboardView", "agentesView", "chatView", "delfosView",
+  "dashboardView", "agentesView", "kanbanView", "chatView", "delfosView",
   "costsView", "settingsView", "nucleoView", "nucleoDocView", "delfosHistoryView",
 ];
 const SUB_VIEWS = ["chatView", "delfosView", "nucleoDocView", "delfosHistoryView"];
 // Qual item da sidebar fica ativo para cada tela (sub-telas herdam a seção pai).
 const VIEW_NAV = {
   dashboardView: "dash", agentesView: "agentes", chatView: "agentes",
+  kanbanView: "kanban",
   delfosView: "dash", delfosHistoryView: "dash", costsView: "custos",
   settingsView: "config", nucleoView: "contextos", nucleoDocView: "contextos",
 };
@@ -273,6 +274,7 @@ function navGo(key) {
   else if (key === "agentes") showView("agentesView");
   else if (key === "contextos") NucleoView.open();
   else if (key === "custos") CostsView.open();
+  else if (key === "kanban") Kanban.open();
   else if (key === "config") Settings.open();
   closeDrawer();
 }
@@ -553,6 +555,10 @@ function init() {
   CostsView.renderMini();
   NucleoView.bind();
   Settings.bind();
+  if (typeof Kanban !== "undefined") {
+    Kanban.boot();
+    document.getElementById("kanbanAdd")?.addEventListener("click", () => Kanban.add("backlog"));
+  }
 
   showView("dashboardView"); // estado inicial
   startPonteiroDust();        // poeira de areia ao vento na seção do ponteiro
