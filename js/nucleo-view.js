@@ -320,19 +320,17 @@ const NucleoView = (() => {
         <div class="briefing-doc__top">
           <span class="briefing-doc__vig">Vigente · <strong>${esc(vigente)}</strong></span>
           <div class="briefing-doc__actions">
-            <button class="btn-solid btn-solid--sm" id="briefPonteiroBtn" type="button">✦ Gerar ponteiro (IA)</button>
             <button class="btn-ghost btn-ghost--sm" id="briefEditBtn" type="button">Editar</button>
             <button class="btn-ghost btn-ghost--sm" id="briefDupBtn" type="button">Duplicar p/ hoje</button>
             <button class="btn-ghost btn-ghost--sm" id="briefVersBtn" type="button">Histórico (${vers.length})</button>
           </div>
         </div>
-        <p class="cost-note">${note} O <strong>ponteiro</strong> (HOJE/MÉDIO/LONGO) é escrito por IA a partir deste cenário <strong>e das últimas reuniões do conselho</strong> (que têm prioridade) — toque em “Gerar ponteiro”.</p>
+        <p class="cost-note">${note} O <strong>ponteiro</strong> (HOJE/MÉDIO/LONGO) é mantido pelo conselho e atualizado fora do app — <strong>custo zero</strong>; toque em “↻ update” na home para puxar a versão nova.</p>
         <div id="briefMain" class="doc">${mdToHtml(Context.effectiveBriefing() || "_Material ainda não carregado._")}</div>
       </div>`;
     document.getElementById("briefEditBtn").addEventListener("click", openBriefEditor);
     document.getElementById("briefVersBtn").addEventListener("click", openBriefVersions);
     document.getElementById("briefDupBtn").addEventListener("click", duplicateToday);
-    document.getElementById("briefPonteiroBtn").addEventListener("click", generatePonteiroAI);
   }
 
   /* Regenera o bloco ## PONTEIRO via IA (Haiku) a partir do cenário atual e salva. */
