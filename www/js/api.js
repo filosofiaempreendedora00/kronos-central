@@ -38,19 +38,27 @@ function parsePonteiroJSON(text) {
 
 /* Gera o "ponteiro" (HOJE/MÉDIO/LONGO) a partir do Briefing, com o modelo barato.
    Uma chamada curta e não-streaming. Devolve {hoje,medio,longo,usage,costUSD}. */
-async function generatePonteiro(briefing) {
+async function generatePonteiro(briefing, meetingsDigest) {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error("NO_API_KEY");
   const system =
-    "Você é o motor do \"ponteiro\" da KRONOS — a inteligência que destila, do cenário atual, o que de fato move o negócio.\n" +
+    "Você é o motor do \"ponteiro\" da KRONOS — a inteligência que destila o que de fato move o negócio AGORA.\n" +
     "Régua: \"isto move o ponteiro?\" = progresso mensurável rumo a receita/cliente/resultado.\n" +
     "Tom: seco, afirmativo, frase curta, sem hype, sem jargão, sem adjetivo de venda. Proibido a palavra \"empoderar\".\n" +
-    "Tarefa: lendo o BRIEFING VIVO, escreva três linhas cirúrgicas:\n" +
-    "- HOJE: a ÚNICA prioridade que mais move o ponteiro agora (a ação concreta do dia).\n" +
+    "Fontes: o BRIEFING VIVO (cenário) e as ÚLTIMAS REUNIÕES DO CONSELHO (decisões). " +
+    "As decisões do conselho têm PRIORIDADE sobre o briefing quando mais recentes — são a direção viva. " +
+    "Se a reunião decidiu uma prioridade, o HOJE deve refletir essa decisão.\n" +
+    "Tarefa: escreva três linhas cirúrgicas:\n" +
+    "- HOJE: a ÚNICA prioridade que mais move o ponteiro agora (a ação concreta do dia, alinhada à decisão mais recente do conselho).\n" +
     "- MEDIO: o que precisa acontecer no médio prazo para o negócio avançar.\n" +
     "- LONGO: a direção de longo prazo.\n" +
-    "Baseie-se SÓ no briefing; não invente número nem fato que não esteja lá.\n" +
+    "Não invente número nem fato que não esteja nas fontes.\n" +
     "Responda APENAS com JSON puro, sem markdown: {\"hoje\":\"...\",\"medio\":\"...\",\"longo\":\"...\"}";
+  const userMsg =
+    "BRIEFING VIVO:\n\n" + String(briefing || "") +
+    (meetingsDigest && meetingsDigest.trim()
+      ? "\n\n---\nÚLTIMAS REUNIÕES DO CONSELHO (decisões recentes — PRIORIDADE sobre o briefing):\n" + meetingsDigest.trim()
+      : "");
   const res = await fetch(ANTHROPIC.url, {
     method: "POST",
     headers: {
@@ -63,7 +71,7 @@ async function generatePonteiro(briefing) {
       model: HAIKU.model,
       max_tokens: 600,
       system,
-      messages: [{ role: "user", content: "BRIEFING VIVO:\n\n" + String(briefing || "") }],
+      messages: [{ role: "user", content: userMsg }],
     }),
   });
   if (!res.ok) {

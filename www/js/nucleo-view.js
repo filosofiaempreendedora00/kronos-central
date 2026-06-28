@@ -326,7 +326,7 @@ const NucleoView = (() => {
             <button class="btn-ghost btn-ghost--sm" id="briefVersBtn" type="button">Histórico (${vers.length})</button>
           </div>
         </div>
-        <p class="cost-note">${note} O <strong>ponteiro</strong> (HOJE/MÉDIO/LONGO) é escrito por IA a partir deste cenário — toque em “Gerar ponteiro”.</p>
+        <p class="cost-note">${note} O <strong>ponteiro</strong> (HOJE/MÉDIO/LONGO) é escrito por IA a partir deste cenário <strong>e das últimas reuniões do conselho</strong> (que têm prioridade) — toque em “Gerar ponteiro”.</p>
         <div id="briefMain" class="doc">${mdToHtml(Context.effectiveBriefing() || "_Material ainda não carregado._")}</div>
       </div>`;
     document.getElementById("briefEditBtn").addEventListener("click", openBriefEditor);
@@ -349,12 +349,30 @@ const NucleoView = (() => {
     if (!found) merged.push({ title: "PONTEIRO — resumo cirúrgico para o fundador", body });
     return buildBriefing(preamble, merged);
   }
+  /* Digest enxuto das últimas reuniões do conselho (data + título + síntese) —
+     entra na geração do ponteiro com PRIORIDADE sobre o briefing. */
+  async function recentMeetingsDigest() {
+    try {
+      if (typeof Delfos === "undefined" || !Delfos.recentMeetings) return "";
+      const ms = await Delfos.recentMeetings(2);
+      if (!ms || !ms.length) return "";
+      return ms.map((m) => {
+        const d = new Date(m.ts);
+        const dd = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const agentTurns = (m.thread || []).filter((t) => t.speaker !== "user");
+        const synth = agentTurns.find((t) => /s[íi]ntese/i.test(t.content || "")) || agentTurns[agentTurns.length - 1];
+        return `- [${dd}] ${m.title || "Reunião"}: ${synth ? synth.content : ""}`;
+      }).join("\n");
+    } catch (_) { return ""; }
+  }
+
   async function generatePonteiroAI() {
     const btn = document.getElementById("briefPonteiroBtn");
     if (typeof generatePonteiro !== "function") { if (window.App && App.toast) App.toast("⚠ IA indisponível."); return; }
     if (btn) { btn.disabled = true; btn.textContent = "✦ gerando…"; }
     try {
-      const r = await generatePonteiro(Context.effectiveBriefing());
+      const meetingsDigest = await recentMeetingsDigest();
+      const r = await generatePonteiro(Context.effectiveBriefing(), meetingsDigest);
       if (!r || (!r.hoje && !r.medio && !r.longo)) throw new Error("resposta vazia");
       const next = replacePonteiroBlock(Context.effectiveBriefing(), r);
       await Context.saveTodayBriefing(next);
