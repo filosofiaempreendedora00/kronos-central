@@ -507,6 +507,7 @@ function init() {
   fitViewportToKeyboard();
   renderAgents();
   renderMetrics();
+  try { Funil.render(); } catch (_) {} // retrato do funil (lê + decifra funil.json da rede)
   renderPonteiro(); // usa o briefing em cache (se houver) na hora; rede atualiza depois
   tickClock();
   setInterval(tickClock, 10_000);
