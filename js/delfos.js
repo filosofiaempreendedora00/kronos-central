@@ -597,7 +597,14 @@ Só puxe a sua especialidade se o que está em jogo realmente toca a sua área. 
     });
   }
 
-  return { open, close, clear, endMeeting, bind };
+  /* Últimas N reuniões do conselho (sincronizadas, decifradas) — usado pelo
+     ponteiro pra refletir as decisões mais recentes. */
+  async function recentMeetings(n = 2) {
+    const all = await loadSyncedMeetings();
+    return all.sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, n);
+  }
+
+  return { open, close, clear, endMeeting, bind, recentMeetings };
 })();
 
 /* Frontão de templo grego — marca da sala Delfos (usado no banner do dashboard). */
