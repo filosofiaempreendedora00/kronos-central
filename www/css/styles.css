@@ -575,16 +575,18 @@ body::before {
 .funil-headline__dot { width: 7px; height: 7px; border-radius: 50%; background: #D98A6E; flex: 0 0 auto; }
 
 /* o funil (trapézios que estreitam) */
-.fnl { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 640px; margin: 0 auto; }
-.fnl__band { position: relative; width: 100%; height: 76px; }
+.fnl { display: flex; flex-direction: column; width: 100%; max-width: 640px; margin: 0 auto; }
+.fnl__stage { width: 100%; }
+.fnl__caption { margin-bottom: 6px; text-align: center; line-height: 1.3; }
+.fnl__label { font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--areia); }
+.fnl__note { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 11.5px; color: var(--areia); opacity: 0.82; }
+.fnl__band { position: relative; width: 100%; height: 56px; }
 .fnl__shape { position: absolute; inset: 0; background: linear-gradient(168deg, var(--creme), var(--areia)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4); }
 .fnl__band--zero .fnl__shape { background: linear-gradient(168deg, var(--areia-40), var(--areia-22)); box-shadow: none; }
-.fnl__c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; text-align: center; pointer-events: none; }
-.fnl__label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(21, 12, 6, 0.62); }
-.fnl__num { font-family: var(--font-title); font-weight: 600; font-size: 33px; line-height: 1.05; color: var(--onix); }
+.fnl__c { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.fnl__num { font-family: var(--font-title); font-weight: 600; font-size: 28px; line-height: 1; color: var(--onix); }
 .fnl__band--zero .fnl__num { color: rgba(21, 12, 6, 0.5); }
-.fnl__note { font-size: 11px; color: rgba(21, 12, 6, 0.6); margin-top: 1px; }
-.fnl__conv { display: flex; align-items: center; gap: 7px; padding: 8px 0; font-size: 12.5px; color: var(--areia); }
+.fnl__conv { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 0; font-size: 12.5px; color: var(--areia); }
 .fnl__conv b { color: var(--branco); font-weight: 600; }
 .fnl__conv-sep { opacity: 0.45; }
 .fnl__conv-drop { color: #D98A6E; }
@@ -2295,4 +2297,22 @@ body::before {
   .delfos-banner { flex-direction: column; align-items: flex-start; gap: 16px; padding: 22px; }
   .delfos-banner__cta { align-self: stretch; justify-content: center; }
   .dmsg__bubble { max-width: 92%; }
+
+  /* funil — mobile: controles empilham, números menores, stats em 2 colunas */
+  .funil-controls { flex-direction: column; align-items: stretch; gap: 10px; }
+  .funil-ctlgroup { justify-content: center; }
+  .funil-headline { font-size: 12.5px; padding: 11px 14px; gap: 8px; }
+  .fnl { max-width: 100%; }
+  .fnl__band { height: 50px; }
+  .fnl__num { font-size: 24px; }
+  .fnl__label { font-size: 11px; }
+  .fnl__note { font-size: 11px; }
+  .fnl__conv { font-size: 11.5px; padding: 7px 0; }
+  .funil-stats { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+  .funil-stat { padding: 12px 13px; }
+  .funil-stat__k { font-size: 10px; }
+  .funil-stat__v { font-size: 18px; }
+
+  /* integrações — 1 coluna no celular */
+  .integ-grid { grid-template-columns: 1fr; }
 }
