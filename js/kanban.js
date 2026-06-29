@@ -217,7 +217,7 @@ const Kanban = (() => {
     board.querySelectorAll(".kcard--edit [data-act]").forEach((b) => b.addEventListener("click", onAct));
     // clicar no card (display) abre a edição
     board.querySelectorAll('.kcard[draggable="true"]').forEach((c) => {
-      c.addEventListener("click", (e) => { if (e.target.closest(".kdl")) return; openEdit(c.dataset.id); });
+      c.addEventListener("click", (e) => { if (e.target.closest(".kdl")) return; if (editingId && editingId !== c.dataset.id) saveCard(editingId); openEdit(c.dataset.id); });
       c.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", c.dataset.id); e.dataTransfer.effectAllowed = "move"; c.classList.add("kcard--drag"); });
       c.addEventListener("dragend", () => c.classList.remove("kcard--drag"));
     });
@@ -260,6 +260,7 @@ const Kanban = (() => {
     render();
   }
   function add(status) {
+    if (editingId) saveCard(editingId); // salva o que estava aberto antes de abrir um novo
     const t = { id: uid(), title: "", status: status || "backlog", deadline: null, owner: "coo", support: [], _new: true, createdAt: Date.now() };
     tasks.unshift(t); openEdit(t.id);
   }
@@ -283,12 +284,24 @@ const Kanban = (() => {
     t.status = status; persist(); render();
   }
 
+  /* clicar FORA: fecha o calendário (recompacta) e salva+fecha o card em edição.
+     Ignora o clique que acabou de re-renderizar (alvo já destacado do DOM). */
+  function onDocClick(e) {
+    if (!e.target.isConnected) return;
+    const oc = document.querySelector(".kdl--open");
+    if (oc && !oc.contains(e.target)) closeCal(oc);
+    if (editingId) {
+      const ec = document.querySelector(`.kcard--edit[data-id="${editingId}"]`);
+      if (ec && !ec.contains(e.target)) saveCard(editingId);
+    }
+  }
+
   function open() {
     if (typeof App !== "undefined" && App.showView) App.showView("kanbanView");
     else { const v = document.getElementById("kanbanView"); if (v) v.hidden = false; }
     render(); reflectSync(); loadRemote();
   }
-  function boot() { loadLocal(); }
+  function boot() { loadLocal(); document.addEventListener("click", onDocClick); }
 
   return { open, boot, render, add };
 })();
