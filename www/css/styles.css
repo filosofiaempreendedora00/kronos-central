@@ -729,7 +729,8 @@ body::before {
 }
 
 /* ---- Configurações: menu lateral + Integrações -------------------------- */
-.settings__layout { display: flex; gap: 30px; align-items: flex-start; }
+.settings__inner.settings__layout { flex-direction: row; align-items: flex-start; gap: 30px; max-width: 1000px; }
+.settings__pane { display: flex; flex-direction: column; gap: 40px; }
 .settings__nav { flex: 0 0 188px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; }
 .settings__navitem { text-align: left; background: transparent; border: 0; color: var(--areia); font-family: var(--font-body); font-size: 14px; padding: 10px 14px; border-radius: 10px; cursor: pointer; transition: color 0.15s ease, background 0.15s ease; }
 .settings__navitem:hover { color: var(--creme); background: var(--areia-12); }
@@ -752,7 +753,7 @@ body::before {
 .integ-card__via { opacity: 0.82; }
 
 @media (max-width: 760px) {
-  .settings__layout { flex-direction: column; gap: 18px; }
+  .settings__inner.settings__layout { flex-direction: column; gap: 18px; }
   .settings__nav { flex-direction: row; flex: none; position: static; overflow-x: auto; gap: 6px; }
   .settings__navitem { white-space: nowrap; }
 }
