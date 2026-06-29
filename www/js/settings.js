@@ -40,6 +40,7 @@ const Settings = (() => {
   /* ------------------------------- Abrir --------------------------------- */
   function open() {
     App.showView("settingsView");
+    showPane("geral");
 
     document.getElementById("apiKeyInput").value = localStorage.getItem(LS_KEY) || "";
     updateKeyStatus();
@@ -152,9 +153,71 @@ const Settings = (() => {
     renderMobile();
   }
 
+  /* ----------------------------- Sub-abas -------------------------------- */
+  function showPane(p) {
+    document.querySelectorAll("#settingsNav .settings__navitem").forEach((b) =>
+      b.classList.toggle("is-active", b.dataset.pane === p));
+    const g = document.getElementById("pane-geral");
+    const i = document.getElementById("pane-integracoes");
+    if (g) g.hidden = p !== "geral";
+    if (i) i.hidden = p !== "integracoes";
+  }
+
+  /* ----------------------------- Integrações ----------------------------- */
+  const INTEGRATIONS = [
+    { name: "Supabase", color: "#3ECF8E", glyph: "db", status: "Conectado · só-leitura", ok: true,
+      desc: "Banco do Gerador — o funil de usuários (cadastros, ativação, pagantes).", reads: "Funil do produto", via: "role kronos_ro (read-only) · ler-gerador.mjs" },
+    { name: "Meta Ads", color: "#0866FF", glyph: "mega", status: "Conectado · só-leitura", ok: true,
+      desc: "Gasto, cliques, cadastros e desempenho por criativo e dispositivo.", reads: "Tráfego pago", via: "token ads_read · ler-metaads.mjs" },
+    { name: "Microsoft Clarity", color: "#1E88C7", glyph: "eye", status: "Conectado · só-leitura", ok: true,
+      desc: "Comportamento real: rage/dead clicks, quickback, scroll — por página.", reads: "Frustração / sessões", via: "token Data.Export · ler-clarity.mjs" },
+    { name: "Brevo", color: "#0B996E", glyph: "mail", status: "Conectado · só-leitura", ok: true,
+      desc: "E-mail transacional (deliverability) e base de contatos/leads.", reads: "E-mail & leads", via: "API key (GET) · ler-brevo.mjs" },
+    { name: "Google Ads", color: "#4285F4", glyph: "target", status: "Tracking instalado · leitura a conectar", ok: false,
+      desc: "Conversões de Cadastro e Ativação instaladas (AW-730378227).", reads: "Conversões (desktop)", via: "tag do Google · leitura read-only pendente" },
+    { name: "Kiwify", color: "#04BF7B", glyph: "cart", status: "Pagamento (checkout)", ok: false,
+      desc: "Processa o pagamento das assinaturas dos planos.", reads: "—", via: "checkout externo" },
+  ];
+
+  function glyphSvg(k) {
+    const g = {
+      db: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>',
+      mega: '<path d="M4 10v4h3l8 4V6l-8 4H4z"/><path d="M18.5 9a4 4 0 0 1 0 6"/>',
+      eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+      mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/>',
+      target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1.1" fill="white"/>',
+      cart: '<circle cx="9.5" cy="20" r="1.4" fill="white"/><circle cx="17" cy="20" r="1.4" fill="white"/><path d="M3 4h2l2.4 12h10l1.9-8H6.2"/>',
+    };
+    return `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${g[k] || ""}</svg>`;
+  }
+
+  function renderIntegracoes() {
+    const el = document.getElementById("integGrid");
+    if (!el) return;
+    el.innerHTML = INTEGRATIONS.map((it) => `
+      <div class="integ-card">
+        <div class="integ-card__head">
+          <span class="integ-logo" style="--c:${it.color}">${glyphSvg(it.glyph)}</span>
+          <span class="integ-card__titlewrap">
+            <span class="integ-card__name">${it.name}</span>
+            <span class="integ-status ${it.ok ? "integ-status--ok" : "integ-status--pend"}">${it.status}</span>
+          </span>
+        </div>
+        <p class="integ-card__desc">${it.desc}</p>
+        <div class="integ-card__meta">
+          <span><b>Lê:</b> ${it.reads}</span>
+          <span class="integ-card__via">${it.via}</span>
+        </div>
+      </div>`).join("");
+  }
+
   /* ------------------------------- Bind ---------------------------------- */
   function bind() {
     consumePairingHash(); // se veio do QR de pareamento, semeia a chave
+
+    renderIntegracoes();
+    document.querySelectorAll("#settingsNav .settings__navitem").forEach((b) =>
+      b.addEventListener("click", () => showPane(b.dataset.pane)));
 
     document.getElementById("pairKeyChk").addEventListener("change", (e) => {
       includeKey = e.target.checked;
