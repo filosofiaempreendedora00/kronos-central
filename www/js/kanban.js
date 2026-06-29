@@ -111,10 +111,19 @@ const Kanban = (() => {
     return `<div class="kcard__people">${parts.join("")}</div>`;
   }
 
-  /* mini-calendário: re-renderiza só dentro do próprio container (não mexe no
-     resto do card, pra não perder o texto digitado). data-date guarda a escolha. */
-  function renderCalendar(el) {
-    const sel = el.dataset.date || "";
+  /* prazo: fica RECOLHIDO (só o gatilho 📅). O calendário abre ao clicar e
+     fecha ao escolher um dia. data-date mora no .kdl (container). */
+  const fmtBR = (ds) => ds.split("-").reverse().slice(0, 2).join("/");
+  function setDate(kdl, ds) {
+    kdl.dataset.date = ds || "";
+    kdl.classList.toggle("kdl--set", !!ds);
+    const l = kdl.querySelector(".kdl__label"); if (l) l.textContent = ds ? fmtBR(ds) : "sem prazo";
+  }
+  function closeCal(kdl) { const c = kdl.querySelector(".kcal"); if (c) c.hidden = true; kdl.classList.remove("kdl--open"); }
+  function openCal(kdl) { calMonth = (kdl.dataset.date || todayISO()).slice(0, 7); renderCalendar(kdl); kdl.querySelector(".kcal").hidden = false; kdl.classList.add("kdl--open"); }
+  function renderCalendar(kdl) {
+    const el = kdl.querySelector(".kcal");
+    const sel = kdl.dataset.date || "";
     const [y, m] = calMonth.split("-").map(Number);
     const startDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
     const dim = new Date(Date.UTC(y, m, 0)).getUTCDate();
@@ -131,14 +140,14 @@ const Kanban = (() => {
       </div>
       <div class="kcal__dow"><span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span></div>
       <div class="kcal__grid">${cells}</div>
-      <div class="kcal__foot"><span>${sel ? "Prazo: " + sel.split("-").reverse().slice(0, 2).join("/") : "Sem prazo"}</span>${sel ? '<button type="button" class="kcal__clear">limpar</button>' : ""}</div>`;
+      ${sel ? '<div class="kcal__foot"><button type="button" class="kcal__clear">limpar prazo</button></div>' : ""}`;
     el.querySelectorAll(".kcal__nav").forEach((b) => b.addEventListener("click", () => {
       let yy = y, mm = m + Number(b.dataset.mv);
       if (mm < 1) { mm = 12; yy--; } if (mm > 12) { mm = 1; yy++; }
-      calMonth = `${yy}-${String(mm).padStart(2, "0")}`; renderCalendar(el);
+      calMonth = `${yy}-${String(mm).padStart(2, "0")}`; renderCalendar(kdl);
     }));
-    el.querySelectorAll(".kcal__day[data-d]").forEach((b) => b.addEventListener("click", () => { el.dataset.date = el.dataset.date === b.dataset.d ? "" : b.dataset.d; renderCalendar(el); }));
-    const clr = el.querySelector(".kcal__clear"); if (clr) clr.addEventListener("click", () => { el.dataset.date = ""; renderCalendar(el); });
+    el.querySelectorAll(".kcal__day[data-d]").forEach((b) => b.addEventListener("click", () => { setDate(kdl, kdl.dataset.date === b.dataset.d ? "" : b.dataset.d); closeCal(kdl); }));
+    const clr = el.querySelector(".kcal__clear"); if (clr) clr.addEventListener("click", () => { setDate(kdl, ""); closeCal(kdl); });
   }
 
   function pickerHtml(id, selected, multi) {
@@ -154,7 +163,12 @@ const Kanban = (() => {
       const owner = t.owner || "coo";
       return `<div class="kcard kcard--edit" data-id="${t.id}">
         <textarea class="kcard__input" rows="3" placeholder="O que precisa ser feito?">${esc(t.title)}</textarea>
-        <div class="kedit-sec"><span class="kedit-lbl">Prazo</span><div class="kcal" data-date="${t.deadline || ""}"></div></div>
+        <div class="kedit-sec"><span class="kedit-lbl">Prazo</span>
+          <div class="kdl${t.deadline ? " kdl--set" : ""}" data-date="${t.deadline || ""}">
+            <button type="button" class="kdl__trigger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/></svg><span class="kdl__label">${t.deadline ? t.deadline.split("-").reverse().slice(0, 2).join("/") : "sem prazo"}</span></button>
+            <div class="kcal" hidden></div>
+          </div>
+        </div>
         <div class="kedit-sec"><span class="kedit-lbl">Coluna</span><div class="kstatus">${COLS.map((c) => `<button type="button" class="kstatus__b${c.key === t.status ? " kstatus__b--on" : ""}" data-s="${c.key}">${c.label}</button>`).join("")}</div></div>
         <div class="kedit-sec"><span class="kedit-lbl">Principal</span>${pickerHtml("kowner", owner, false)}</div>
         <div class="kedit-sec"><span class="kedit-lbl">Apoio</span>${pickerHtml("ksupport", (t.support || []).filter((k) => k !== owner), true)}</div>
@@ -204,8 +218,9 @@ const Kanban = (() => {
       z.addEventListener("dragleave", () => z.classList.remove("kcol__cards--over"));
       z.addEventListener("drop", (e) => { e.preventDefault(); z.classList.remove("kcol__cards--over"); moveTo(e.dataTransfer.getData("text/plain"), z.dataset.col); });
     });
-    // editor: calendário, pickers, status
-    const cal = board.querySelector(".kcal"); if (cal) renderCalendar(cal);
+    // editor: prazo (gatilho recolhido), pickers, status
+    const kdl = board.querySelector(".kdl");
+    if (kdl) kdl.querySelector(".kdl__trigger").addEventListener("click", () => { kdl.classList.contains("kdl--open") ? closeCal(kdl) : openCal(kdl); });
     const ow = board.querySelector("#kowner");
     if (ow) ow.querySelectorAll(".kpick__a").forEach((b) => b.addEventListener("click", () => { ow.querySelectorAll(".kpick__a--on").forEach((x) => x.classList.remove("kpick__a--on")); b.classList.add("kpick__a--on"); }));
     const sp = board.querySelector("#ksupport");
@@ -243,7 +258,7 @@ const Kanban = (() => {
     if (!t) return;
     if (!title) { if (t._new) tasks = tasks.filter((x) => x.id !== id); editingId = null; persist(); render(); return; }
     t.title = title;
-    t.deadline = (card.querySelector(".kcal") && card.querySelector(".kcal").dataset.date) || null;
+    const kdl = card.querySelector(".kdl"); t.deadline = (kdl && kdl.dataset.date) || null;
     const sb = card.querySelector(".kstatus__b--on"); if (sb) t.status = sb.dataset.s;
     const ob = card.querySelector("#kowner .kpick__a--on"); t.owner = ob ? ob.dataset.k : null;
     t.support = Array.from(card.querySelectorAll("#ksupport .kpick__a--on")).map((b) => b.dataset.k).filter((k) => k !== t.owner);
