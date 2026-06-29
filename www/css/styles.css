@@ -650,8 +650,7 @@ body::before {
 .kdl--set .kdl__label { color: var(--creme); }
 .kdl--open .kdl__trigger { border-color: var(--areia); }
 /* chip de prazo na FACE do card (clicável direto) */
-.kdl--face { position: relative; display: inline-block; }
-.kdl--face .kcal { position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: 232px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+.kdl--face { display: block; }
 .kdl__trigger--chip { padding: 3px 9px; gap: 5px; font-size: 11px; border-radius: 999px; border: 1px solid var(--areia-22); background: transparent; color: var(--areia); }
 .kdl__trigger--chip svg { width: 12px; height: 12px; }
 .kdl__trigger--chip:hover { color: var(--creme); border-color: var(--areia); }
@@ -692,7 +691,7 @@ body::before {
 .kbtn-del { margin-left: auto; background: transparent; border: 1px solid transparent; color: var(--areia); opacity: 0.7; border-radius: 7px; padding: 8px 12px; cursor: pointer; font-family: var(--font-body); font-size: 13px; }
 .kbtn-del:hover { color: #D98A6E; opacity: 1; }
 .kbtn-del--confirm { color: #fff; background: #8a3b2c; border-color: #8a3b2c; opacity: 1; }
-.kcard__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 11px; }
+.kcard__foot { margin-top: 11px; }
 .kcard__dl { font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--areia-22); color: var(--areia); white-space: nowrap; }
 .kcard__dl--over { color: #E08A6E; border-color: #7a3b2c; background: rgba(217, 138, 110, 0.1); }
 .kcard__dl--due { color: #D8B36E; border-color: #6e5a2c; }
@@ -712,6 +711,17 @@ body::before {
 .kbtn-save:hover { background: var(--creme); }
 .kbtn-cancel { background: transparent; color: var(--areia); border: 1px solid var(--areia-22); border-radius: 7px; padding: 8px 13px; cursor: pointer; font-family: var(--font-body); font-size: 13px; }
 .kbtn-cancel:hover { color: var(--creme); }
+
+/* Desktop: o board preenche a altura; o topo do MatIAs e os títulos das colunas
+   ficam CONGELADOS e cada coluna rola por dentro (facilita arrastar entre colunas). */
+@media (min-width: 861px) {
+  #kanbanView:not([hidden]) { display: flex; flex-direction: column; height: calc(100dvh - var(--pad-top) - var(--pad-bottom)); }
+  #kanbanView .view__inner { flex: 1; min-height: 0; gap: 20px; }
+  #kanbanView .kanban__head { margin-bottom: 0; }
+  #kanbanView .kanban__board { flex: 1; min-height: 0; align-items: stretch; grid-template-rows: minmax(0, 1fr); }
+  #kanbanView .kcol { overflow: hidden; }
+  #kanbanView .kcol__cards { overflow-y: auto; padding-right: 3px; padding-bottom: 4px; }
+}
 
 @media (max-width: 860px) {
   .kanban__board { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(250px, 78vw); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
