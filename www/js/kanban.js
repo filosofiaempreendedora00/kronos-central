@@ -1,14 +1,15 @@
 /* ===========================================================================
    KANBAN — Atividades (aba própria). Dono: MatIAs (COO, "quem toca o bumbo").
 
-   Colunas: Backlog → To Do → Doing → Complete. Cards com prazo, RESPONSÁVEIS
-   (1 principal + apoios, e o Founder sempre junto), drag-drop (desktop) e setas
-   ‹ › (mobile). Responsáveis são ilustrativos/editáveis hoje — e o campo já fica
-   pronto pra, no futuro, virar gatilho de automação por agente.
+   Colunas: Backlog → To Do → Doing → Complete. Cada card: título, RESPONSÁVEIS
+   (1 principal + apoios, e o Founder sempre junto) e prazo.
+   - Clicar no card abre a EDIÇÃO. Mover: arrastar (desktop) ou pelo seletor de
+     coluna na edição (mobile). Prazo: mini-calendário. Pessoas: por FOTO.
+     Excluir só dentro da edição, com confirmação.
 
    PERSISTÊNCIA DURÁVEL (cross-device): tarefas CIFRADAS em www/contexto/kanban.json
-   (chave do cofre). Lê de qualquer aparelho (público) e grava de volta no GitHub
-   se houver token (Configurar). localStorage = cache local + fallback offline.
+   (chave do cofre). Lê de qualquer aparelho; grava de volta no GitHub se houver
+   token (Configurar). localStorage = cache local + fallback offline.
    =========================================================================== */
 const Kanban = (() => {
   const LS = "kronos.kanban";
@@ -19,7 +20,6 @@ const Kanban = (() => {
     { key: "doing", label: "Doing" },
     { key: "done", label: "Complete" },
   ];
-  // Roster (chave → pessoa). Founder = Roberto (sempre co-responsável).
   const PEOPLE = {
     ceo: { name: "TIAgo", role: "CEO", img: "assets/agents/tiago.jpg" },
     growth: { name: "Hilário", role: "Head de Growth", img: "assets/agents/hilario.jpg" },
@@ -34,12 +34,14 @@ const Kanban = (() => {
     founder: { name: "Roberto", role: "Founder", ini: "R" },
   };
   const AGENT_KEYS = Object.keys(PEOPLE).filter((k) => k !== "founder");
+  const MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
   let tasks = [];
-  let editingId = null, updatedAt = 0, remoteSha = null, saveTimer = null, syncState = "local";
+  let editingId = null, calMonth = null, updatedAt = 0, remoteSha = null, saveTimer = null, syncState = "local";
 
   const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const uid = () => "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const todayISO = () => new Date().toISOString().slice(0, 10);
   const canSync = () => typeof Sync !== "undefined" && Sync.configured && Sync.configured() && typeof Auth !== "undefined" && Auth.encryptJSON;
 
   function loadLocal() { try { const d = JSON.parse(localStorage.getItem(LS)); if (d && Array.isArray(d.tasks)) { tasks = d.tasks; updatedAt = d.updatedAt || 0; } } catch (_) {} }
@@ -109,41 +111,67 @@ const Kanban = (() => {
     return `<div class="kcard__people">${parts.join("")}</div>`;
   }
 
-  function editPeopleHtml(t) {
-    const owner = t.owner || "coo";
-    const sup = new Set((t.support || []).filter((k) => k !== owner));
-    const opts = AGENT_KEYS.map((k) => `<option value="${k}"${k === owner ? " selected" : ""}>${PEOPLE[k].name} · ${PEOPLE[k].role}</option>`).join("");
-    const chips = AGENT_KEYS.map((k) => `<button type="button" class="ksupport-chip${sup.has(k) ? " ksupport-chip--on" : ""}" data-k="${k}">${PEOPLE[k].name}</button>`).join("");
-    return `<div class="kedit-row"><span class="kedit-lbl">Principal</span><select class="kcard__owner">${opts}</select></div>
-      <div class="kedit-row kedit-row--col"><span class="kedit-lbl">Apoio</span><div class="kcard__support">${chips}</div></div>
-      <p class="kedit-note">Você (Founder) entra junto em todas.</p>`;
+  /* mini-calendário: re-renderiza só dentro do próprio container (não mexe no
+     resto do card, pra não perder o texto digitado). data-date guarda a escolha. */
+  function renderCalendar(el) {
+    const sel = el.dataset.date || "";
+    const [y, m] = calMonth.split("-").map(Number);
+    const startDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+    const dim = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    let cells = "";
+    for (let i = 0; i < startDow; i++) cells += '<span class="kcal__day kcal__day--pad"></span>';
+    for (let d = 1; d <= dim; d++) {
+      const ds = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      cells += `<button type="button" class="kcal__day${ds === sel ? " kcal__day--sel" : ""}${ds === todayISO() ? " kcal__day--today" : ""}" data-d="${ds}">${d}</button>`;
+    }
+    el.innerHTML = `<div class="kcal__head">
+        <button type="button" class="kcal__nav" data-mv="-1">‹</button>
+        <span class="kcal__title">${MES[m - 1]} ${y}</span>
+        <button type="button" class="kcal__nav" data-mv="1">›</button>
+      </div>
+      <div class="kcal__dow"><span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span></div>
+      <div class="kcal__grid">${cells}</div>
+      <div class="kcal__foot"><span>${sel ? "Prazo: " + sel.split("-").reverse().slice(0, 2).join("/") : "Sem prazo"}</span>${sel ? '<button type="button" class="kcal__clear">limpar</button>' : ""}</div>`;
+    el.querySelectorAll(".kcal__nav").forEach((b) => b.addEventListener("click", () => {
+      let yy = y, mm = m + Number(b.dataset.mv);
+      if (mm < 1) { mm = 12; yy--; } if (mm > 12) { mm = 1; yy++; }
+      calMonth = `${yy}-${String(mm).padStart(2, "0")}`; renderCalendar(el);
+    }));
+    el.querySelectorAll(".kcal__day[data-d]").forEach((b) => b.addEventListener("click", () => { el.dataset.date = el.dataset.date === b.dataset.d ? "" : b.dataset.d; renderCalendar(el); }));
+    const clr = el.querySelector(".kcal__clear"); if (clr) clr.addEventListener("click", () => { el.dataset.date = ""; renderCalendar(el); });
+  }
+
+  function pickerHtml(id, selected, multi) {
+    const sel = multi ? new Set(selected) : null;
+    return `<div class="kpick" id="${id}">${AGENT_KEYS.map((k) => {
+      const on = multi ? sel.has(k) : k === selected;
+      return `<button type="button" class="kpick__a${on ? " kpick__a--on" : ""}" data-k="${k}" title="${esc(PEOPLE[k].name + " · " + PEOPLE[k].role)}"><img src="${PEOPLE[k].img}" alt=""></button>`;
+    }).join("")}</div>`;
   }
 
   function cardHtml(t) {
     if (editingId === t.id) {
+      const owner = t.owner || "coo";
       return `<div class="kcard kcard--edit" data-id="${t.id}">
         <textarea class="kcard__input" rows="3" placeholder="O que precisa ser feito?">${esc(t.title)}</textarea>
-        <label class="kcard__dllabel">Prazo <input type="date" class="kcard__date" value="${t.deadline || ""}"></label>
-        ${editPeopleHtml(t)}
+        <div class="kedit-sec"><span class="kedit-lbl">Prazo</span><div class="kcal" data-date="${t.deadline || ""}"></div></div>
+        <div class="kedit-sec"><span class="kedit-lbl">Coluna</span><div class="kstatus">${COLS.map((c) => `<button type="button" class="kstatus__b${c.key === t.status ? " kstatus__b--on" : ""}" data-s="${c.key}">${c.label}</button>`).join("")}</div></div>
+        <div class="kedit-sec"><span class="kedit-lbl">Principal</span>${pickerHtml("kowner", owner, false)}</div>
+        <div class="kedit-sec"><span class="kedit-lbl">Apoio</span>${pickerHtml("ksupport", (t.support || []).filter((k) => k !== owner), true)}</div>
+        <p class="kedit-note">Você (Founder) entra junto em todas.</p>
         <div class="kcard__editbtns">
           <button class="kbtn-save" data-act="save" data-id="${t.id}">Salvar</button>
           <button class="kbtn-cancel" data-act="cancel" data-id="${t.id}">Cancelar</button>
+          <button class="kbtn-del" data-act="askdel" data-id="${t.id}">Excluir</button>
         </div>
       </div>`;
     }
     const dl = deadlineInfo(t.deadline);
-    const idx = COLS.findIndex((c) => c.key === t.status);
     return `<div class="kcard" draggable="true" data-id="${t.id}">
       <div class="kcard__title">${esc(t.title) || '<span class="kcard__empty">(sem título)</span>'}</div>
       ${peopleRow(t)}
       <div class="kcard__foot">
         ${dl ? `<span class="kcard__dl kcard__dl--${dl.cls}">${dl.txt}</span>` : `<span class="kcard__dl kcard__dl--none">sem prazo</span>`}
-        <span class="kcard__actions">
-          <button class="kbtn" data-act="move" data-dir="-1" data-id="${t.id}"${idx === 0 ? " disabled" : ""} title="Mover para a esquerda">‹</button>
-          <button class="kbtn" data-act="move" data-dir="1" data-id="${t.id}"${idx === COLS.length - 1 ? " disabled" : ""} title="Mover para a direita">›</button>
-          <button class="kbtn" data-act="edit" data-id="${t.id}" title="Editar">✎</button>
-          <button class="kbtn" data-act="del" data-id="${t.id}" title="Excluir">✕</button>
-        </span>
       </div>
     </div>`;
   }
@@ -163,9 +191,11 @@ const Kanban = (() => {
   }
 
   function bindBoard(board) {
-    board.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", onAct));
-    board.querySelectorAll(".ksupport-chip").forEach((b) => b.addEventListener("click", () => b.classList.toggle("ksupport-chip--on")));
+    board.querySelectorAll('[data-act="add"]').forEach((b) => b.addEventListener("click", () => add(b.dataset.col)));
+    board.querySelectorAll(".kcard--edit [data-act]").forEach((b) => b.addEventListener("click", onAct));
+    // clicar no card (display) abre a edição
     board.querySelectorAll('.kcard[draggable="true"]').forEach((c) => {
+      c.addEventListener("click", () => openEdit(c.dataset.id));
       c.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", c.dataset.id); e.dataTransfer.effectAllowed = "move"; c.classList.add("kcard--drag"); });
       c.addEventListener("dragend", () => c.classList.remove("kcard--drag"));
     });
@@ -174,23 +204,36 @@ const Kanban = (() => {
       z.addEventListener("dragleave", () => z.classList.remove("kcol__cards--over"));
       z.addEventListener("drop", (e) => { e.preventDefault(); z.classList.remove("kcol__cards--over"); moveTo(e.dataTransfer.getData("text/plain"), z.dataset.col); });
     });
+    // editor: calendário, pickers, status
+    const cal = board.querySelector(".kcal"); if (cal) renderCalendar(cal);
+    const ow = board.querySelector("#kowner");
+    if (ow) ow.querySelectorAll(".kpick__a").forEach((b) => b.addEventListener("click", () => { ow.querySelectorAll(".kpick__a--on").forEach((x) => x.classList.remove("kpick__a--on")); b.classList.add("kpick__a--on"); }));
+    const sp = board.querySelector("#ksupport");
+    if (sp) sp.querySelectorAll(".kpick__a").forEach((b) => b.addEventListener("click", () => b.classList.toggle("kpick__a--on")));
+    const st = board.querySelector(".kstatus");
+    if (st) st.querySelectorAll(".kstatus__b").forEach((b) => b.addEventListener("click", () => { st.querySelectorAll(".kstatus__b--on").forEach((x) => x.classList.remove("kstatus__b--on")); b.classList.add("kstatus__b--on"); }));
     const ta = board.querySelector(".kcard__input");
     if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
   }
 
   function onAct(e) {
+    e.stopPropagation();
     const b = e.currentTarget, act = b.dataset.act, id = b.dataset.id;
-    if (act === "add") add(b.dataset.col);
-    else if (act === "edit") { editingId = id; render(); }
-    else if (act === "save") saveCard(id);
+    if (act === "save") saveCard(id);
     else if (act === "cancel") { const t = tasks.find((x) => x.id === id); if (t && t._new) tasks = tasks.filter((x) => x.id !== id); editingId = null; persist(); render(); }
+    else if (act === "askdel") { b.textContent = "Confirmar exclusão"; b.dataset.act = "del"; b.classList.add("kbtn-del--confirm"); }
     else if (act === "del") { tasks = tasks.filter((x) => x.id !== id); editingId = null; persist(); render(); }
-    else if (act === "move") moveDir(id, Number(b.dataset.dir));
   }
 
+  function openEdit(id) {
+    editingId = id;
+    const t = tasks.find((x) => x.id === id);
+    calMonth = ((t && t.deadline) || todayISO()).slice(0, 7);
+    render();
+  }
   function add(status) {
     const t = { id: uid(), title: "", status: status || "backlog", deadline: null, owner: "coo", support: [], _new: true, createdAt: Date.now() };
-    tasks.unshift(t); editingId = t.id; render();
+    tasks.unshift(t); openEdit(t.id);
   }
   function saveCard(id) {
     const card = document.querySelector(`.kcard[data-id="${id}"]`);
@@ -200,17 +243,12 @@ const Kanban = (() => {
     if (!t) return;
     if (!title) { if (t._new) tasks = tasks.filter((x) => x.id !== id); editingId = null; persist(); render(); return; }
     t.title = title;
-    t.deadline = card.querySelector(".kcard__date").value || null;
-    t.owner = card.querySelector(".kcard__owner")?.value || null;
-    t.support = Array.from(card.querySelectorAll(".ksupport-chip--on")).map((b) => b.dataset.k).filter((k) => k !== t.owner);
+    t.deadline = (card.querySelector(".kcal") && card.querySelector(".kcal").dataset.date) || null;
+    const sb = card.querySelector(".kstatus__b--on"); if (sb) t.status = sb.dataset.s;
+    const ob = card.querySelector("#kowner .kpick__a--on"); t.owner = ob ? ob.dataset.k : null;
+    t.support = Array.from(card.querySelectorAll("#ksupport .kpick__a--on")).map((b) => b.dataset.k).filter((k) => k !== t.owner);
     delete t._new;
     editingId = null; persist(); render();
-  }
-  function moveDir(id, dir) {
-    const t = tasks.find((x) => x.id === id); if (!t) return;
-    const ni = COLS.findIndex((c) => c.key === t.status) + dir;
-    if (ni < 0 || ni >= COLS.length) return;
-    t.status = COLS[ni].key; persist(); render();
   }
   function moveTo(id, status) {
     const t = tasks.find((x) => x.id === id); if (!t || t.status === status) return;
