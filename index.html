@@ -447,7 +447,13 @@
       </header>
 
       <div class="settings__scroll">
-        <div class="settings__inner">
+        <div class="settings__inner settings__layout">
+          <nav class="settings__nav" id="settingsNav">
+            <button class="settings__navitem is-active" data-pane="geral" type="button">Conexão &amp; acesso</button>
+            <button class="settings__navitem" data-pane="integracoes" type="button">Integrações</button>
+          </nav>
+          <div class="settings__panes">
+          <div class="settings__pane" id="pane-geral">
           <!-- Chave da API -->
           <section class="settings__section">
             <h3 class="settings__title">Chave da API</h3>
@@ -517,6 +523,16 @@
             <p class="settings__desc">Você fica logado neste aparelho. Saia para exigir login de novo (ex.: num aparelho emprestado).</p>
             <button class="btn-ghost btn-ghost--sm" id="logoutBtn" type="button">Sair (bloquear a Central)</button>
           </section>
+          </div><!-- /pane-geral -->
+
+          <div class="settings__pane" id="pane-integracoes" hidden>
+            <section class="settings__section">
+              <h3 class="settings__title">Integrações</h3>
+              <p class="settings__desc">Tudo que está conectado à Central — leituras <strong>só-leitura</strong>, com as credenciais fora do GitHub (<code>.env.local</code>). É daqui que os agentes puxam dado em vez de achismo.</p>
+              <div class="integ-grid" id="integGrid"></div>
+            </section>
+          </div><!-- /pane-integracoes -->
+          </div><!-- /settings__panes -->
         </div>
       </div>
     </div>

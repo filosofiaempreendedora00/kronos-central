@@ -728,6 +728,35 @@ body::before {
   .kcol { scroll-snap-align: start; }
 }
 
+/* ---- Configurações: menu lateral + Integrações -------------------------- */
+.settings__layout { display: flex; gap: 30px; align-items: flex-start; }
+.settings__nav { flex: 0 0 188px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; }
+.settings__navitem { text-align: left; background: transparent; border: 0; color: var(--areia); font-family: var(--font-body); font-size: 14px; padding: 10px 14px; border-radius: 10px; cursor: pointer; transition: color 0.15s ease, background 0.15s ease; }
+.settings__navitem:hover { color: var(--creme); background: var(--areia-12); }
+.settings__navitem.is-active { color: var(--branco); background: var(--areia-12); font-weight: 500; }
+.settings__panes { flex: 1; min-width: 0; }
+.settings__pane[hidden] { display: none; }
+
+.integ-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: 16px; }
+.integ-card { background: var(--sepia); border: 1px solid var(--areia-22); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.integ-card__head { display: flex; align-items: center; gap: 13px; }
+.integ-logo { width: 44px; height: 44px; border-radius: 12px; display: inline-grid; place-items: center; flex: 0 0 auto; background: linear-gradient(155deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0)), var(--c); box-shadow: 0 6px 16px -6px var(--c); }
+.integ-card__titlewrap { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.integ-card__name { font-family: var(--font-title); font-weight: 600; font-size: 18px; color: var(--branco); line-height: 1.1; }
+.integ-status { font-size: 11px; font-weight: 500; }
+.integ-status--ok { color: #8FB573; }
+.integ-status--pend { color: var(--areia); }
+.integ-card__desc { font-size: 13px; color: var(--creme); line-height: 1.45; flex: 1; }
+.integ-card__meta { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--areia); }
+.integ-card__meta b { color: var(--creme); font-weight: 600; }
+.integ-card__via { opacity: 0.82; }
+
+@media (max-width: 760px) {
+  .settings__layout { flex-direction: column; gap: 18px; }
+  .settings__nav { flex-direction: row; flex: none; position: static; overflow-x: auto; gap: 6px; }
+  .settings__navitem { white-space: nowrap; }
+}
+
 /* ============================== FOOTER ============================== */
 .foot {
   margin-top: 48px;
