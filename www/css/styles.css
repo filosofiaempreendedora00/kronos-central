@@ -649,6 +649,16 @@ body::before {
 .kdl__trigger svg { width: 15px; height: 15px; color: var(--areia); flex: 0 0 auto; }
 .kdl--set .kdl__label { color: var(--creme); }
 .kdl--open .kdl__trigger { border-color: var(--areia); }
+/* chip de prazo na FACE do card (clicável direto) */
+.kdl--face { position: relative; display: inline-block; }
+.kdl--face .kcal { position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: 232px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+.kdl__trigger--chip { padding: 3px 9px; gap: 5px; font-size: 11px; border-radius: 999px; border: 1px solid var(--areia-22); background: transparent; color: var(--areia); }
+.kdl__trigger--chip svg { width: 12px; height: 12px; }
+.kdl__trigger--chip:hover { color: var(--creme); border-color: var(--areia); }
+.kdl__trigger--chip.is-over { color: #E08A6E; border-color: #7a3b2c; background: rgba(217, 138, 110, 0.1); }
+.kdl__trigger--chip.is-due { color: #D8B36E; border-color: #6e5a2c; }
+.kdl__trigger--chip.is-ok { color: var(--creme); }
+.kdl__trigger--chip.is-none { opacity: 0.7; }
 .kcal[hidden] { display: none; }
 .kdl .kcal { margin-top: 8px; }
 .kcal { background: var(--onix); border: 1px solid var(--areia-22); border-radius: 9px; padding: 9px; }
@@ -693,7 +703,7 @@ body::before {
 .kbtn:disabled { opacity: 0.28; cursor: default; }
 
 .kcard--edit { cursor: default; background: var(--sepia); }
-.kcard__input { width: 100%; background: var(--onix); border: 1px solid var(--areia-40); border-radius: 7px; color: var(--creme); font-family: var(--font-body); font-size: 13.5px; padding: 8px 10px; resize: vertical; box-sizing: border-box; }
+.kcard__input { width: 100%; background: var(--onix); border: 1px solid var(--areia-40); border-radius: 9px; color: var(--creme); font-family: var(--font-body); font-size: 14px; line-height: 1.55; padding: 12px 13px; min-height: 96px; resize: none; overflow: hidden; box-sizing: border-box; }
 .kcard__input:focus { outline: 2px solid var(--areia); outline-offset: 1px; }
 .kcard__dllabel { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--areia); margin-top: 9px; }
 .kcard__date { background: var(--onix); border: 1px solid var(--areia-40); border-radius: 7px; color: var(--creme); padding: 5px 8px; font-family: var(--font-body); color-scheme: dark; }

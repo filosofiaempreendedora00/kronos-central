@@ -146,9 +146,14 @@ const Kanban = (() => {
       if (mm < 1) { mm = 12; yy--; } if (mm > 12) { mm = 1; yy++; }
       calMonth = `${yy}-${String(mm).padStart(2, "0")}`; renderCalendar(kdl);
     }));
-    el.querySelectorAll(".kcal__day[data-d]").forEach((b) => b.addEventListener("click", () => { setDate(kdl, kdl.dataset.date === b.dataset.d ? "" : b.dataset.d); closeCal(kdl); }));
-    const clr = el.querySelector(".kcal__clear"); if (clr) clr.addEventListener("click", () => { setDate(kdl, ""); closeCal(kdl); });
+    const commit = (ds) => {
+      if (kdl.classList.contains("kdl--face")) commitDeadline(kdl.dataset.id, ds); // no card: salva na hora
+      else { setDate(kdl, ds); closeCal(kdl); } // na edição: guarda p/ o Salvar
+    };
+    el.querySelectorAll(".kcal__day[data-d]").forEach((b) => b.addEventListener("click", () => commit(kdl.dataset.date === b.dataset.d ? "" : b.dataset.d)));
+    const clr = el.querySelector(".kcal__clear"); if (clr) clr.addEventListener("click", () => commit(""));
   }
+  function commitDeadline(id, ds) { const t = tasks.find((x) => x.id === id); if (!t) return; t.deadline = ds || null; persist(); render(); }
 
   function pickerHtml(id, selected, multi) {
     const sel = multi ? new Set(selected) : null;
@@ -162,7 +167,7 @@ const Kanban = (() => {
     if (editingId === t.id) {
       const owner = t.owner || "coo";
       return `<div class="kcard kcard--edit" data-id="${t.id}">
-        <textarea class="kcard__input" rows="3" placeholder="O que precisa ser feito?">${esc(t.title)}</textarea>
+        <textarea class="kcard__input" rows="4" placeholder="O que precisa ser feito?">${esc(t.title)}</textarea>
         <div class="kedit-sec"><span class="kedit-lbl">Prazo</span>
           <div class="kdl${t.deadline ? " kdl--set" : ""}" data-date="${t.deadline || ""}">
             <button type="button" class="kdl__trigger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/></svg><span class="kdl__label">${t.deadline ? t.deadline.split("-").reverse().slice(0, 2).join("/") : "sem prazo"}</span></button>
@@ -185,7 +190,10 @@ const Kanban = (() => {
       <div class="kcard__title">${esc(t.title) || '<span class="kcard__empty">(sem título)</span>'}</div>
       ${peopleRow(t)}
       <div class="kcard__foot">
-        ${dl ? `<span class="kcard__dl kcard__dl--${dl.cls}">${dl.txt}</span>` : `<span class="kcard__dl kcard__dl--none">sem prazo</span>`}
+        <div class="kdl kdl--face${t.deadline ? " kdl--set" : ""}" data-id="${t.id}" data-date="${t.deadline || ""}">
+          <button type="button" class="kdl__trigger kdl__trigger--chip ${dl ? "is-" + dl.cls : "is-none"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/></svg><span class="kdl__label">${dl ? dl.txt : "sem prazo"}</span></button>
+          <div class="kcal" hidden></div>
+        </div>
       </div>
     </div>`;
   }
@@ -209,7 +217,7 @@ const Kanban = (() => {
     board.querySelectorAll(".kcard--edit [data-act]").forEach((b) => b.addEventListener("click", onAct));
     // clicar no card (display) abre a edição
     board.querySelectorAll('.kcard[draggable="true"]').forEach((c) => {
-      c.addEventListener("click", () => openEdit(c.dataset.id));
+      c.addEventListener("click", (e) => { if (e.target.closest(".kdl")) return; openEdit(c.dataset.id); });
       c.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", c.dataset.id); e.dataTransfer.effectAllowed = "move"; c.classList.add("kcard--drag"); });
       c.addEventListener("dragend", () => c.classList.remove("kcard--drag"));
     });
@@ -218,9 +226,10 @@ const Kanban = (() => {
       z.addEventListener("dragleave", () => z.classList.remove("kcol__cards--over"));
       z.addEventListener("drop", (e) => { e.preventDefault(); z.classList.remove("kcol__cards--over"); moveTo(e.dataTransfer.getData("text/plain"), z.dataset.col); });
     });
-    // editor: prazo (gatilho recolhido), pickers, status
-    const kdl = board.querySelector(".kdl");
-    if (kdl) kdl.querySelector(".kdl__trigger").addEventListener("click", () => { kdl.classList.contains("kdl--open") ? closeCal(kdl) : openCal(kdl); });
+    // prazo (na face do card E na edição): o gatilho recolhido abre/fecha o calendário
+    board.querySelectorAll(".kdl").forEach((kdl) => {
+      kdl.querySelector(".kdl__trigger").addEventListener("click", (e) => { e.stopPropagation(); kdl.classList.contains("kdl--open") ? closeCal(kdl) : openCal(kdl); });
+    });
     const ow = board.querySelector("#kowner");
     if (ow) ow.querySelectorAll(".kpick__a").forEach((b) => b.addEventListener("click", () => { ow.querySelectorAll(".kpick__a--on").forEach((x) => x.classList.remove("kpick__a--on")); b.classList.add("kpick__a--on"); }));
     const sp = board.querySelector("#ksupport");
@@ -228,7 +237,11 @@ const Kanban = (() => {
     const st = board.querySelector(".kstatus");
     if (st) st.querySelectorAll(".kstatus__b").forEach((b) => b.addEventListener("click", () => { st.querySelectorAll(".kstatus__b--on").forEach((x) => x.classList.remove("kstatus__b--on")); b.classList.add("kstatus__b--on"); }));
     const ta = board.querySelector(".kcard__input");
-    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+    if (ta) {
+      const grow = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
+      grow(); ta.addEventListener("input", grow);
+      ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    }
   }
 
   function onAct(e) {
