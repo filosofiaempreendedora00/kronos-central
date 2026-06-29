@@ -718,9 +718,9 @@ body::before {
   #kanbanView:not([hidden]) { display: flex; flex-direction: column; height: calc(100dvh - var(--pad-top) - var(--pad-bottom)); }
   #kanbanView .view__inner { flex: 1; min-height: 0; gap: 20px; }
   #kanbanView .kanban__head { margin-bottom: 0; }
-  #kanbanView .kanban__board { flex: 1; min-height: 0; align-items: stretch; grid-template-rows: minmax(0, 1fr); }
-  #kanbanView .kcol { overflow: hidden; }
-  #kanbanView .kcol__cards { overflow-y: auto; padding-right: 3px; padding-bottom: 4px; }
+  #kanbanView .kanban__board { flex: 1; min-height: 0; align-items: start; grid-template-rows: minmax(0, 1fr); }
+  #kanbanView .kcol { overflow: hidden; max-height: 100%; }
+  #kanbanView .kcol__cards { overflow-y: auto; min-height: 0; padding-right: 3px; padding-bottom: 4px; }
 }
 
 @media (max-width: 860px) {
