@@ -629,6 +629,26 @@ body::before {
 .kcard--drag { opacity: 0.45; }
 .kcard__title { color: var(--creme); font-size: 13.5px; line-height: 1.4; word-break: break-word; white-space: pre-wrap; }
 .kcard__empty { color: var(--areia); opacity: 0.6; }
+
+/* responsáveis no card */
+.kcard__people { display: flex; align-items: center; gap: 4px; margin-top: 10px; }
+.kperson { width: 22px; height: 22px; border-radius: 50%; overflow: hidden; border: 1px solid var(--areia-40); background: var(--sepia); flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
+.kperson img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kperson__ini { font-size: 10px; font-weight: 600; color: var(--creme); }
+.kperson--owner { width: 26px; height: 26px; border-color: var(--areia); box-shadow: 0 0 0 2px var(--areia-22); }
+.kperson--founder { margin-left: auto; border-style: dashed; background: var(--areia-12); }
+.kperson--founder .kperson__ini { color: var(--areia); }
+
+/* seletores de responsável na edição */
+.kedit-row { display: flex; align-items: center; gap: 10px; margin-top: 11px; }
+.kedit-row--col { flex-direction: column; align-items: stretch; gap: 6px; }
+.kedit-lbl { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--areia); flex: 0 0 auto; }
+.kcard__owner { flex: 1; background: var(--onix); border: 1px solid var(--areia-40); border-radius: 7px; color: var(--creme); padding: 6px 8px; font-family: var(--font-body); font-size: 13px; color-scheme: dark; }
+.kcard__support { display: flex; flex-wrap: wrap; gap: 5px; }
+.ksupport-chip { background: transparent; border: 1px solid var(--areia-22); color: var(--areia); border-radius: 999px; padding: 4px 10px; font-size: 11.5px; cursor: pointer; font-family: var(--font-body); }
+.ksupport-chip:hover { color: var(--creme); }
+.ksupport-chip--on { background: var(--areia); color: var(--onix); border-color: var(--areia); }
+.kedit-note { margin: 8px 0 0; font-size: 11px; color: var(--areia); opacity: 0.8; }
 .kcard__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 11px; }
 .kcard__dl { font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--areia-22); color: var(--areia); white-space: nowrap; }
 .kcard__dl--over { color: #E08A6E; border-color: #7a3b2c; background: rgba(217, 138, 110, 0.1); }
