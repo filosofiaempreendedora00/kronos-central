@@ -100,12 +100,11 @@ const Funil = (() => {
       const topF = i === 0 ? frac(stages[0].value) : frac(stages[i - 1].value);
       const botF = frac(s.value);
       const poly = `polygon(${50 - topF * 50}% 0, ${50 + topF * 50}% 0, ${50 + botF * 50}% 100%, ${50 - botF * 50}% 100%)`;
-      html += `<div class="fnl__band${s.value === 0 ? " fnl__band--zero" : ""}">
-        <div class="fnl__shape" style="clip-path:${poly};-webkit-clip-path:${poly}"></div>
-        <div class="fnl__c">
-          <span class="fnl__label">${s.label}</span>
-          <span class="fnl__num">${nf(s.value)}</span>
-          ${s.note ? `<span class="fnl__note">${s.note}</span>` : ""}
+      html += `<div class="fnl__stage">
+        <div class="fnl__caption"><span class="fnl__label">${s.label}</span>${s.note ? ` <span class="fnl__note">${s.note}</span>` : ""}</div>
+        <div class="fnl__band${s.value === 0 ? " fnl__band--zero" : ""}">
+          <div class="fnl__shape" style="clip-path:${poly};-webkit-clip-path:${poly}"></div>
+          <div class="fnl__c"><span class="fnl__num">${nf(s.value)}</span></div>
         </div>
       </div>`;
       if (i < stages.length - 1) {
