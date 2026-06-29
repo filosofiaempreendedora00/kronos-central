@@ -644,6 +644,13 @@ body::before {
 .kedit-lbl { display: block; margin-bottom: 6px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--areia); }
 .kedit-note { margin: 10px 0 0; font-size: 11px; color: var(--areia); opacity: 0.8; }
 
+.kdl__trigger { display: inline-flex; align-items: center; gap: 8px; background: var(--onix); border: 1px solid var(--areia-40); border-radius: 7px; color: var(--areia); padding: 8px 12px; cursor: pointer; font-family: var(--font-body); font-size: 13px; }
+.kdl__trigger:hover { border-color: var(--areia); color: var(--creme); }
+.kdl__trigger svg { width: 15px; height: 15px; color: var(--areia); flex: 0 0 auto; }
+.kdl--set .kdl__label { color: var(--creme); }
+.kdl--open .kdl__trigger { border-color: var(--areia); }
+.kcal[hidden] { display: none; }
+.kdl .kcal { margin-top: 8px; }
 .kcal { background: var(--onix); border: 1px solid var(--areia-22); border-radius: 9px; padding: 9px; }
 .kcal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
 .kcal__title { font-size: 12.5px; font-weight: 600; color: var(--creme); text-transform: capitalize; }
