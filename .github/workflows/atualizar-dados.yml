@@ -1,0 +1,48 @@
+name: Atualizar dados
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atualizar-dados
+  cancel-in-progress: false
+
+jobs:
+  funil:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependência (pg)
+        run: npm install pg --no-save --no-audit --no-fund
+
+      - name: Gerar funil.json (Supabase + Google + Meta)
+        env:
+          KRONOS_PASS: ${{ secrets.KRONOS_PASS }}
+          GERADOR_DB_URL: ${{ secrets.GERADOR_DB_URL }}
+          GOOGLE_CSV_URL: ${{ secrets.GOOGLE_CSV_URL }}
+          META_TOKEN: ${{ secrets.META_TOKEN }}
+        run: node scripts/ler-funil.mjs
+
+      - name: Commitar se mudou
+        run: |
+          git config user.name "kronos-bot"
+          git config user.email "bot@kronos-ias.com.br"
+          git add www/contexto/funil.json
+          if git diff --cached --quiet; then
+            echo "Nada mudou — sem commit."
+          else
+            git commit -m "chore(dados): atualiza funil (cron)"
+            git push
+          fi
