@@ -290,8 +290,11 @@ async function syncNow(btn) {
   } catch (_) {}
   await minSpin;
   try { renderPonteiro(); renderAgents(); } catch (_) {}
+  // re-puxa o funil (Supabase/Google/Meta) do GitHub — o robô atualiza esse dado
+  try { if (typeof Funil !== "undefined" && Funil.render) Funil.render(); } catch (_) {}
   closeDrawer();
   if (btn) { btn.classList.remove("is-spinning"); btn.disabled = false; }
+  try { toast("✓ Dados atualizados"); } catch (_) {}
 }
 
 /* Toast efêmero (confirmações curtas, ex.: "✓ Salvo"). */
