@@ -21,6 +21,20 @@ const Funil = (() => {
   const fmtPct = (a, b) => { const v = ratio(a, b) * 100; return (v > 0 && v < 1 ? v.toFixed(1) : Math.round(v)) + "%"; };
   const fmtDate = (iso) => { if (!iso) return ""; const p = iso.split("-"); return p[2] + "/" + p[1]; };
   const addDays = (iso, n) => { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const since = (iso) => {
+    if (!iso) return "";
+    const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    if (min < 1) return "agora";
+    if (min < 60) return "há " + min + "min";
+    const h = Math.round(min / 60);
+    if (h < 24) return "há " + h + "h";
+    return "há " + Math.round(h / 24) + "d";
+  };
+  const fmtWindow = (w) => { // "20260531..20260630" → "31/05–30/06"
+    if (!w) return "";
+    const p = w.split("..").map((s) => s.length === 8 ? s.slice(6, 8) + "/" + s.slice(4, 6) : s);
+    return p.join("–");
+  };
 
   async function load() {
     if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return null;
@@ -50,10 +64,15 @@ const Funil = (() => {
     const ativacao = sumIn(DOC.daily, "ativacoes", from, to);
     const ativacaoReal = sumIn(DOC.daily, "ativacoesReal", from, to);
     const metaClicks = sumIn(DOC.metaDaily, "linkClicks", from, to);
-    const spend = sumIn(DOC.metaDaily, "spend", from, to);
-    const google = 0; // leitura do Google ainda não conectada
-    const traffic = state.source === "meta" ? metaClicks : state.source === "google" ? google : metaClicks + google;
-    return { cadastros, ativacao, ativacaoReal, metaClicks, google, traffic, spend, pagantes: DOC.pagantesTotal || 0 };
+    const metaSpend = sumIn(DOC.metaDaily, "spend", from, to);
+    const metaReg = sumIn(DOC.metaDaily, "registrations", from, to);
+    // Google é resumo da JANELA da campanha (não série diária) → não filtra por data.
+    const g = DOC.google || null;
+    const googleClicks = g ? g.clicks : 0;
+    const googleSpend = g ? g.cost : 0;
+    const traffic = state.source === "meta" ? metaClicks : state.source === "google" ? googleClicks : metaClicks + googleClicks;
+    const spend = state.source === "meta" ? metaSpend : state.source === "google" ? googleSpend : metaSpend + googleSpend;
+    return { cadastros, ativacao, ativacaoReal, metaClicks, metaSpend, metaReg, googleClicks, googleSpend, g, traffic, spend, pagantes: DOC.pagantesTotal || 0 };
   }
 
   /* ----- controles (data + fonte) ----- */
@@ -65,8 +84,9 @@ const Funil = (() => {
     if (!el) return;
     const dates = [["freemium", "Freemium"], ["30d", "30d"], ["14d", "14d"], ["7d", "7d"]]
       .map(([v, l]) => chip("range", v, l, state.range === v)).join("");
+    const gOn = !!(DOC && DOC.google);
     const srcs = [["todos", "Todos"], ["meta", "Meta"], ["google", "Google"]]
-      .map(([v, l]) => chip("source", v, l + (v === "google" ? " ·conectar" : ""), state.source === v)).join("");
+      .map(([v, l]) => chip("source", v, l + (v === "google" && !gOn ? " ·conectar" : ""), state.source === v)).join("");
     el.innerHTML = `<div class="funil-ctlgroup">${dates}</div><div class="funil-ctlgroup funil-ctlgroup--src">${srcs}</div>`;
     el.querySelectorAll(".funil-chip").forEach((b) => b.addEventListener("click", () => {
       state[b.dataset.g === "range" ? "range" : "source"] = b.dataset.v;
@@ -84,7 +104,11 @@ const Funil = (() => {
     const d = compute(from, to);
 
     // fases do funil (monotônicas)
-    const srcNote = state.source === "google" ? "leitura do Google não conectada" : state.source === "meta" ? "cliques no link · Meta" : "cliques no link · Meta (Google em breve)";
+    const gWin = d.g ? fmtWindow(d.g.window) : "";
+    const srcNote = state.source === "google"
+      ? (d.g ? `cliques · Google · janela ${gWin}` : "leitura do Google não conectada")
+      : state.source === "meta" ? "cliques no link · Meta"
+      : (d.g ? "cliques · Meta (diário) + Google (janela)" : "cliques no link · Meta (Google em breve)");
     const stages = [
       { label: "Tráfego", value: d.traffic, note: srcNote },
       { label: "Cadastros", value: d.cadastros, verb: "se cadastram" },
@@ -133,11 +157,27 @@ const Funil = (() => {
       stats.innerHTML = chips.map(([k, v]) => `<div class="funil-stat"><span class="funil-stat__k">${k}</span><span class="funil-stat__v">${v}</span></div>`).join("");
     }
 
+    // Comparação de aquisição Meta × Google (quem traz mais barato)
+    if (d.g) {
+      const rowsCmp = [
+        ["Meta", d.metaClicks, d.metaSpend, d.metaReg, d.metaReg ? d.metaSpend / d.metaReg : 0],
+        ["Google", d.g.clicks, d.g.cost, d.g.conversions, d.g.costPerConv],
+      ];
+      const cells = rowsCmp.map(([src, cl, sp, cv, cpc]) => `<div class="funil-cmp__row">
+          <span class="funil-cmp__src funil-cmp__src--${src.toLowerCase()}">${src}</span>
+          <span class="funil-cmp__n">${nf(cl)}<small>cliques</small></span>
+          <span class="funil-cmp__n">${sp ? brl(sp) : "—"}<small>gasto</small></span>
+          <span class="funil-cmp__n">${nf(cv)}<small>cadastros</small></span>
+          <span class="funil-cmp__n">${cpc ? brl(cpc) : "—"}<small>/cadastro</small></span>
+        </div>`).join("");
+      grid.insertAdjacentHTML("beforeend", `<div class="funil-cmp"><div class="funil-cmp__ttl">Aquisição · Meta × Google <span class="funil-cmp__win">janela Google ${gWin}</span></div>${cells}</div>`);
+    }
+
     if (state.source !== "todos") {
       grid.insertAdjacentHTML("beforeend", `<p class="funil-src-note">Obs: a fonte filtra só o tráfego. Cadastro→ativação→pagante ainda não são atribuídos por fonte (sem UTM/click-id ligando clique→conta).</p>`);
     }
 
-    if (metaEl) metaEl.textContent = `${state.range === "freemium" ? "Freemium" : state.range} · ${fmtDate(from)}–${fmtDate(to)}${DOC.freemiumCampaign ? " · campanha isolada" : ""}`;
+    if (metaEl) metaEl.textContent = `${state.range === "freemium" ? "Freemium" : state.range} · ${fmtDate(from)}–${fmtDate(to)}${DOC.freemiumCampaign ? " · campanha isolada" : ""}${DOC.updatedAt ? " · atualizado " + since(DOC.updatedAt) : ""}`;
   }
 
   function render() {

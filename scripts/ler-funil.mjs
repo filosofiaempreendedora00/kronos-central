@@ -18,10 +18,12 @@ const pwd = process.env.KRONOS_PWD || "";
 const passphrase = process.env.KRONOS_PASS || ((email && pwd) ? email + "|" + pwd : "");
 if (!passphrase) { console.error("Defina KRONOS_PASS (a passphrase exata do cofre) OU KRONOS_EMAIL e KRONOS_PWD."); process.exit(1); }
 
-const envFile = fs.readFileSync(".env.local", "utf8");
-const dbUrl = (envFile.match(/GERADOR_DB_URL\s*=\s*"?([^"\n]+)"?/) || [])[1];
-if (!dbUrl) { console.error("GERADOR_DB_URL não encontrado em .env.local."); process.exit(1); }
-const metaTok = (envFile.match(/META_TOKEN\s*=\s*"?([^"\n]+)"?/) || [])[1];
+// Lê de variáveis de ambiente (GitHub Actions) OU do .env.local (máquina local).
+const envFile = fs.existsSync(".env.local") ? fs.readFileSync(".env.local", "utf8") : "";
+const fromEnv = (name) => process.env[name] || (envFile.match(new RegExp(name + '\\s*=\\s*"?([^"\\n]+)"?')) || [])[1];
+const dbUrl = fromEnv("GERADOR_DB_URL");
+if (!dbUrl) { console.error("GERADOR_DB_URL não definido (env var nem .env.local)."); process.exit(1); }
+const metaTok = fromEnv("META_TOKEN");
 
 const OUT = "www/contexto/funil.json";
 const ITER = 150000;
@@ -79,6 +81,44 @@ if (metaTok) {
 }
 if (!freemiumStart) freemiumStart = "2026-06-21"; // fallback se Meta off
 
+// ---- Google Ads (CSV publicado, público) → resumo da janela da campanha ----
+// O CSV é agregado por campanha (não é série diária), então entra como resumo.
+let google = null;
+const gUrl = fromEnv("GOOGLE_CSV_URL");
+if (gUrl) {
+  try {
+    const txt = await (await fetch(gUrl)).text();
+    const parseLine = (line) => {
+      const out = []; let cur = "", q = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { if (q && line[i + 1] === '"') { cur += '"'; i++; } else q = !q; }
+        else if (c === "," && !q) { out.push(cur); cur = ""; }
+        else cur += c;
+      }
+      out.push(cur); return out;
+    };
+    const num = (s) => Number(String(s || "").replace(/[^0-9.\-]/g, "")) || 0;
+    const lines = txt.split(/\r?\n/).filter((l) => l.trim());
+    const rows = lines.slice(1).map(parseLine);
+    // col: 0 Campanha,1 Status,2 Impr,3 Cliques,4 CTR,5 CPC,6 Custo,7 Conv,8 Custo/conv,9 Janela
+    const rel = rows.filter((x) => /kronos|gerador|proposta/i.test(x[0]) || /ativ/i.test(x[1] || "") || num(x[3]) > 0);
+    if (rel.length) {
+      const impressions = rel.reduce((s, x) => s + num(x[2]), 0);
+      const clicks = rel.reduce((s, x) => s + num(x[3]), 0);
+      const cost = rel.reduce((s, x) => s + num(x[6]), 0);
+      const conversions = rel.reduce((s, x) => s + num(x[7]), 0);
+      google = {
+        impressions, clicks, cost, conversions,
+        ctr: impressions ? clicks / impressions : 0,
+        cpc: clicks ? cost / clicks : 0,
+        costPerConv: conversions ? cost / conversions : 0,
+        window: rel[0][9] || "", campaigns: rel.map((x) => x[0]),
+      };
+    }
+  } catch (e) { console.error("Google indisponível (segue sem):", e.message); }
+}
+
 // ---- Supabase (só-leitura): séries DIÁRIAS escopadas ao freemium ----
 const cli = new pg.Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
 const q = async (sql, p) => (await cli.query(sql, p)).rows;
@@ -103,9 +143,10 @@ const daily = Object.values(map).sort((a, b) => (a.date < b.date ? -1 : 1));
 
 const doc = {
   type: "kronos.funil", version: 2, updatedAt: new Date().toISOString(),
-  freemiumStart, freemiumCampaign, today, daily, metaDaily, pagantesTotal,
+  freemiumStart, freemiumCampaign, today, daily, metaDaily, pagantesTotal, google,
 };
 fs.writeFileSync(OUT, JSON.stringify(encryptDoc(doc)));
 const sum = (arr, k) => arr.reduce((s, x) => s + (x[k] || 0), 0);
 console.log(`ok — funil v2 cifrado · freemium desde ${freemiumStart}${freemiumCampaign ? ` (${freemiumCampaign})` : ""}`);
 console.log(`  cadastros ${sum(daily, "cadastros")} · ativações ${sum(daily, "ativacoes")} (${sum(daily, "ativacoesReal")} reais) · pagantes ${pagantesTotal} · cliques-link ${sum(metaDaily, "linkClicks")} · gasto R$${Math.round(sum(metaDaily, "spend"))}`);
+if (google) console.log(`  Google: ${google.clicks} cliques · ${google.conversions} conv · gasto R$${Math.round(google.cost)} · janela ${google.window}`);
