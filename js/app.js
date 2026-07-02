@@ -110,6 +110,7 @@ function makeAgentCard(agent) {
             <path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
+        <button class="agent-card__easy agent-card__ctx" type="button" data-ctx="${agent.id}" title="Ver o contexto (escopo + cartilha) atual deste agente — sincronizado do cofre">Contexto</button>
       </div>
     `;
 
@@ -123,6 +124,11 @@ function makeAgentCard(agent) {
     card.querySelector(".agent-card__easy").addEventListener("click", (e) => {
       e.stopPropagation();
       openEasyDirect(agent.id);
+    });
+
+    card.querySelector("[data-ctx]").addEventListener("click", (e) => {
+      e.stopPropagation();
+      openAgentContext(agent.id);
     });
 
     // A foto no card NÃO abre lightbox (evita missclick) — clicar em qualquer
@@ -148,6 +154,17 @@ function openEasyDirect(id) {
   const url = easyUrlFor(id);
   if (url) window.open(url, "_blank", "noopener");
   else Chat.open(id, "easy"); // sem link salvo → entra no modo Easy para configurar
+}
+
+/* Contexto do agente: mostra o escopo + cartilha REAIS lidos do cofre (vault.enc).
+   Sempre sincronizado — o que eu atualizo pelo Claude Code aparece aqui. */
+function openAgentContext(id) {
+  const a = (typeof AGENTS !== "undefined" ? AGENTS : []).find((x) => x.id === id);
+  if (!a) return;
+  const esc = (typeof Context !== "undefined" && Context.escopoEfetivo) ? Context.escopoEfetivo(a) : (a.escopo || "");
+  const md = "## Escopo\n" + (esc || "_(sem escopo)_") + (a.knowledge ? "\n\n---\n\n" + a.knowledge : "");
+  const html = (typeof NucleoView !== "undefined" && NucleoView.mdToHtml) ? NucleoView.mdToHtml(md) : md;
+  openDocModal((a.nome || a.name) + " · contexto", (a.name || "") + " · lido do cofre (sincronizado)", html);
 }
 
 /* ------------------------------ Métricas (Bloco 2) ------------------------ */
@@ -556,6 +573,8 @@ function init() {
   Delfos.bind();
   CostsView.bind();
   CostsView.renderMini();
+  const _openCosts = document.getElementById("openCostsBtn");
+  if (_openCosts) _openCosts.addEventListener("click", () => navGo("custos"));
   NucleoView.bind();
   Settings.bind();
   if (typeof Kanban !== "undefined") {
