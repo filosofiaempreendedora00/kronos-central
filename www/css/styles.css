@@ -787,7 +787,7 @@ body::before {
   #kanbanView .kanban__head { flex-shrink: 0; }
   #kanbanView .kanban__board { flex: 1; min-height: 0; align-items: stretch; }
   #kanbanView .kcol { max-height: 100%; overflow: hidden; }
-  #kanbanView .kcol__cards { overflow-y: auto; min-height: 0; -webkit-overflow-scrolling: touch; padding-right: 3px; }
+  #kanbanView .kcol__cards { overflow-y: auto; min-height: 0; -webkit-overflow-scrolling: touch; padding-right: 3px; padding-bottom: 18px; }
 
   .kanban__board { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(250px, 82vw); overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 6px; }
   .kcol { scroll-snap-align: start; }
@@ -2391,10 +2391,11 @@ body::before {
   .funil-stat__k { font-size: 10px; }
   .funil-stat__v { font-size: 18px; }
   /* comparação Meta×Google: 2 colunas de métrica por linha no celular */
-  .funil-cmp { padding: 14px; }
-  .funil-cmp__row { grid-template-columns: 1fr 1fr; gap: 8px 12px; }
-  .funil-cmp__src { grid-column: 1 / -1; justify-self: start; }
-  .funil-cmp__n { font-size: 15px; }
+  .funil-cmp { padding: 15px 16px; }
+  .funil-cmp__row { grid-template-columns: 1fr 1fr; gap: 12px 14px; padding: 12px 0; }
+  .funil-cmp__src { grid-column: 1 / -1; justify-self: start; font-size: 13px; padding: 4px 12px; }
+  .funil-cmp__n { font-size: 18px; gap: 3px; }
+  .funil-cmp__n small { font-size: 10.5px; }
 
   /* integrações — 1 coluna no celular */
   .integ-grid { grid-template-columns: 1fr; }
