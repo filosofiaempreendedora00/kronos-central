@@ -661,7 +661,7 @@ body::before {
 
 /* Menu enxuto: Dash ao centro; Contextos (→ dentro de Agentes), Custos (→ no Dash)
    e Config (→ só na gaveta) saem do acesso rápido. */
-.tabbar__btn[data-nav="contextos"], .tabbar__btn[data-nav="custos"], .tabbar__btn[data-nav="config"] { display: none; }
+.tabbar .tabbar__btn[data-nav="contextos"], .tabbar .tabbar__btn[data-nav="custos"], .tabbar .tabbar__btn[data-nav="config"] { display: none !important; }
 .tabbar__btn[data-nav="agentes"] { order: 1; }
 .tabbar__btn[data-nav="dash"]    { order: 2; }
 .tabbar__btn[data-nav="kanban"]  { order: 3; }
