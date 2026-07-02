@@ -104,13 +104,6 @@ function makeAgentCard(agent) {
             <polyline points="13,7 18,12 13,17" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
-        <button class="agent-card__easy" type="button" data-easy="${agent.id}" title="Abrir no Claude (modo Easy) — sem custo">
-          Easy
-          <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
-            <path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <button class="agent-card__easy agent-card__ctx" type="button" data-ctx="${agent.id}" title="Ver o contexto (escopo + cartilha) atual deste agente — sincronizado do cofre">Contexto</button>
       </div>
     `;
 
@@ -120,16 +113,7 @@ function makeAgentCard(agent) {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openAgent(agent.id); }
     });
 
-    // clique no atalho Easy → vai direto pro Claude, sem entrar no agente
-    card.querySelector(".agent-card__easy").addEventListener("click", (e) => {
-      e.stopPropagation();
-      openEasyDirect(agent.id);
-    });
-
-    card.querySelector("[data-ctx]").addEventListener("click", (e) => {
-      e.stopPropagation();
-      openAgentContext(agent.id);
-    });
+    // (card = uma ação só: abrir conversa. Sem atalho "Easy" — desvinculado.)
 
     // A foto no card NÃO abre lightbox (evita missclick) — clicar em qualquer
     // ponto do card leva ao chat. Lá dentro, sim, a foto amplia.
@@ -575,6 +559,8 @@ function init() {
   CostsView.renderMini();
   const _openCosts = document.getElementById("openCostsBtn");
   if (_openCosts) _openCosts.addEventListener("click", () => navGo("custos"));
+  const _openNucleo = document.getElementById("openNucleoBtn");
+  if (_openNucleo) _openNucleo.addEventListener("click", () => NucleoView.open());
   NucleoView.bind();
   Settings.bind();
   if (typeof Kanban !== "undefined") {
