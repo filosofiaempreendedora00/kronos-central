@@ -14,6 +14,9 @@ const Funil = (() => {
   let DOC = null;
   const state = { range: "freemium", source: "todos" };
 
+  // METAS de ativação — o placar do conselho (editável). Higher-is-better exceto custo.
+  const METAS = { ativacao: 0.25, ativacaoReal: 0.20, custoAtivacao: 80, pagantes: 1 };
+
   const nf = (n) => Number(n).toLocaleString("pt-BR");
   const brl = (n) => "R$ " + Math.round(n).toLocaleString("pt-BR");
   const ratio = (a, b) => (b ? a / b : 0);
@@ -138,6 +141,38 @@ const Funil = (() => {
     });
     html += "</div>";
     grid.innerHTML = html;
+
+    // PLACAR DE METAS (janela freemium inteira — estável, não segue os chips)
+    {
+      const fmS = DOC.freemiumStart, tdy = DOC.today;
+      const cadA = sumIn(DOC.daily, "cadastros", fmS, tdy);
+      const atA = sumIn(DOC.daily, "ativacoes", fmS, tdy);
+      const atRA = sumIn(DOC.daily, "ativacoesReal", fmS, tdy);
+      const spA = sumIn(DOC.metaDaily, "spend", fmS, tdy) + (DOC.google ? DOC.google.cost : 0);
+      const pag = DOC.pagantesTotal || 0;
+      const custoAt = atA ? spA / atA : 0;
+      const heroFill = Math.min(100, Math.round((ratio(atA, cadA) / METAS.ativacao) * 100));
+      const faltam = Math.max(0, Math.ceil(METAS.ativacao * cadA) - atA);
+      const realOk = ratio(atRA, cadA) >= METAS.ativacaoReal;
+      const custoOk = custoAt && custoAt <= METAS.custoAtivacao;
+      const metasHtml = `<div class="funil-metas">
+        <div class="funil-metas__ttl">Metas de ativação <span class="funil-metas__sub">o placar que importa · janela freemium</span></div>
+        <div class="fmk-hero">
+          <div class="fmk-hero__top">
+            <span class="fmk-hero__k">Ativação · cadastro→1ª proposta</span>
+            <span class="fmk-hero__v">${fmtPct(atA, cadA)} <small>/ meta ${Math.round(METAS.ativacao * 100)}%</small></span>
+          </div>
+          <div class="fmk-bar"><div class="fmk-bar__fill" style="width:${heroFill}%"></div></div>
+          <div class="fmk-hero__hint">${atA} de ${cadA} ativaram · ${faltam > 0 ? `faltam <b class="fmk-hero__goal">~${faltam} ativações</b> pra bater ${Math.round(METAS.ativacao * 100)}%` : `<b class="fmk-hero__goal">meta batida 🎯</b>`}</div>
+        </div>
+        <div class="funil-metas__grid">
+          <div class="fmk"><span class="fmk__k">Ativação real</span><span class="fmk__v${realOk ? " fmk__v--ok" : ""}">${fmtPct(atRA, cadA)}</span><div class="fmk__goal">meta ${Math.round(METAS.ativacaoReal * 100)}%</div></div>
+          <div class="fmk"><span class="fmk__k">1º pagante · gate</span><span class="fmk__v${pag >= METAS.pagantes ? " fmk__v--ok" : ""}">${pag} / ${METAS.pagantes}</span><div class="fmk__goal">libera escalar verba</div></div>
+          <div class="fmk"><span class="fmk__k">Custo / ativação</span><span class="fmk__v${custoOk ? " fmk__v--ok" : ""}">${atA ? brl(custoAt) : "—"}</span><div class="fmk__goal">meta ≤ ${brl(METAS.custoAtivacao)}</div></div>
+        </div>
+      </div>`;
+      grid.insertAdjacentHTML("afterbegin", metasHtml);
+    }
 
     // headline (1 frase) — o gargalo
     if (head) {
