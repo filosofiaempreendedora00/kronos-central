@@ -41,17 +41,11 @@ const Chat = (() => {
   }
 
   /* ------------------------------- Abrir --------------------------------- */
-  function open(agentId, forceMode) {
+  function open(agentId) {
     const agent = AGENTS.find((a) => a.id === agentId);
     if (!agent) return;
 
     currentAgent = agent;
-    if (forceMode === "easy" || forceMode === "hard") {
-      currentMode = forceMode;
-      localStorage.setItem(modeKey(agent.id), forceMode);
-    } else {
-      currentMode = getMode(agent.id);
-    }
     history = loadHistory(agent.id);
 
     document.getElementById("chatAvatar").innerHTML = agentAvatarHTML(agent);
@@ -64,35 +58,18 @@ const Chat = (() => {
     // Benchmarking de Mercado é o "item" do TIAgo — só no chat dele (e só se existir).
     const benchChip = document.getElementById("chatBenchChip");
     if (benchChip) benchChip.hidden = !(agent.id === "ceo" && agent.knowledge);
+    // Prompt/escopo do agente — atalho sutil no topo (abre em modal, volta pro chat).
+    const promptChip = document.getElementById("chatPromptChip");
+    if (promptChip) promptChip.hidden = false;
 
     App.showView("chatView");
 
     stick = true;
     renderMessages();
-    applyMode(currentMode);
+    setTimeout(() => document.getElementById("chatInput")?.focus(), 50);
     scrollToBottom(true);
   }
-
-  /* --------------------------- Troca de modo ----------------------------- */
-  function applyMode(mode) {
-    currentMode = mode;
-    if (currentAgent) localStorage.setItem(modeKey(currentAgent.id), mode);
-
-    const isEasy = mode === "easy";
-    document.getElementById("chatScroll").hidden = isEasy;
-    document.querySelector(".chat__composer").hidden = isEasy;
-    document.getElementById("chatEasy").hidden = !isEasy;
-    document.getElementById("chatClearBtn").hidden = isEasy;
-
-    document.getElementById("modeEasyBtn").classList.toggle("mode-switch__opt--active", isEasy);
-    document.getElementById("modeHardBtn").classList.toggle("mode-switch__opt--active", !isEasy);
-
-    if (isEasy) {
-      renderEasy();
-    } else {
-      setTimeout(() => document.getElementById("chatInput")?.focus(), 50);
-    }
-  }
+  // (modo Easy removido — o chat é sempre via API; sem troca de modo.)
 
   /* ----------------------------- Modo Easy ------------------------------- */
   function renderEasy() {
@@ -428,10 +405,14 @@ const Chat = (() => {
     document.getElementById("chatCartChip")?.addEventListener("click", () => { if (window.App && App.openCartilha) App.openCartilha(); });
     document.getElementById("chatBenchChip")?.addEventListener("click", () => { if (window.App && App.openBenchmark) App.openBenchmark(); });
 
-    document.getElementById("modeEasyBtn").addEventListener("click", () => applyMode("easy"));
-    document.getElementById("modeHardBtn").addEventListener("click", () => {
-      if (busy) abortCtrl?.abort();
-      applyMode("hard");
+    document.getElementById("chatPromptChip")?.addEventListener("click", () => {
+      if (!currentAgent) return;
+      const esc = (window.Context && Context.escopoEfetivo) ? Context.escopoEfetivo(currentAgent) : (currentAgent.escopo || "");
+      const md = "## Escopo\n" + (esc || "_(sem escopo)_") + (currentAgent.knowledge ? "\n\n---\n\n" + currentAgent.knowledge : "");
+      const html = (window.NucleoView && NucleoView.mdToHtml) ? NucleoView.mdToHtml(md) : md;
+      if (typeof openDocModal === "function") {
+        openDocModal((currentAgent.nome || currentAgent.name) + " · prompt", (currentAgent.name || "") + " · sincronizado do cofre", html);
+      }
     });
 
     // Detecta se o usuário rolou pra cima — aí paramos de arrastá-lo pro fim.

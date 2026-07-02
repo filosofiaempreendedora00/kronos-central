@@ -220,7 +220,7 @@
             <div class="block__head">
               <h2 class="block__title">Agentes</h2>
               <span class="block__rule" aria-hidden="true"></span>
-              <span class="block__hint">Clique no card p/ conversar · botão <b>Prompt</b> vê o escopo</span>
+              <span class="block__hint">Clique num card para conversar</span>
             </div>
             <div class="agents-search">
               <svg class="agents-search__icon" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
@@ -232,10 +232,7 @@
                 <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
               </button>
             </div>
-            <div class="agents-ctx">
-              <button type="button" id="openNucleoBtn" class="btn-ghost btn-ghost--sm">📘 Núcleo</button>
-              <button type="button" id="openBriefingBtn" class="btn-ghost btn-ghost--sm">📄 Briefing vivo</button>
-            </div>
+            <div class="agents-docs" id="agentsDocs"></div>
             <div class="agents-groups" id="agentsGrid"></div>
           </section>
         </div>
@@ -266,11 +263,11 @@
          =================================================================== -->
     <div id="chatView" class="chat" hidden>
       <header class="chat__head">
-        <button class="chat__back" id="chatBackBtn" aria-label="Voltar ao dashboard">
+        <button class="chat__back" id="chatBackBtn" aria-label="Voltar aos agentes">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <polyline points="14,6 8,12 14,18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Dashboard</span>
+          <span>Agentes</span>
         </button>
 
         <div class="chat__identity">
@@ -284,10 +281,7 @@
         <div class="chat__actions">
           <button class="cart-chip" id="chatCartChip" type="button" hidden><span class="cart-chip__mark">✦</span> Cartilha</button>
           <button class="cart-chip" id="chatBenchChip" type="button" hidden><span class="cart-chip__mark">✦</span> Benchmarking</button>
-          <div class="mode-switch" role="group" aria-label="Modo do agente">
-            <button class="mode-switch__opt" id="modeEasyBtn" data-mode="easy" type="button">Easy</button>
-            <button class="mode-switch__opt" id="modeHardBtn" data-mode="hard" type="button">Hard</button>
-          </div>
+          <button class="cart-chip" id="chatPromptChip" type="button" hidden><span class="cart-chip__mark">✦</span> Prompt</button>
           <button class="btn-ghost btn-ghost--sm" id="chatClearBtn">Limpar conversa</button>
         </div>
       </header>
@@ -295,26 +289,6 @@
       <!-- MODO HARD: chat via API -->
       <div class="chat__scroll" id="chatScroll">
         <div class="chat__messages" id="chatMessages"></div>
-      </div>
-
-      <!-- MODO EASY: atalho para o chat no Claude -->
-      <div class="chat__easy" id="chatEasy" hidden>
-        <div class="easy">
-          <span class="easy__mark" aria-hidden="true">
-            <svg viewBox="0 0 48 48" width="42" height="42">
-              <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>
-              <line x1="24" y1="24" x2="24" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-              <line x1="24" y1="24" x2="32" y2="27" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-              <circle cx="24" cy="24" r="1.6" fill="currentColor"/>
-            </svg>
-          </span>
-          <h3 class="easy__title">Modo Easy</h3>
-          <p class="easy__desc">
-            Conversa direto no seu Claude, com as mesmas instruções deste agente —
-            <strong>sem usar a API e sem custo</strong>.
-          </p>
-          <div class="easy__launcher" id="easyLauncher"></div>
-        </div>
       </div>
 
       <div class="chat__composer">
@@ -566,11 +540,11 @@
     <!-- ===================== NÚCLEO — leitor de um documento =========== -->
     <div id="nucleoDocView" class="settings" hidden>
       <header class="chat__head">
-        <button class="chat__back" id="nucleoDocBackBtn" aria-label="Voltar à Biblioteca">
+        <button class="chat__back" id="nucleoDocBackBtn" aria-label="Voltar aos agentes">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <polyline points="14,6 8,12 14,18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Biblioteca</span>
+          <span>Agentes</span>
         </button>
         <div class="chat__identity">
           <span class="chat__avatar" id="nucleoDocAvatar" hidden></span>
