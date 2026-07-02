@@ -611,6 +611,26 @@ body::before {
 .funil-cmp__n { display: flex; flex-direction: column; gap: 2px; font-family: var(--font-title); font-weight: 600; font-size: 17px; color: var(--branco); }
 .funil-cmp__n small { font-family: var(--font-body); font-weight: 500; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--areia); }
 
+/* Metas de ativação — o placar (atual × meta) */
+.funil-metas { margin-bottom: 20px; background: var(--areia-12); border: 1px solid var(--areia-22); border-radius: 12px; padding: 16px 18px; }
+.funil-metas__ttl { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--areia); margin-bottom: 14px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.funil-metas__sub { text-transform: none; letter-spacing: 0; font-size: 10.5px; opacity: 0.7; }
+.fmk-hero { margin-bottom: 14px; }
+.fmk-hero__top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.fmk-hero__k { font-family: var(--font-body); font-weight: 600; font-size: 13px; color: var(--branco); }
+.fmk-hero__v { font-family: var(--font-title); font-weight: 700; font-size: 26px; color: var(--branco); white-space: nowrap; }
+.fmk-hero__v small { font-size: 12.5px; color: var(--areia); font-weight: 600; }
+.fmk-bar { position: relative; height: 10px; border-radius: 999px; background: var(--areia-22); overflow: hidden; }
+.fmk-bar__fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #E0A88F, #E8C07D); transition: width 0.4s ease; }
+.fmk-hero__hint { margin-top: 8px; font-size: 11.5px; color: var(--areia); }
+.fmk-hero__goal { color: #E0A88F; font-weight: 600; }
+.funil-metas__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.fmk { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--areia-22); border-radius: 10px; padding: 11px 12px; }
+.fmk__k { display: block; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--areia); margin-bottom: 5px; }
+.fmk__v { font-family: var(--font-title); font-weight: 700; font-size: 19px; color: var(--branco); }
+.fmk__v--ok { color: #86C08F; }
+.fmk__goal { font-size: 10.5px; color: var(--areia); margin-top: 3px; opacity: 0.85; }
+
 /* ---- Kanban (aba Atividades — dono: MatIAs) ------------------------------ */
 .kanban__head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
 .kanban__owner { display: flex; align-items: center; gap: 14px; }
@@ -2317,6 +2337,8 @@ body::before {
   .fnl { max-width: 100%; }
   .fnl__band { height: 50px; }
   .fnl__num { font-size: 24px; }
+  .funil-metas__grid { grid-template-columns: 1fr; gap: 8px; }
+  .fmk-hero__v { font-size: 22px; }
   .fnl__label { font-size: 11px; }
   .fnl__note { font-size: 11px; }
   .fnl__conv { font-size: 11.5px; padding: 7px 0; }
