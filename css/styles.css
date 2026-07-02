@@ -668,6 +668,8 @@ body::before {
 .tabbar__btn[data-nav="kanban"]  { order: 3; }
 .sidebar__nav .navitem[data-nav="contextos"], .sidebar__nav .navitem[data-nav="custos"] { display: none; }
 .agents-docs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 6px 0 22px; }
+#agentesView .view__inner > .block:first-child { margin-top: 14px; }
+.kanban__avatar.avatar--zoomable { cursor: pointer; }
 .kcol__head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 2px 4px; }
 .kcol__label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--areia); }
 .kcol__count { font-size: 11px; color: var(--areia); border: 1px solid var(--areia-22); border-radius: 999px; padding: 1px 8px; }
