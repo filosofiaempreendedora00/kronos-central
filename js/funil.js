@@ -119,13 +119,17 @@ const Funil = (() => {
       { label: "Pagantes", value: d.pagantes, verb: "assinam" },
     ];
 
-    const top = stages[0].value || stages[1].value || 1;
-    const frac = (v) => (v > 0 ? Math.min(0.96, Math.max(0.18, 0.18 + 0.80 * Math.sqrt(v / top))) : 0.12);
+    // Funil de ângulo CONSTANTE: a largura estreita de forma linear e cada trapézio
+    // encaixa no próximo (o fundo de um = o topo do seguinte). O topo é trapézio, não
+    // retângulo. Os NÚMEROS + as conversões carregam o dado; a forma fica limpa.
+    const N = stages.length;
+    const wTop = 0.94, wBot = 0.36;
+    const edge = (k) => wTop - (wTop - wBot) * (k / N);
 
     let html = '<div class="fnl">';
     stages.forEach((s, i) => {
-      const topF = i === 0 ? frac(stages[0].value) : frac(stages[i - 1].value);
-      const botF = frac(s.value);
+      const topF = edge(i);
+      const botF = edge(i + 1);
       const poly = `polygon(${50 - topF * 50}% 0, ${50 + topF * 50}% 0, ${50 + botF * 50}% 100%, ${50 - botF * 50}% 100%)`;
       html += `<div class="fnl__stage">
         <div class="fnl__caption"><span class="fnl__label">${s.label}</span>${s.note ? ` <span class="fnl__note">${s.note}</span>` : ""}</div>

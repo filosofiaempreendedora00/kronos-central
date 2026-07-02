@@ -203,7 +203,7 @@ const Kanban = (() => {
     if (!board) return;
     board.innerHTML = COLS.map((c) => {
       const list = tasks.filter((t) => t.status === c.key);
-      return `<div class="kcol" data-col="${c.key}">
+      return `<div class="kcol kcol--${c.key}" data-col="${c.key}">
         <div class="kcol__head"><span class="kcol__label">${c.label}</span><span class="kcol__count">${list.length}</span>
           <button class="kcol__add" data-act="add" data-col="${c.key}" title="Nova atividade">+</button></div>
         <div class="kcol__cards" data-col="${c.key}">${list.map(cardHtml).join("") || '<p class="kcol__empty">—</p>'}</div>
