@@ -104,6 +104,7 @@ function makeAgentCard(agent) {
             <polyline points="13,7 18,12 13,17" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
+        <button class="agent-card__easy agent-card__prompt" type="button" data-prompt="${agent.id}" title="Ver o prompt/escopo atual deste agente (sincronizado do cofre)">Prompt</button>
       </div>
     `;
 
@@ -113,7 +114,12 @@ function makeAgentCard(agent) {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openAgent(agent.id); }
     });
 
-    // (card = uma ação só: abrir conversa. Sem atalho "Easy" — desvinculado.)
+    // botão "Prompt" → abre o escopo/prompt REAL do agente (do cofre, sincronizado)
+    const _pb = card.querySelector("[data-prompt]");
+    if (_pb) _pb.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (typeof NucleoView !== "undefined" && NucleoView.openDoc) NucleoView.openDoc("agent:" + agent.id);
+    });
 
     // A foto no card NÃO abre lightbox (evita missclick) — clicar em qualquer
     // ponto do card leva ao chat. Lá dentro, sim, a foto amplia.
@@ -560,7 +566,9 @@ function init() {
   const _openCosts = document.getElementById("openCostsBtn");
   if (_openCosts) _openCosts.addEventListener("click", () => navGo("custos"));
   const _openNucleo = document.getElementById("openNucleoBtn");
-  if (_openNucleo) _openNucleo.addEventListener("click", () => NucleoView.open());
+  if (_openNucleo) _openNucleo.addEventListener("click", () => NucleoView.openDoc("nucleo"));
+  const _openBriefing = document.getElementById("openBriefingBtn");
+  if (_openBriefing) _openBriefing.addEventListener("click", () => NucleoView.openDoc("briefing"));
   NucleoView.bind();
   Settings.bind();
   if (typeof Kanban !== "undefined") {

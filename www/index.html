@@ -220,7 +220,7 @@
             <div class="block__head">
               <h2 class="block__title">Agentes</h2>
               <span class="block__rule" aria-hidden="true"></span>
-              <button type="button" id="openNucleoBtn" class="btn-ghost btn-ghost--sm">Núcleo · Briefing · Prompts</button>
+              <span class="block__hint">Clique no card p/ conversar · botão <b>Prompt</b> vê o escopo</span>
             </div>
             <div class="agents-search">
               <svg class="agents-search__icon" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
@@ -231,6 +231,10 @@
               <button type="button" id="agentSearchClear" class="agents-search__clear" aria-label="Limpar busca">
                 <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
               </button>
+            </div>
+            <div class="agents-ctx">
+              <button type="button" id="openNucleoBtn" class="btn-ghost btn-ghost--sm">📘 Núcleo</button>
+              <button type="button" id="openBriefingBtn" class="btn-ghost btn-ghost--sm">📄 Briefing vivo</button>
             </div>
             <div class="agents-groups" id="agentsGrid"></div>
           </section>
