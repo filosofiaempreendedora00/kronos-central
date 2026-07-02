@@ -2263,6 +2263,16 @@ body::before {
   .tabbar .tabbar__btn.is-active { background: transparent; color: #e6c98f; }
   .tabbar .tabbar__btn.is-active .tabbar__ico { background: rgba(201, 169, 110, 0.16); }
   .tabbar .tabbar__btn:active .tabbar__ico { background: rgba(201, 169, 110, 0.10); }
+  /* Dash = central de dados, hierarquicamente superior: botão redondo elevado. */
+  .tabbar .tabbar__btn[data-nav="dash"] .tabbar__ico {
+    width: 54px; height: 54px; margin-top: -22px; border-radius: 50%;
+    background: linear-gradient(180deg, #d8b878, #b0894f);
+    border: 3px solid rgba(21, 12, 6, 0.95);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.42);
+  }
+  .tabbar .tabbar__btn[data-nav="dash"] .tabbar__icon { stroke: #201308; width: 25px; height: 25px; }
+  .tabbar .tabbar__btn[data-nav="dash"] .tabbar__label { color: #e6c98f; }
+  .tabbar .tabbar__btn[data-nav="dash"].is-active .tabbar__ico { background: linear-gradient(180deg, #e6c98f, #c9a96e); }
 
   /* espaço pro conteúdo não ficar atrás da tab bar (só telas top-level) */
   .app:not(.app--sub) { --pad-bottom: calc(70px + env(safe-area-inset-bottom)); }
