@@ -560,6 +560,8 @@ function init() {
   const _openCosts = document.getElementById("openCostsBtn");
   if (_openCosts) _openCosts.addEventListener("click", () => navGo("custos"));
   if (typeof NucleoView !== "undefined" && NucleoView.mountFundamentos) NucleoView.mountFundamentos(document.getElementById("agentsDocs"));
+  const _kOwner = document.getElementById("kanbanOwnerAvatar");
+  if (_kOwner) _kOwner.addEventListener("click", () => openLightbox("assets/agents/matias-full.jpg", "MatIAs"));
   NucleoView.bind();
   Settings.bind();
   if (typeof Kanban !== "undefined") {
