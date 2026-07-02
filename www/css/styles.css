@@ -573,6 +573,7 @@ body::before {
 .funil-headline[hidden] { display: none; }
 .funil-headline b { color: var(--branco); font-weight: 600; }
 .funil-headline__dot { width: 7px; height: 7px; border-radius: 50%; background: #D98A6E; flex: 0 0 auto; margin-top: 7px; }
+.funil-headline__text { flex: 1; min-width: 0; }
 
 /* o funil (trapézios que estreitam) */
 .fnl { display: flex; flex-direction: column; width: 100%; max-width: 640px; margin: 0 auto; }
