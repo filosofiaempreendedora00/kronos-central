@@ -658,6 +658,15 @@ body::before {
 .kcol--todo .kcol__label    { color: #D9968C; }
 .kcol--doing .kcol__label   { color: #E0A88F; }
 .kcol--done .kcol__label    { color: #9BCBA2; }
+
+/* Menu enxuto: Dash ao centro; Contextos (→ dentro de Agentes), Custos (→ no Dash)
+   e Config (→ só na gaveta) saem do acesso rápido. */
+.tabbar__btn[data-nav="contextos"], .tabbar__btn[data-nav="custos"], .tabbar__btn[data-nav="config"] { display: none; }
+.tabbar__btn[data-nav="agentes"] { order: 1; }
+.tabbar__btn[data-nav="dash"]    { order: 2; }
+.tabbar__btn[data-nav="kanban"]  { order: 3; }
+.sidebar__nav .navitem[data-nav="contextos"], .sidebar__nav .navitem[data-nav="custos"] { display: none; }
+.agent-card__ctx { color: var(--areia); }
 .kcol__head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 2px 4px; }
 .kcol__label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--areia); }
 .kcol__count { font-size: 11px; color: var(--areia); border: 1px solid var(--areia-22); border-radius: 999px; padding: 1px 8px; }
