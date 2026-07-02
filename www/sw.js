@@ -9,7 +9,7 @@
    As chamadas à API da Anthropic NUNCA passam por aqui (sempre rede direta).
    =========================================================================== */
 
-const CACHE = "kronos-v87";
+const CACHE = "kronos-v88";
 
 // Caminhos relativos ao escopo — funcionam em localhost (Electron) e na
 // subpasta do GitHub Pages (/kronos-central/).
