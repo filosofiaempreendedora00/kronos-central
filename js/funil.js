@@ -181,7 +181,7 @@ const Funil = (() => {
     // headline (1 frase) — o gargalo
     if (head) {
       const tA = pctInt(d.ativacao, d.cadastros);
-      head.innerHTML = `<span class="funil-headline__dot"></span> <b>Gargalo na ativação:</b> só <b>${tA}%</b> dos cadastros geram a 1ª proposta — ${d.cadastros - d.ativacao} de ${d.cadastros} não geram nada.${d.pagantes === 0 ? " Ainda <b>0 pagantes</b> (gate de escala = 1ª assinatura)." : ""}`;
+      head.innerHTML = `<span class="funil-headline__dot"></span><span class="funil-headline__text"><b>Gargalo na ativação:</b> só <b>${tA}%</b> dos cadastros geram a 1ª proposta — ${d.cadastros - d.ativacao} de ${d.cadastros} não geram nada.${d.pagantes === 0 ? " Ainda <b>0 pagantes</b> (gate de escala = 1ª assinatura)." : ""}</span>`;
       head.hidden = false;
     }
 
