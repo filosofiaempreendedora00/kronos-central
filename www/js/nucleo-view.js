@@ -529,17 +529,32 @@ const NucleoView = (() => {
   }
 
   function toDashboard() { App.navGo("dash"); }
+  function toAgentes() { App.navGo("agentes"); }
+
+  // Monta os cards bonitos do Núcleo + Briefing Vivo no topo de Agentes.
+  async function mountFundamentos(host) {
+    if (!host) return;
+    await Context.ready();
+    const date = Context.briefingDate();
+    host.innerHTML =
+      cardHtml("nucleo", "Camada 1 · muda raramente", "Núcleo central",
+        "O DNA comum a todo agente da KRONOS — identidade, missão, tom, léxico e comportamento.", null, "core") +
+      cardHtml("briefing", `Camada 2 · você atualiza${date ? ` · ${date}` : ""}`, "Briefing Vivo",
+        "O cenário atual da empresa. Todos os agentes leem por cima do Núcleo.", null, "living");
+    host.querySelectorAll(".nucleo-card").forEach((c) => c.addEventListener("click", () => openDoc(c.dataset.doc)));
+  }
 
   function bind() {
-    // abertura é pela sidebar (nav "Contextos"); aqui só os "voltar".
-    document.getElementById("nucleoBackBtn").addEventListener("click", toDashboard);
-    document.getElementById("nucleoDocBackBtn").addEventListener("click", openHub);
+    // Os documentos (Núcleo, Briefing) abrem a partir de AGENTES; "voltar" retorna pra lá
+    // (o hub antigo de contextos foi descontinuado).
+    document.getElementById("nucleoBackBtn").addEventListener("click", toAgentes);
+    document.getElementById("nucleoDocBackBtn").addEventListener("click", toAgentes);
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
-      if (!document.getElementById("nucleoDocView").hidden) openHub();
-      else if (!document.getElementById("nucleoView").hidden) toDashboard();
+      if (!document.getElementById("nucleoDocView").hidden) toAgentes();
+      else if (!document.getElementById("nucleoView").hidden) toAgentes();
     });
   }
 
-  return { open: openHub, openDoc, bind, cartilhaHTML, mdToHtml };
+  return { open: openHub, openDoc, bind, cartilhaHTML, mdToHtml, mountFundamentos };
 })();
