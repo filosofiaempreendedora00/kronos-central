@@ -121,7 +121,9 @@ if (gUrl) {
 
 // ---- GA4 (CSV publicado, público) → funil de PRODUTO (onboarding → WOW → pay) ----
 let produto = null;
-const ga4Url = fromEnv("GA4_CSV_URL");
+// URL pública do CSV do GA4 (planilha publicada, não-secreta) — fallback embutido
+// pra o cron funcionar sem secret; .env.local sobrescreve se quiser.
+const ga4Url = fromEnv("GA4_CSV_URL") || "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTAq7pmu_h3DGne1wd9hIROL4fNd-eJBXDF1Y_uK-SemAEq4ZIsMmNl3RKEEwdI_bWF4FBWweSDiXk/pub?gid=1991838151&single=true&output=csv";
 if (ga4Url) {
   try {
     const txt = await (await fetch(ga4Url)).text();
