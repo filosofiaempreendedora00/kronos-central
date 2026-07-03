@@ -119,6 +119,33 @@ if (gUrl) {
   } catch (e) { console.error("Google indisponível (segue sem):", e.message); }
 }
 
+// ---- GA4 (CSV publicado, público) → funil de PRODUTO (onboarding → WOW → pay) ----
+let produto = null;
+const ga4Url = fromEnv("GA4_CSV_URL");
+if (ga4Url) {
+  try {
+    const txt = await (await fetch(ga4Url)).text();
+    const map = {};
+    txt.split(/\r?\n/).slice(1).forEach((line) => {
+      const cols = line.split(",");
+      const ev = (cols[0] || "").trim();
+      if (ev) map[ev] = Number(String(cols[1] || "0").replace(/[^0-9.]/g, "")) || 0;
+    });
+    const STEPS = [
+      ["onboarding_view", "Viu o onboarding"],
+      ["business_described", "Descreveu o negócio"],
+      ["catalog_generated", "IA gerou o catálogo"],
+      ["proposal_ready", "Proposta pronta"],
+      ["chegou_ao_gerador", "Chegou ao gerador"],
+      ["download_attempt", "Tentou baixar"],
+      ["download_success", "Baixou · WOW"],
+      ["upgrade_prompt_view", "Viu o \"assine\""],
+      ["upgrade_prompt_click", "Clicou em assinar"],
+    ];
+    produto = { steps: STEPS.map(([key, label]) => ({ key, label, count: map[key] || 0 })) };
+  } catch (e) { console.error("GA4 indisponível (segue sem):", e.message); }
+}
+
 // ---- Supabase (só-leitura): séries DIÁRIAS escopadas ao freemium ----
 const cli = new pg.Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
 const q = async (sql, p) => (await cli.query(sql, p)).rows;
@@ -143,7 +170,7 @@ const daily = Object.values(map).sort((a, b) => (a.date < b.date ? -1 : 1));
 
 const doc = {
   type: "kronos.funil", version: 2, updatedAt: new Date().toISOString(),
-  freemiumStart, freemiumCampaign, today, daily, metaDaily, pagantesTotal, google,
+  freemiumStart, freemiumCampaign, today, daily, metaDaily, pagantesTotal, google, produto,
 };
 fs.writeFileSync(OUT, JSON.stringify(encryptDoc(doc)));
 const sum = (arr, k) => arr.reduce((s, x) => s + (x[k] || 0), 0);
