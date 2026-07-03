@@ -115,7 +115,7 @@ const Funil = (() => {
     const stages = [
       { label: "Tráfego", value: d.traffic, note: srcNote },
       { label: "Cadastros", value: d.cadastros, verb: "se cadastram" },
-      { label: "Ativação · 1ª proposta", value: d.ativacao, verb: "ativam", note: `${d.ativacaoReal} catálogo real · ${d.ativacao - d.ativacaoReal} exemplo` },
+      { label: "Ativação · 1ª proposta real", value: d.ativacaoReal, verb: "ativam", note: "catálogo próprio (não exemplo)" },
       { label: "Pagantes", value: d.pagantes, verb: "assinam" },
     ];
 
@@ -152,31 +152,29 @@ const Funil = (() => {
       const fmS = DOC.freemiumStart, tdy = DOC.today;
       let from7 = addDays(tdy, -6); if (from7 < fmS) from7 = fmS;
       const cad7 = sumIn(DOC.daily, "cadastros", from7, tdy);
-      const at7 = sumIn(DOC.daily, "ativacoes", from7, tdy);
       const atR7 = sumIn(DOC.daily, "ativacoesReal", from7, tdy);
       const cadA = sumIn(DOC.daily, "cadastros", fmS, tdy);
-      const atA = sumIn(DOC.daily, "ativacoes", fmS, tdy);
+      const atRA = sumIn(DOC.daily, "ativacoesReal", fmS, tdy);
       const spA = sumIn(DOC.metaDaily, "spend", fmS, tdy) + (DOC.google ? DOC.google.cost : 0);
       const pag = DOC.pagantesTotal || 0;
-      const custoAt = atA ? spA / atA : 0;
-      const heroFill = Math.min(100, Math.round((ratio(at7, cad7) / METAS.ativacao) * 100));
-      const faltam = Math.max(0, Math.ceil(METAS.ativacao * cad7) - at7);
-      const realOk = ratio(atR7, cad7) >= METAS.ativacaoReal;
+      const custoAt = atRA ? spA / atRA : 0;
+      const heroFill = Math.min(100, Math.round((ratio(atR7, cad7) / METAS.ativacao) * 100));
+      const faltam = Math.max(0, Math.ceil(METAS.ativacao * cad7) - atR7);
       const custoOk = custoAt && custoAt <= METAS.custoAtivacao;
       const metasHtml = `<div class="funil-metas">
-        <div class="funil-metas__ttl">Metas SMART de ativação <span class="funil-metas__sub">o placar que importa · coorte dos últimos 7 dias</span></div>
+        <div class="funil-metas__ttl">Metas SMART de ativação <span class="funil-metas__sub">só ativação REAL (catálogo próprio) · coorte 7 dias</span></div>
         <div class="fmk-hero">
           <div class="fmk-hero__top">
-            <span class="fmk-hero__k">Ativação 7d · cadastro→1ª proposta</span>
-            <span class="fmk-hero__v">${fmtPct(at7, cad7)} <small>/ meta ${Math.round(METAS.ativacao * 100)}% · ${METAS.dataAtiv}</small></span>
+            <span class="fmk-hero__k">Ativação real 7d · cadastro→1ª proposta</span>
+            <span class="fmk-hero__v">${fmtPct(atR7, cad7)} <small>/ meta ${Math.round(METAS.ativacao * 100)}% · ${METAS.dataAtiv}</small></span>
           </div>
           <div class="fmk-bar"><div class="fmk-bar__fill" style="width:${heroFill}%"></div></div>
-          <div class="fmk-hero__hint">${at7} de ${cad7} ativaram (7d) · ${faltam > 0 ? `faltam <b class="fmk-hero__goal">~${faltam}</b> pra ${Math.round(METAS.ativacao * 100)}%` : `<b class="fmk-hero__goal">meta batida 🎯</b>`} · acumulado ${fmtPct(atA, cadA)}</div>
+          <div class="fmk-hero__hint">${atR7} de ${cad7} ativaram de verdade (7d) · ${faltam > 0 ? `faltam <b class="fmk-hero__goal">~${faltam}</b> pra ${Math.round(METAS.ativacao * 100)}%` : `<b class="fmk-hero__goal">meta batida 🎯</b>`} · acumulado ${fmtPct(atRA, cadA)}</div>
         </div>
         <div class="funil-metas__grid">
           <div class="fmk"><span class="fmk__k">1ª venda · gate</span><span class="fmk__v${pag >= METAS.pagantes ? " fmk__v--ok" : ""}">${pag} / ${METAS.pagantes}</span><div class="fmk__goal">até ${METAS.dataVenda}</div></div>
-          <div class="fmk"><span class="fmk__k">Custo / ativação</span><span class="fmk__v${custoOk ? " fmk__v--ok" : ""}">${atA ? brl(custoAt) : "—"}</span><div class="fmk__goal">meta ≤ ${brl(METAS.custoAtivacao)}</div></div>
-          <div class="fmk"><span class="fmk__k">Ativação real 7d</span><span class="fmk__v${realOk ? " fmk__v--ok" : ""}">${fmtPct(atR7, cad7)}</span><div class="fmk__goal">catálogo real · meta ${Math.round(METAS.ativacaoReal * 100)}%</div></div>
+          <div class="fmk"><span class="fmk__k">Custo / ativação real</span><span class="fmk__v${custoOk ? " fmk__v--ok" : ""}">${atRA ? brl(custoAt) : "—"}</span><div class="fmk__goal">meta ≤ ${brl(METAS.custoAtivacao)}</div></div>
+          <div class="fmk"><span class="fmk__k">Ativações reais (total)</span><span class="fmk__v">${atRA}</span><div class="fmk__goal">desde o freemium</div></div>
         </div>
       </div>`;
       grid.insertAdjacentHTML("afterbegin", metasHtml);
@@ -184,8 +182,8 @@ const Funil = (() => {
 
     // headline (1 frase) — o gargalo
     if (head) {
-      const tA = pctInt(d.ativacao, d.cadastros);
-      head.innerHTML = `<span class="funil-headline__dot"></span><span class="funil-headline__text"><b>Gargalo na ativação:</b> só <b>${tA}%</b> dos cadastros geram a 1ª proposta — ${d.cadastros - d.ativacao} de ${d.cadastros} não geram nada.${d.pagantes === 0 ? " Ainda <b>0 pagantes</b> (gate de escala = 1ª assinatura)." : ""}</span>`;
+      const tA = pctInt(d.ativacaoReal, d.cadastros);
+      head.innerHTML = `<span class="funil-headline__dot"></span><span class="funil-headline__text"><b>Gargalo na ativação:</b> só <b>${tA}%</b> dos cadastros geram uma proposta real (catálogo próprio) — ${d.cadastros - d.ativacaoReal} de ${d.cadastros} não chegam lá.${d.pagantes === 0 ? " Ainda <b>0 pagantes</b> (gate de escala = 1ª assinatura)." : ""}</span>`;
       head.hidden = false;
     }
 
@@ -193,9 +191,9 @@ const Funil = (() => {
     if (stats) {
       const chips = [
         ["Gasto", d.spend ? brl(d.spend) : "—"],
-        ["Custo / ativação", d.ativacao ? brl(d.spend / d.ativacao) : "—"],
+        ["Custo / ativação real", d.ativacaoReal ? brl(d.spend / d.ativacaoReal) : "—"],
         ["Custo / cadastro", d.cadastros ? brl(d.spend / d.cadastros) : "—"],
-        ["Ativação real", `${d.ativacaoReal} de ${d.ativacao}`],
+        ["Ativações reais", `${d.ativacaoReal}`],
       ];
       stats.innerHTML = chips.map(([k, v]) => `<div class="funil-stat"><span class="funil-stat__k">${k}</span><span class="funil-stat__v">${v}</span></div>`).join("");
     }
