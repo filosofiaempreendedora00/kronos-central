@@ -214,6 +214,18 @@ const Funil = (() => {
       grid.insertAdjacentHTML("beforeend", `<div class="funil-cmp"><div class="funil-cmp__ttl">Aquisição · Meta × Google <span class="funil-cmp__win">janela Google ${gWin}</span></div>${cells}</div>`);
     }
 
+    // Funil de PRODUTO (eventos GA4): onboarding → WOW → pay-moment.
+    if (DOC.produto && Array.isArray(DOC.produto.steps) && DOC.produto.steps.length) {
+      const st = DOC.produto.steps;
+      const maxN = Math.max(1, ...st.map((x) => x.count));
+      const rows = st.map((x) => `<div class="fprod__row">
+          <span class="fprod__k">${x.label}</span>
+          <span class="fprod__barwrap"><span class="fprod__bar${x.count === 0 ? " fprod__bar--zero" : ""}" style="width:${x.count ? Math.max(4, Math.round((x.count / maxN) * 100)) : 0}%"></span></span>
+          <span class="fprod__n">${nf(x.count)}</span>
+        </div>`).join("");
+      grid.insertAdjacentHTML("beforeend", `<div class="funil-prod"><div class="funil-prod__ttl">Funil de produto <span class="funil-prod__sub">eventos GA4 · recente, vai encher</span></div>${rows}</div>`);
+    }
+
     if (state.source !== "todos") {
       grid.insertAdjacentHTML("beforeend", `<p class="funil-src-note">Obs: a fonte filtra só o tráfego. Cadastro→ativação→pagante ainda não são atribuídos por fonte (sem UTM/click-id ligando clique→conta).</p>`);
     }
