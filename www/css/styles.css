@@ -1924,6 +1924,9 @@ body::before {
 }
 .cart-chip:hover { color: var(--creme); border-color: var(--areia-40); }
 .cart-chip[hidden] { display: none; }
+/* ✦ Cartilha ligada — o conhecimento profundo está entrando no prompt desta conversa */
+.cart-chip--on { background: rgba(201, 169, 110, 0.16); color: #e6c98f; border-color: #8a6d3f; }
+.cart-chip--on:hover { color: #f0d9a4; border-color: #a5854e; }
 
 /* Portão de acesso (login) */
 .authgate {

@@ -287,6 +287,18 @@ const Context = (() => {
     ].join("\n\n");
   }
 
+  /* ----- Cartilha sob demanda (profundidade sem custo fixo) -----
+     O chip ✦ Cartilha no chat liga a injeção do knowledge do agente no prompt
+     DESTA conversa (por agente, por aparelho). Desligada, o agente conhece só
+     o índice (que vive no escopo) e avisa quando o tema pedir profundidade. */
+  const cartilhaKey = (id) => "kronos.cartilha." + id;
+  function isCartilhaOn(id) { try { return localStorage.getItem(cartilhaKey(id)) === "on"; } catch (_) { return false; } }
+  function toggleCartilha(id) {
+    const on = !isCartilhaOn(id);
+    try { localStorage.setItem(cartilhaKey(id), on ? "on" : "off"); } catch (_) {}
+    return on;
+  }
+
   /* System prompt completo de um agente (usado no chat e na Delfos). */
   function systemFor(agent) {
     const doctrine = typeof CONVERSATION_DOCTRINE === "string" ? CONVERSATION_DOCTRINE : "";
@@ -295,11 +307,13 @@ const Context = (() => {
       "---",
       `## ESCOPO — ${agent.name} (${agent.role})\n${effectiveEscopo(agent)}`,
     ];
+    // Cartilha (knowledge): só entra quando o fundador liga o chip ✦ Cartilha.
+    if (agent.knowledge && isCartilhaOn(agent.id)) {
+      parts.push("---", `## CARTILHA — conhecimento profundo da função (ligada pelo fundador nesta conversa)\n${agent.knowledge}`);
+    }
     if (doctrine) parts.push("---", `## MODO DE CONVERSA\n${doctrine}`);
     if (agent.id === "head-rh") { const c = cartilhaBlock(); if (c) parts.push("---", c); }
     if (agent.id === "prompt-engineer") parts.push("---", promptsLibraryBlock());
-    // NOTA: agent.knowledge (ex.: benchmarking do TIAgo) NÃO entra no prompt — é só
-    // um "item" que o agente segura para você consultar (não custa token na conversa).
     const brief = briefingForPrompt();
     if (brief) parts.push("---", brief);
     return parts.join("\n\n");
@@ -335,6 +349,7 @@ const Context = (() => {
 
   return {
     load, ready, seedBase, systemFor, rawNucleo, rawBriefing, briefingDate, ponteiro,
+    isCartilhaOn, toggleCartilha,
     effectiveEscopo, isEscopoOverridden, isEscopoPublished,
     applyEscopoEdit, applyEscopoPermanent, revertEscopo, revertEscopoPermanent,
     effectiveBriefing, briefingVersions, saveBriefing, restoreBriefingVersion, briefingSynced, applyBriefingEdit,
