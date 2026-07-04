@@ -223,7 +223,7 @@ const Funil = (() => {
           <span class="fprod__barwrap"><span class="fprod__bar${x.count === 0 ? " fprod__bar--zero" : ""}" style="width:${x.count ? Math.max(4, Math.round((x.count / maxN) * 100)) : 0}%"></span></span>
           <span class="fprod__n">${nf(x.count)}</span>
         </div>`).join("");
-      grid.insertAdjacentHTML("beforeend", `<div class="funil-prod"><div class="funil-prod__ttl">Funil de produto <span class="funil-prod__sub">eventos GA4 · recente, vai encher</span></div>${rows}</div>`);
+      grid.insertAdjacentHTML("beforeend", `<div class="funil-prod"><div class="funil-prod__ttl">Eventos do produto <span class="funil-prod__sub">GA4 · contagem 30d — NÃO é funil sequencial</span></div>${rows}<p class="funil-prod__note">Contagem de <b>eventos</b> (não usuários em ordem) — por isso não é monotônico, e "chegou ao gerador" supera o topo (dispara por vários caminhos). O funil de ativação <b>real</b> é o de cima. Sinal a vigiar: quando <b>Baixou·WOW</b> e <b>assine</b> saírem de 0 (entraram 01/07).</p></div>`);
     }
 
     if (state.source !== "todos") {
