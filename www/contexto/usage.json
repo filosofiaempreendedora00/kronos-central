@@ -1,7 +1,7 @@
 {
   "type": "kronos.usage",
   "version": 1,
-  "updatedAt": "2026-06-20T19:43:31.560Z",
+  "updatedAt": "2026-07-04T02:51:48.737Z",
   "entries": [
     {
       "ts": 1780775693889,
@@ -202,6 +202,36 @@
       "input": 88,
       "output": 18,
       "costUSD": 0.0113715
+    },
+    {
+      "id": "mr5rmvdwkt27ijy",
+      "ts": 1783133480804,
+      "context": "delfos",
+      "agentId": "ceo",
+      "agentName": "CEO",
+      "input": 61,
+      "output": 14,
+      "costUSD": 0.0143655
+    },
+    {
+      "id": "mr5rmwcb5rehhx9",
+      "ts": 1783133482043,
+      "context": "delfos",
+      "agentId": "coo",
+      "agentName": "COO",
+      "input": 77,
+      "output": 15,
+      "costUSD": 0.015486
+    },
+    {
+      "id": "mr5rmxe3f529o6b",
+      "ts": 1783133483403,
+      "context": "delfos",
+      "agentId": "cro",
+      "agentName": "CRO Expert",
+      "input": 99,
+      "output": 13,
+      "costUSD": 0.0196245
     }
   ]
 }
