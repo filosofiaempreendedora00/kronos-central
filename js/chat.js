@@ -52,6 +52,14 @@ const Chat = (() => {
     document.getElementById("chatAvatar").classList.toggle("avatar--zoomable", !!agent.photo);
     document.getElementById("chatName").textContent = agent.nome || agent.name;
     document.getElementById("chatRole").textContent = `${agent.name} · ${agent.role}`;
+    // ✦ Cartilha (toggle): qualquer agente com knowledge — liga a profundidade
+    // total NESTA conversa (o conteúdo entra no prompt; custa token só quando ligada).
+    const knowChip = document.getElementById("chatKnowChip");
+    if (knowChip) {
+      knowChip.hidden = !agent.knowledge;
+      const on = typeof Context !== "undefined" && Context.isCartilhaOn && Context.isCartilhaOn(agent.id);
+      knowChip.classList.toggle("cart-chip--on", !!on);
+    }
     // Cartilha de Nomes é da IAra — atalho só no chat dela.
     const cartChip = document.getElementById("chatCartChip");
     if (cartChip) cartChip.hidden = agent.id !== "head-rh";
@@ -402,6 +410,12 @@ const Chat = (() => {
     });
     document.getElementById("chatClearBtn").addEventListener("click", clear);
     document.getElementById("chatSendBtn").addEventListener("click", send);
+    document.getElementById("chatKnowChip")?.addEventListener("click", () => {
+      if (!currentAgent || !currentAgent.knowledge) return;
+      const on = Context.toggleCartilha(currentAgent.id);
+      document.getElementById("chatKnowChip").classList.toggle("cart-chip--on", on);
+      if (window.App && App.toast) App.toast(on ? "✦ Cartilha LIGADA nesta conversa — profundidade total" : "Cartilha desligada — modo enxuto");
+    });
     document.getElementById("chatCartChip")?.addEventListener("click", () => { if (window.App && App.openCartilha) App.openCartilha(); });
     document.getElementById("chatBenchChip")?.addEventListener("click", () => { if (window.App && App.openBenchmark) App.openBenchmark(); });
 
