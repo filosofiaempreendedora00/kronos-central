@@ -294,6 +294,9 @@ body::before {
   letter-spacing: 0.03em;
 }
 
+.funil-sync { display: inline-flex; align-items: center; gap: 6px; }
+.funil-sync svg { display: block; }
+
 /* ============================== AGENTES ============================== */
 .agents-grid {
   display: grid;

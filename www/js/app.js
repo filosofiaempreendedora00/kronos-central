@@ -546,6 +546,7 @@ function init() {
   document.getElementById("sidebarCollapse").addEventListener("click", toggleCollapse);
   document.getElementById("syncNowBtn")?.addEventListener("click", (e) => syncNow(e.currentTarget));
   document.getElementById("syncNowSidebar")?.addEventListener("click", (e) => syncNow(e.currentTarget));
+  document.getElementById("funilSyncBtn")?.addEventListener("click", (e) => syncNow(e.currentTarget));
   if (localStorage.getItem("kronos.sidebarCollapsed") === "1") {
     document.getElementById("shell").classList.add("sidebar-collapsed");
   }
