@@ -1,7 +1,7 @@
 {
   "type": "kronos.usage",
   "version": 1,
-  "updatedAt": "2026-08-15T19:25:55.736Z",
+  "updatedAt": "2026-08-15T19:27:17.046Z",
   "entries": [
     {
       "ts": 1780775693889,
@@ -262,6 +262,36 @@
       "input": 110,
       "output": 142,
       "costUSD": 0.0271875
+    },
+    {
+      "id": "msurost2ncxkotc",
+      "ts": 1786822007510,
+      "context": "delfos",
+      "agentId": "ceo",
+      "agentName": "CEO",
+      "input": 193,
+      "output": 36,
+      "costUSD": 0.0028545
+    },
+    {
+      "id": "msurotznp53n1qw",
+      "ts": 1786822009043,
+      "context": "delfos",
+      "agentId": "coo",
+      "agentName": "COO",
+      "input": 231,
+      "output": 17,
+      "costUSD": 0.0026498999999999997
+    },
+    {
+      "id": "msurov974fp423k",
+      "ts": 1786822010683,
+      "context": "delfos",
+      "agentId": "head-growth",
+      "agentName": "Head de Growth",
+      "input": 250,
+      "output": 23,
+      "costUSD": 0.0030732
     }
   ]
 }
