@@ -205,6 +205,22 @@
             <div class="funil-stats" id="funilStats"></div>
           </section>
 
+          <!-- LEADS (espelho do painel Master do gerador — só-leitura, cifrado) -->
+          <section class="block" id="leadsSection">
+            <div class="block__head">
+              <h2 class="block__title">Leads</h2>
+              <span class="block__rule" aria-hidden="true"></span>
+              <span class="block__hint" id="leadsMeta"></span>
+              <button class="btn-ghost btn-ghost--sm funil-sync" id="leadsSyncBtn" type="button" title="Atualizar — puxar os leads reais">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-3"/><polyline points="4,4 4,8.5 8.5,8.5"/><path d="M4 13a8 8 0 0 0 14.9 3"/><polyline points="20,20 20,15.5 15.5,15.5"/></svg>
+                <span>Atualizar</span>
+              </button>
+            </div>
+            <div class="lead-kpis" id="leadsKpis"></div>
+            <div class="lead-controls" id="leadsControls"></div>
+            <div class="lead-list" id="leadsList"></div>
+          </section>
+
           <!-- CUSTOS (resumo) -->
           <section class="block">
             <div class="block__head">
@@ -639,6 +655,7 @@
   <script src="js/delfos.js"></script>
   <script src="js/costs-view.js"></script>
   <script src="js/funil.js"></script>
+  <script src="js/leads.js"></script>
   <script src="js/kanban.js"></script>
   <script src="js/nucleo-view.js"></script>
   <script src="js/settings.js"></script>
