@@ -35,14 +35,20 @@ jobs:
           META_TOKEN: ${{ secrets.META_TOKEN }}
         run: node scripts/ler-funil.mjs
 
+      - name: Gerar leads.json (espelho do painel Master — cifrado)
+        env:
+          KRONOS_PASS: ${{ secrets.KRONOS_PASS }}
+          GERADOR_DB_URL: ${{ secrets.GERADOR_DB_URL }}
+        run: node scripts/ler-leads.mjs
+
       - name: Commitar se mudou
         run: |
           git config user.name "kronos-bot"
           git config user.email "bot@kronos-ias.com.br"
-          git add www/contexto/funil.json
+          git add www/contexto/funil.json www/contexto/leads.json
           if git diff --cached --quiet; then
             echo "Nada mudou — sem commit."
           else
-            git commit -m "chore(dados): atualiza funil (cron)"
+            git commit -m "chore(dados): atualiza funil + leads (cron)"
             git push
           fi
