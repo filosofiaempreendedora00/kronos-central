@@ -293,6 +293,7 @@ async function syncNow(btn) {
   try { renderPonteiro(); renderAgents(); } catch (_) {}
   // re-puxa o funil (Supabase/Google/Meta) do GitHub — o robô atualiza esse dado
   try { if (typeof Funil !== "undefined" && Funil.render) Funil.render(); } catch (_) {}
+  try { if (typeof Leads !== "undefined" && Leads.render) Leads.render(); } catch (_) {}
   closeDrawer();
   if (btn) { btn.classList.remove("is-spinning"); btn.disabled = false; }
   try { toast("✓ Dados atualizados"); } catch (_) {}
@@ -514,6 +515,7 @@ function init() {
   renderAgents();
   renderMetrics();
   try { Funil.render(); } catch (_) {} // retrato do funil (lê + decifra funil.json da rede)
+  try { Leads.render(); } catch (_) {} // espelho dos leads (lê + decifra leads.json da rede)
   renderPonteiro(); // usa o briefing em cache (se houver) na hora; rede atualiza depois
   tickClock();
   setInterval(tickClock, 10_000);
@@ -547,6 +549,7 @@ function init() {
   document.getElementById("syncNowBtn")?.addEventListener("click", (e) => syncNow(e.currentTarget));
   document.getElementById("syncNowSidebar")?.addEventListener("click", (e) => syncNow(e.currentTarget));
   document.getElementById("funilSyncBtn")?.addEventListener("click", (e) => syncNow(e.currentTarget));
+  document.getElementById("leadsSyncBtn")?.addEventListener("click", (e) => syncNow(e.currentTarget));
   if (localStorage.getItem("kronos.sidebarCollapsed") === "1") {
     document.getElementById("shell").classList.add("sidebar-collapsed");
   }
