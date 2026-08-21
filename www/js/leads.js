@@ -148,9 +148,16 @@ const Leads = (() => {
       ${whatsBlock(l)}
       ${behaviorHtml}`;
     drawer.hidden = false;
+    document.getElementById("app")?.classList.add("is-locked");
+    document.body.classList.add("lead-locked");
+    panel.scrollTop = 0;
     document.getElementById("leadDClose").addEventListener("click", closeDetail);
   }
-  function closeDetail() { const d = document.getElementById("leadDrawer"); if (d) d.hidden = true; }
+  function closeDetail() {
+    const d = document.getElementById("leadDrawer"); if (d) d.hidden = true;
+    document.getElementById("app")?.classList.remove("is-locked");
+    document.body.classList.remove("lead-locked");
+  }
 
   async function render() {
     const meta = document.getElementById("leadsMeta");
