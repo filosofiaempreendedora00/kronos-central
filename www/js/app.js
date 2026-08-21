@@ -244,14 +244,14 @@ function fitViewportToKeyboard() {
 
 /* --------------------- Navegação central (troca de telas) ----------------- */
 const VIEW_IDS = [
-  "dashboardView", "agentesView", "kanbanView", "chatView", "delfosView",
+  "dashboardView", "agentesView", "kanbanView", "leadsView", "chatView", "delfosView",
   "costsView", "settingsView", "nucleoView", "nucleoDocView", "delfosHistoryView",
 ];
 const SUB_VIEWS = ["chatView", "delfosView", "nucleoDocView", "delfosHistoryView"];
 // Qual item da sidebar fica ativo para cada tela (sub-telas herdam a seção pai).
 const VIEW_NAV = {
   dashboardView: "dash", agentesView: "agentes", chatView: "agentes",
-  kanbanView: "kanban",
+  kanbanView: "kanban", leadsView: "leads",
   delfosView: "dash", delfosHistoryView: "dash", costsView: "custos",
   settingsView: "config", nucleoView: "contextos", nucleoDocView: "contextos",
 };
@@ -276,6 +276,7 @@ function navGo(key) {
   else if (key === "contextos") NucleoView.open();
   else if (key === "custos") CostsView.open();
   else if (key === "kanban") Kanban.open();
+  else if (key === "leads") Leads.open();
   else if (key === "config") Settings.open();
   closeDrawer();
 }
@@ -515,7 +516,6 @@ function init() {
   renderAgents();
   renderMetrics();
   try { Funil.render(); } catch (_) {} // retrato do funil (lê + decifra funil.json da rede)
-  try { Leads.render(); } catch (_) {} // espelho dos leads (lê + decifra leads.json da rede)
   renderPonteiro(); // usa o briefing em cache (se houver) na hora; rede atualiza depois
   tickClock();
   setInterval(tickClock, 10_000);

@@ -1,14 +1,12 @@
-/* Snapshot dos LEADS do SaaS → www/contexto/leads.json (CIFRADO, chave do cofre).
-   Espelha o painel "Master" do gerador (mesma temperatura/fonte), só-leitura.
-   A Central decifra e mostra a lista com filtros (temperatura + fonte).
+/* Snapshot dos LEADS + COMPORTAMENTO → www/contexto/leads.json (CIFRADO).
+   A "casa do DamIAno" (CRO) na Central: cada lead com granularidade tipo Clarity —
+   sessões, tempo, visitas, downloads, timeline de eventos, device, WhatsApp+LGPD.
 
-   Racional da temperatura = idêntico ao gerador (src/lib/admin/data.ts):
-     cliente (status active) > quente (baixou ≥1) > morno (logo/catálogo/contato) > frio.
-   E-mail vem de ai_generations (o cofre só-leitura não acessa auth.users).
+   Fontes (Supabase só-leitura): organizations/consultants/solutions (perfil) +
+   funnel_events (comportamento por org_id). E-mail via ai_generations.
 
-   Uso:
-     KRONOS_PASS='email|senha' node scripts/ler-leads.mjs
-     (ou KRONOS_EMAIL + KRONOS_PWD) */
+   Uso: KRONOS_PASS='email|senha' node scripts/ler-leads.mjs
+        (ou KRONOS_EMAIL + KRONOS_PWD) */
 import fs from "fs";
 import crypto from "crypto";
 import pg from "pg";
@@ -40,12 +38,9 @@ function decryptDoc(e) {
   d.setAuthTag(data.subarray(data.length - 16));
   return JSON.parse(Buffer.concat([d.update(data.subarray(0, data.length - 16)), d.final()]).toString("utf8"));
 }
-
-// TRAVA: a passphrase TEM que abrir o cofre (mesma chave que o app usa).
 try { decryptDoc(JSON.parse(fs.readFileSync("www/vault.enc", "utf8"))); }
-catch (_) { console.error("✗ Esta senha NÃO abre o cofre (vault.enc). Use a senha de LOGIN do app. Nada gravado."); process.exit(1); }
+catch (_) { console.error("✗ Esta senha NÃO abre o cofre (vault.enc). Nada gravado."); process.exit(1); }
 
-// Contas internas (nunca aparecem). Sobrescreve com INTERNAL_EMAILS (csv) se quiser.
 const INTERNAL = new Set(
   (fromEnv("INTERNAL_EMAILS") || "roberto_fpj@hotmail.com,robertofachetti2@gmail.com")
     .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
@@ -55,55 +50,97 @@ const cli = new pg.Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: 
 const q = async (sql, p) => (await cli.query(sql, p)).rows;
 await cli.connect();
 
+// ---- perfil dos leads ----
 const rows = await q(`
-  select
-    o.id, o.name, o.plan, o.status, o.downloads_used, o.created_at, o.first_download_at,
-    o.acquisition_source, o.acquisition_gclid, o.acquisition_fbclid,
-    (select ag.user_email from ai_generations ag where ag.org_id=o.id and ag.user_email is not null
-       order by ag.created_at limit 1) as email,
-    (select c.phone from consultants c where c.org_id=o.id and c.phone ~ '[1-9]'
-       and c.phone not like '%00000%' order by c.sort_order, c.created_at limit 1) as wa,
-    (select coalesce(c.whatsapp_optin,false) from consultants c where c.org_id=o.id
-       and c.phone ~ '[1-9]' and c.phone not like '%00000%' order by c.sort_order, c.created_at limit 1) as wa_optin,
-    exists(select 1 from company_settings cs where cs.org_id=o.id
-      and ((cs.logo is not null and length(cs.logo)>100) or (cs.logo_dark is not null and length(cs.logo_dark)>100))) as has_logo,
-    exists(select 1 from consultants c where c.org_id=o.id
-      and ((c.email ~ '@' and c.email <> 'consultor@suaempresa.com') or (c.phone ~ '[1-9]' and c.phone not like '%00000%'))) as consultant_contact,
-    exists(select 1 from solutions s where s.org_id=o.id
-      and (s.name !~ '^Solução [0-9]+$' or (s.tagline <> '' and s.tagline not in
-        ('Resumo de uma linha do que esta solução entrega.','Outra frente de trabalho, totalmente preenchível.')))) as custom_solution
+  select o.id, o.name, o.plan, o.status, o.downloads_used, o.created_at, o.first_download_at,
+    o.acquisition_source, o.acquisition_gclid, o.acquisition_fbclid, o.acquisition_first_url,
+    (select ag.user_email from ai_generations ag where ag.org_id=o.id and ag.user_email is not null order by ag.created_at limit 1) as email,
+    (select c.phone from consultants c where c.org_id=o.id and c.phone ~ '[1-9]' and c.phone not like '%00000%' order by c.sort_order, c.created_at limit 1) as wa,
+    (select coalesce(c.whatsapp_optin,false) from consultants c where c.org_id=o.id and c.phone ~ '[1-9]' and c.phone not like '%00000%' order by c.sort_order, c.created_at limit 1) as wa_optin,
+    exists(select 1 from company_settings cs where cs.org_id=o.id and ((cs.logo is not null and length(cs.logo)>100) or (cs.logo_dark is not null and length(cs.logo_dark)>100))) as has_logo,
+    exists(select 1 from consultants c where c.org_id=o.id and ((c.email ~ '@' and c.email <> 'consultor@suaempresa.com') or (c.phone ~ '[1-9]' and c.phone not like '%00000%'))) as consultant_contact,
+    exists(select 1 from solutions s where s.org_id=o.id and (s.name !~ '^Solução [0-9]+$' or (s.tagline <> '' and s.tagline not in ('Resumo de uma linha do que esta solução entrega.','Outra frente de trabalho, totalmente preenchível.')))) as custom_solution,
+    (select string_agg(name,' · ') from (select name from solutions s where s.org_id=o.id and s.name !~ '^Solução [0-9]+$' order by created_at limit 3) x) as catalogo
   from organizations o
   order by o.created_at desc
 `);
+
+// ---- comportamento: todos os eventos com org_id (pequeno, cabe em memória) ----
+const evs = await q(`
+  select org_id, event, device, created_at
+  from funnel_events
+  where event <> '__smoke_test__' and org_id is not null
+  order by created_at asc
+`);
 await cli.end();
 
+// agrupa eventos por org e computa métricas de sessão/comportamento (Clarity-like)
+const GAP_MIN = 30; // > 30min sem evento = nova sessão
+const byOrg = {};
+for (const e of evs) (byOrg[e.org_id] = byOrg[e.org_id] || []).push(e);
+function behavior(list) {
+  if (!list || !list.length) return null;
+  const ts = list.map((e) => new Date(e.created_at).getTime());
+  // sessões por gap
+  let sessions = 1, sessStart = ts[0], totalMs = 0;
+  for (let i = 1; i < ts.length; i++) {
+    if (ts[i] - ts[i - 1] > GAP_MIN * 60000) { totalMs += ts[i - 1] - sessStart; sessions++; sessStart = ts[i]; }
+  }
+  totalMs += ts[ts.length - 1] - sessStart;
+  const days = new Set(list.map((e) => new Date(e.created_at).toISOString().slice(0, 10))).size;
+  const devices = [...new Set(list.map((e) => e.device).filter(Boolean))];
+  const cnt = (ev) => list.filter((e) => e.event === ev).length;
+  const round1 = (n) => Math.round(n * 10) / 10;
+  return {
+    events: list.length,
+    sessions,
+    visitDays: days,
+    totalMin: Math.round(totalMs / 60000),
+    avgSessionMin: round1(totalMs / 60000 / sessions),
+    firstSeen: new Date(ts[0]).toISOString(),
+    lastSeen: new Date(ts[ts.length - 1]).toISOString(),
+    devices,
+    key: {
+      downloads: cnt("download_success"),
+      examples: cnt("example_downloaded"),
+      watermark: cnt("watermark_download"),
+      unlockClicks: cnt("unlock_click"),
+      blocked: cnt("download_blocked"),
+      upgradeViews: cnt("upgrade_prompt_view"),
+      transcripts: cnt("transcript_generated") + cnt("transcript_uploaded"),
+    },
+    // timeline compacta (últimos 20 eventos) pro drill-down
+    timeline: list.slice(-20).map((e) => ({ e: e.event, t: new Date(e.created_at).toISOString(), d: e.device || null })),
+  };
+}
+
 const toIso = (d) => (d == null ? null : d instanceof Date ? d.toISOString() : String(d));
-const sourceOf = (o) =>
-  o.acquisition_fbclid ? "meta" : o.acquisition_gclid ? "google" : (o.acquisition_source || "direto");
-const tempOf = (o) => {
-  if (o.status === "active") return "cliente";
-  if ((o.downloads_used || 0) >= 1) return "quente";
-  if (o.has_logo || o.custom_solution || o.consultant_contact) return "morno";
-  return "frio";
-};
+const sourceOf = (o) => o.acquisition_fbclid ? "meta" : o.acquisition_gclid ? "google" : (o.acquisition_source || "direto");
+const tempOf = (o) => o.status === "active" ? "cliente" : (o.downloads_used || 0) >= 1 ? "quente"
+  : (o.has_logo || o.custom_solution || o.consultant_contact) ? "morno" : "frio";
 
 const leads = rows
   .filter((o) => !INTERNAL.has(String(o.email || "").toLowerCase()))
   .map((o) => ({
+    id: o.id,
     email: o.email || null,
     name: o.name || null,
+    catalogo: o.catalogo || null,
     plan: o.plan,
     status: o.status,
     downloads: Number(o.downloads_used) || 0,
     source: sourceOf(o),
     temperature: tempOf(o),
     whatsapp: o.wa || null,
-    whatsappOptin: !!o.wa_optin,
+    whatsappOptin: !!o.wa_optin, // LGPD: só clicável se true
     createdAt: toIso(o.created_at),
     firstDownloadAt: toIso(o.first_download_at),
+    behavior: behavior(byOrg[o.id]),
   }));
 
 const count = (fn) => leads.filter(fn).length;
+const withB = leads.filter((l) => l.behavior);
+const avg = (arr) => arr.length ? Math.round(arr.reduce((s, x) => s + x, 0) / arr.length) : 0;
 const totals = {
   total: leads.length,
   cliente: count((l) => l.temperature === "cliente"),
@@ -112,13 +149,21 @@ const totals = {
   frio: count((l) => l.temperature === "frio"),
   meta: count((l) => l.source === "meta"),
   google: count((l) => l.source === "google"),
+  direto: count((l) => l.source === "direto" || l.source === "direct"),
   baixaram: count((l) => l.downloads > 0),
   paywall: count((l) => l.status !== "active" && l.downloads >= 3),
+  comWhats: count((l) => l.whatsapp),
+  comWhatsOptin: count((l) => l.whatsapp && l.whatsappOptin),
+  // agregados de comportamento (padrões coletivos)
+  avgSessionMin: withB.length ? Math.round(withB.reduce((s, l) => s + l.behavior.avgSessionMin, 0) / withB.length * 10) / 10 : 0,
+  avgVisits: withB.length ? Math.round(withB.reduce((s, l) => s + l.behavior.sessions, 0) / withB.length * 10) / 10 : 0,
+  voltaram: count((l) => l.behavior && l.behavior.sessions >= 2), // engajamento repetido
 };
 
-const doc = { type: "kronos.leads", version: 1, updatedAt: new Date().toISOString(),
+const doc = { type: "kronos.leads", version: 2, updatedAt: new Date().toISOString(),
   today: new Date().toISOString().slice(0, 10), totals, leads };
 fs.writeFileSync(OUT, JSON.stringify(encryptDoc(doc)));
-console.log(`ok — leads v1 cifrado · ${totals.total} leads`);
+console.log(`ok — leads v2 cifrado · ${totals.total} leads · ${withB.length} com comportamento`);
 console.log(`  cliente ${totals.cliente} · quente ${totals.quente} · morno ${totals.morno} · frio ${totals.frio}`);
-console.log(`  meta ${totals.meta} · google ${totals.google} · baixaram ${totals.baixaram} · paywall ${totals.paywall}`);
+console.log(`  meta ${totals.meta} · google ${totals.google} · direto ${totals.direto} · baixaram ${totals.baixaram} · paywall ${totals.paywall}`);
+console.log(`  whats ${totals.comWhats} (${totals.comWhatsOptin} opt-in) · sessão média ${totals.avgSessionMin}min · visitas média ${totals.avgVisits} · voltaram ${totals.voltaram}`);
