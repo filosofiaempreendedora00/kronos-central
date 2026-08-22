@@ -2550,3 +2550,9 @@ body.lead-locked { overflow: hidden !important; }
 .lead-d-sit.sit--esfriando { color: #E0BB6A; }
 .lead-d-sit.sit--dormente { color: #A8BAD0; }
 .lead-d-sit b { color: var(--creme); }
+
+/* temperatura como sinal único (badge à esquerda) */
+.lead-lead { flex: 0 0 auto; min-width: 64px; display: flex; align-items: center; }
+.sit-txt--esfriando { color: #E0BB6A !important; }
+.sit-txt--dormente { color: #A8BAD0 !important; }
+.sit-txt--novo { color: #3ECF8E !important; }

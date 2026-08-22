@@ -1,11 +1,10 @@
 /* ===========================================================================
-   LEADS — a casa do DamIAno (CRO). Clarity 2.0 dos leads da Kronos.
+   LEADS — a casa do DamIAno (CRO). Um sinal só: TEMPERATURA (dinâmica).
 
-   Lê www/contexto/leads.json (CIFRADO) e decifra com a chave do cofre. Cada
-   lead com comportamento (sessões, tempo, visitas, timeline) + um SCORE DE
-   PROPENSÃO A COMPRAR (heurística de CRO), tags coloridas, e WhatsApp com trava
-   LGPD (só clicável se autorizado). Ordena os mais propensos no topo. Mobile-first.
-   Snapshot: `node scripts/ler-leads.mjs` (Supabase só-leitura + funnel_events).
+   Lê www/contexto/leads.json (CIFRADO) e decifra com a chave do cofre. A
+   temperatura já é engajamento (proximidade do dinheiro) DECAÍDO pela recência
+   — então é a própria propensão-agora. Quente que some vira morno e depois frio
+   sozinho (o cron reavalia de 4/4h). WhatsApp com trava LGPD. Mobile-first.
    =========================================================================== */
 const Leads = (() => {
   const PATH = "www/contexto/leads.json";
@@ -16,41 +15,12 @@ const Leads = (() => {
     cliente: { l: "Cliente", c: "lead-t--cliente" }, quente: { l: "Quente", c: "lead-t--quente" },
     morno: { l: "Morno", c: "lead-t--morno" }, frio: { l: "Frio", c: "lead-t--frio" },
   };
+  const TRANK = { cliente: 4, quente: 3, morno: 2, frio: 1 };
+  const SITL = { esfriando: "esfriando", dormente: "dormente", novo: "novo", ativo: "ativo", espiou: "só espiou", sumiu: "sumiu", cliente: "cliente" };
   const srcB = (s) => ({
     meta: { l: "Meta", c: "lead-s--meta" }, google: { l: "Google", c: "lead-s--google" },
     direto: { l: "Direto", c: "lead-s--direto" }, direct: { l: "Direto", c: "lead-s--direto" },
   }[s] || { l: s ? s[0].toUpperCase() + s.slice(1) : "—", c: "lead-s--direto" });
-
-  // PROPENSÃO A COMPRAR — heurística de CRO (sinais de intenção de pagar).
-  const PROP = {
-    cliente: { l: "Cliente", f: "✓", c: "prop--cliente" }, alta: { l: "Alta", f: "🔥🔥🔥", c: "prop--alta" },
-    media: { l: "Média", f: "🔥🔥", c: "prop--media" }, baixa: { l: "Baixa", f: "🔥", c: "prop--baixa" },
-    fria: { l: "Fria", f: "·", c: "prop--fria" },
-  };
-  function propensity(l) {
-    if (l.status === "active") return { tier: "cliente", score: 999, why: ["já é cliente"] };
-    const b = l.behavior; let s = 0; const why = [];
-    if (l.downloads > 0) { s += l.downloads * 8; why.push(l.downloads + " proposta" + (l.downloads > 1 ? "s" : "") + " baixada" + (l.downloads > 1 ? "s" : "")); }
-    if (b) {
-      if (b.key.unlockClicks) { s += b.key.unlockClicks * 10; why.push(b.key.unlockClicks + "× clicou em desbloquear"); }
-      if (b.key.watermark) { s += b.key.watermark * 6; why.push(b.key.watermark + "× baixou c/ marca d'água"); }
-      if (b.key.upgradeViews) { s += b.key.upgradeViews * 4; why.push("viu a oferta " + b.key.upgradeViews + "×"); }
-      if (b.key.transcripts) { s += b.key.transcripts * 12; why.push("usou o transcript"); } // wedge = alta intenção
-      if (b.sessions >= 2) { s += 12; why.push("voltou " + b.sessions + " sessões"); }
-      if (b.sessions >= 4) { s += 6; }
-    }
-    if (l.downloads >= 3) { s += 15; why.push("bateu o paywall"); }
-    if (l.temperature === "morno" && b) { s += 6; } // ativou de verdade, mesmo sem sinal de dinheiro
-    // recência: engajamento recente vale mais (esfria com o tempo)
-    if (l.daysSince != null) { if (l.daysSince <= 2) { s += 10; why.push("ativo agora"); } else if (l.daysSince <= 7) s += 5; }
-    const tier = s >= 40 ? "alta" : s >= 18 ? "media" : s >= 6 ? "baixa" : "fria";
-    return { tier, score: s, why };
-  }
-  // Situação (recência) — mostra o decaimento de forma clara.
-  const SIT = {
-    esfriando: { l: "esfriando", c: "sit--esfriando" }, dormente: { l: "dormente", c: "sit--dormente" },
-    novo: { l: "novo", c: "sit--novo" }, espiou: { l: "só espiou", c: "sit--dormente" },
-  };
 
   const EVL = {
     landing_view: "Viu a landing", signup_submitted: "Cadastrou", onboarding_view: "Abriu o onboarding",
@@ -75,6 +45,7 @@ const Leads = (() => {
     const p = (n) => String(n).padStart(2, "0");
     return p(d.getDate()) + "/" + p(d.getMonth() + 1) + " " + p(d.getHours()) + ":" + p(d.getMinutes()); };
   const waUrl = (n) => "https://wa.me/" + String(n).replace(/\D/g, "");
+  const lastOf = (l) => (l.behavior && l.behavior.lastSeen) || l.createdAt;
 
   async function load() {
     if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return null;
@@ -91,16 +62,13 @@ const Leads = (() => {
   function renderKpis() {
     const el = document.getElementById("leadsKpis"); if (!el) return;
     const t = DOC.totals || {};
-    const quentes = (DOC.leads || []).filter((l) => { const p = propensity(l); return p.tier === "alta" || p.tier === "media"; }).length;
     const tile = (n, lbl, cls, sub) =>
       `<div class="lead-kpi ${cls || ""}"><div class="lead-kpi__n">${n ?? 0}</div><div class="lead-kpi__l">${lbl}</div>${sub ? `<div class="lead-kpi__s">${sub}</div>` : ""}</div>`;
     el.innerHTML =
       tile(t.total, "Leads") +
-      tile(quentes, "Propensos", "prop--alta", "alta+média") +
-      tile(t.baixaram, "Baixaram") + tile(t.paywall, "No paywall") +
-      tile(t.esfriando ?? 0, "Esfriando", "sit--esfriando", "reengajar") +
-      tile(t.voltaram, "Voltaram", "", "≥2 sessões") +
-      tile((t.avgSessionMin ?? 0) + "min", "Sessão média") +
+      tile(t.quente, "Quentes", "lead-t--quente") + tile(t.morno, "Mornos", "lead-t--morno") +
+      tile(t.frio, "Frios", "lead-t--frio") + tile(t.baixaram, "Baixaram") +
+      tile(t.esfriando, "Esfriando", "sit--esfriando", "reengajar") +
       tile(t.comWhatsOptin + "/" + t.comWhats, "WhatsApp", "", "opt-in / total");
   }
 
@@ -108,7 +76,7 @@ const Leads = (() => {
     const el = document.getElementById("leadsControls"); if (!el) return;
     const chip = (g, v, l, on) => `<button class="lead-chip${on ? " is-active" : ""}" data-g="${g}" data-v="${v}" type="button">${l}</button>`;
     el.innerHTML =
-      `<div class="lead-chips lead-sort"><span class="lead-sort__lbl">Ordenar:</span>${[["recente", "Recentes"], ["propenso", "Mais propensos"]].map(([v, l]) => chip("sort", v, l, state.sort === v)).join("")}</div>` +
+      `<div class="lead-chips lead-sort"><span class="lead-sort__lbl">Ordenar:</span>${[["recente", "Recentes"], ["quente", "Mais quentes"]].map(([v, l]) => chip("sort", v, l, state.sort === v)).join("")}</div>` +
       `<div class="lead-chips">${["todos", "cliente", "quente", "morno", "frio"].map((v) => chip("temp", v, v === "todos" ? "Todas" : TEMP[v].l, state.temp === v)).join("")}</div>` +
       `<div class="lead-chips">${["todos", "meta", "google", "direto"].map((v) => chip("source", v, v === "todos" ? "Toda fonte" : srcB(v).l, state.source === v)).join("")}</div>`;
     el.querySelectorAll(".lead-chip").forEach((b) => b.addEventListener("click", () => {
@@ -119,22 +87,20 @@ const Leads = (() => {
   function renderList() {
     const el = document.getElementById("leadsList"); if (!el) return;
     const list = filtered().slice();
-    if (state.sort === "propenso") list.sort((a, b) => propensity(b).score - propensity(a).score);
+    if (state.sort === "quente")
+      list.sort((a, b) => (TRANK[b.temperature] - TRANK[a.temperature]) || (new Date(lastOf(b)) - new Date(lastOf(a))));
     else list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     if (!list.length) { el.innerHTML = `<p class="lead-empty">Nenhum lead com esse filtro.</p>`; return; }
     el.innerHTML = list.map((l) => {
       const t = TEMP[l.temperature] || TEMP.frio, s = srcB(l.source), b = l.behavior;
-      const p = propensity(l), P = PROP[p.tier];
       const wa = l.whatsapp ? `<span class="lead-wadot ${l.whatsappOptin ? "is-ok" : "is-block"}" title="${l.whatsappOptin ? "WhatsApp autorizado" : "WhatsApp sem autorização (LGPD)"}"></span>` : "";
       const dl = l.downloads > 0 ? `<span class="lead-tag lead-mini">⬇${l.downloads}</span>` : "";
       const back = b && b.sessions >= 2 ? `<span class="lead-tag lead-mini">↻${b.sessions}</span>` : "";
-      const time = b && b.totalMin ? `<span class="lead-tag lead-mini">⏱${b.totalMin}min</span>` : "";
-      const S = SIT[l.situation]; const sit = S ? `<span class="lead-sit ${S.c}">${S.l}</span>` : "";
       return `<button class="lead-row" data-id="${esc(l.id)}" type="button">
-        <span class="lead-prop ${P.c}" title="Propensão a comprar: ${P.l}">${P.f}</span>
+        <span class="lead-lead"><span class="lead-badge ${t.c}">${t.l}</span></span>
         <span class="lead-row__main">
-          <span class="lead-row__top"><span class="lead-id">${esc(l.email || l.name || "—")}</span>${wa}<span class="lead-when">${since((b && b.lastSeen) || l.createdAt)}</span></span>
-          <span class="lead-row__tags"><span class="lead-badge ${t.c}">${t.l}</span>${sit}<span class="lead-tag ${s.c}">${s.l}</span>${dl}${back}${time}</span>
+          <span class="lead-row__top"><span class="lead-id">${esc(l.email || l.name || "—")}</span>${wa}<span class="lead-when">${since(lastOf(l))}</span></span>
+          <span class="lead-row__tags"><span class="lead-tag ${s.c}">${s.l}</span>${dl}${back}</span>
         </span>
       </button>`;
     }).join("");
@@ -157,14 +123,9 @@ const Leads = (() => {
     const drawer = document.getElementById("leadDrawer"), panel = document.getElementById("leadDrawerPanel");
     if (!drawer || !panel) return;
     const t = TEMP[l.temperature] || TEMP.frio, s = srcB(l.source), b = l.behavior;
-    const p = propensity(l), P = PROP[p.tier];
     const stat = (n, lbl) => `<div class="lead-d-stat"><div class="lead-d-stat__n">${n}</div><div class="lead-d-stat__l">${lbl}</div></div>`;
-    const propBlock = `
-      <div class="lead-prop-box ${P.c}">
-        <div class="lead-prop-box__top"><span class="lead-prop-box__f">${P.f}</span>
-          <div><div class="lead-prop-box__l">Propensão a comprar: <b>${P.l}</b></div>
-          <div class="lead-prop-box__why">${p.why.length ? esc(p.why.join(" · ")) : "sem sinais de intenção ainda"}</div></div></div>
-      </div>`;
+    const sitTxt = l.situation === "novo" ? `cadastrou há ${l.daysSince}d`
+      : (b ? `sem atividade há ${l.daysSince}d` : "sem eventos");
     const behaviorHtml = b ? `
       <div class="lead-d-stats">
         ${stat(b.sessions, "Sessões")}${stat(b.visitDays, "Dias distintos")}
@@ -186,11 +147,10 @@ const Leads = (() => {
           <h3 class="lead-d-name">${esc(l.email || l.name || "—")}</h3>
           ${l.catalogo ? `<p class="lead-d-cat">${esc(l.catalogo)}</p>` : ""}
           <p class="lead-d-sub">Cadastrou ${since(l.createdAt)} · plano ${esc(l.plan || "—")} · ${l.status === "active" ? "PAGANTE" : "grátis"}</p>
-          <p class="lead-d-sit ${SIT[l.situation] ? SIT[l.situation].c : ""}">Situação: <b>${({ esfriando: "Esfriando", dormente: "Dormente", novo: "Novo", ativo: "Ativo", espiou: "Só espiou", sumiu: "Sumiu", cliente: "Cliente" })[l.situation] || l.situation}</b> · ${l.situation === "novo" ? "cadastrou" : "sem atividade"} há ${l.daysSince}d</p>
+          <p class="lead-d-sit ${SITL[l.situation] ? "sit-txt--" + l.situation : ""}">${(SITL[l.situation] || l.situation)} · ${sitTxt}</p>
         </div>
         <button class="lead-d-close" id="leadDClose" type="button" aria-label="Fechar">✕</button>
       </div>
-      ${propBlock}
       ${whatsBlock(l)}
       ${behaviorHtml}`;
     drawer.hidden = false;
