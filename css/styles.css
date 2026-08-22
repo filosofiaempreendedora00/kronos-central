@@ -2539,3 +2539,14 @@ body.lead-locked { overflow: hidden !important; }
 /* ordenação dos leads */
 .lead-sort { align-items: center; }
 .lead-sort__lbl { font-size: 11px; color: var(--areia); opacity: .75; margin-right: 4px; align-self: center; }
+
+/* situação (recência / decaimento) */
+.lead-sit { flex: 0 0 auto; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: .03em; }
+.sit--esfriando { background: rgba(216,169,75,.16); color: #E0BB6A; }
+.sit--dormente { background: rgba(138,160,184,.14); color: #A8BAD0; }
+.sit--novo { background: rgba(62,207,142,.16); color: #3ECF8E; }
+.lead-kpi.sit--esfriando .lead-kpi__n { color: #E0BB6A; }
+.lead-d-sit { font-size: 12.5px; color: var(--areia); margin-top: 6px; padding: 6px 10px; border-radius: 8px; background: var(--sepia); display: inline-block; }
+.lead-d-sit.sit--esfriando { color: #E0BB6A; }
+.lead-d-sit.sit--dormente { color: #A8BAD0; }
+.lead-d-sit b { color: var(--creme); }
