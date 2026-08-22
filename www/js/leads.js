@@ -35,13 +35,22 @@ const Leads = (() => {
       if (b.key.unlockClicks) { s += b.key.unlockClicks * 10; why.push(b.key.unlockClicks + "× clicou em desbloquear"); }
       if (b.key.watermark) { s += b.key.watermark * 6; why.push(b.key.watermark + "× baixou c/ marca d'água"); }
       if (b.key.upgradeViews) { s += b.key.upgradeViews * 4; why.push("viu a oferta " + b.key.upgradeViews + "×"); }
+      if (b.key.transcripts) { s += b.key.transcripts * 12; why.push("usou o transcript"); } // wedge = alta intenção
       if (b.sessions >= 2) { s += 12; why.push("voltou " + b.sessions + " sessões"); }
-      if (b.key.transcripts) { s += b.key.transcripts * 6; why.push("usou o transcript"); }
+      if (b.sessions >= 4) { s += 6; }
     }
     if (l.downloads >= 3) { s += 15; why.push("bateu o paywall"); }
+    if (l.temperature === "morno" && b) { s += 6; } // ativou de verdade, mesmo sem sinal de dinheiro
+    // recência: engajamento recente vale mais (esfria com o tempo)
+    if (l.daysSince != null) { if (l.daysSince <= 2) { s += 10; why.push("ativo agora"); } else if (l.daysSince <= 7) s += 5; }
     const tier = s >= 40 ? "alta" : s >= 18 ? "media" : s >= 6 ? "baixa" : "fria";
     return { tier, score: s, why };
   }
+  // Situação (recência) — mostra o decaimento de forma clara.
+  const SIT = {
+    esfriando: { l: "esfriando", c: "sit--esfriando" }, dormente: { l: "dormente", c: "sit--dormente" },
+    novo: { l: "novo", c: "sit--novo" }, espiou: { l: "só espiou", c: "sit--dormente" },
+  };
 
   const EVL = {
     landing_view: "Viu a landing", signup_submitted: "Cadastrou", onboarding_view: "Abriu o onboarding",
@@ -89,6 +98,7 @@ const Leads = (() => {
       tile(t.total, "Leads") +
       tile(quentes, "Propensos", "prop--alta", "alta+média") +
       tile(t.baixaram, "Baixaram") + tile(t.paywall, "No paywall") +
+      tile(t.esfriando ?? 0, "Esfriando", "sit--esfriando", "reengajar") +
       tile(t.voltaram, "Voltaram", "", "≥2 sessões") +
       tile((t.avgSessionMin ?? 0) + "min", "Sessão média") +
       tile(t.comWhatsOptin + "/" + t.comWhats, "WhatsApp", "", "opt-in / total");
@@ -119,11 +129,12 @@ const Leads = (() => {
       const dl = l.downloads > 0 ? `<span class="lead-tag lead-mini">⬇${l.downloads}</span>` : "";
       const back = b && b.sessions >= 2 ? `<span class="lead-tag lead-mini">↻${b.sessions}</span>` : "";
       const time = b && b.totalMin ? `<span class="lead-tag lead-mini">⏱${b.totalMin}min</span>` : "";
+      const S = SIT[l.situation]; const sit = S ? `<span class="lead-sit ${S.c}">${S.l}</span>` : "";
       return `<button class="lead-row" data-id="${esc(l.id)}" type="button">
         <span class="lead-prop ${P.c}" title="Propensão a comprar: ${P.l}">${P.f}</span>
         <span class="lead-row__main">
           <span class="lead-row__top"><span class="lead-id">${esc(l.email || l.name || "—")}</span>${wa}<span class="lead-when">${since((b && b.lastSeen) || l.createdAt)}</span></span>
-          <span class="lead-row__tags"><span class="lead-badge ${t.c}">${t.l}</span><span class="lead-tag ${s.c}">${s.l}</span>${dl}${back}${time}</span>
+          <span class="lead-row__tags"><span class="lead-badge ${t.c}">${t.l}</span>${sit}<span class="lead-tag ${s.c}">${s.l}</span>${dl}${back}${time}</span>
         </span>
       </button>`;
     }).join("");
@@ -175,6 +186,7 @@ const Leads = (() => {
           <h3 class="lead-d-name">${esc(l.email || l.name || "—")}</h3>
           ${l.catalogo ? `<p class="lead-d-cat">${esc(l.catalogo)}</p>` : ""}
           <p class="lead-d-sub">Cadastrou ${since(l.createdAt)} · plano ${esc(l.plan || "—")} · ${l.status === "active" ? "PAGANTE" : "grátis"}</p>
+          <p class="lead-d-sit ${SIT[l.situation] ? SIT[l.situation].c : ""}">Situação: <b>${({ esfriando: "Esfriando", dormente: "Dormente", novo: "Novo", ativo: "Ativo", espiou: "Só espiou", sumiu: "Sumiu", cliente: "Cliente" })[l.situation] || l.situation}</b> · ${l.situation === "novo" ? "cadastrou" : "sem atividade"} há ${l.daysSince}d</p>
         </div>
         <button class="lead-d-close" id="leadDClose" type="button" aria-label="Fechar">✕</button>
       </div>

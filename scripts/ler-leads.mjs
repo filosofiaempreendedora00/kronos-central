@@ -116,27 +116,56 @@ function behavior(list) {
 
 const toIso = (d) => (d == null ? null : d instanceof Date ? d.toISOString() : String(d));
 const sourceOf = (o) => o.acquisition_fbclid ? "meta" : o.acquisition_gclid ? "google" : (o.acquisition_source || "direto");
-const tempOf = (o) => o.status === "active" ? "cliente" : (o.downloads_used || 0) >= 1 ? "quente"
-  : (o.has_logo || o.custom_solution || o.consultant_contact) ? "morno" : "frio";
+// TEMPERATURA DINÂMICA — engajamento (proximidade do dinheiro) DECAÍDO pela recência.
+// Um quente que some vira morno e depois frio sozinho (o cron reavalia de 4/4h).
+const DECAY = { hotToWarm: 7, hotToCold: 21, warmToCold: 14, newDays: 3 }; // dias (ajustáveis)
+function tempSituation(o, b) {
+  if (o.status === "active") return { temp: "cliente", situation: "cliente", daysSince: 0 };
+  const now = Date.now();
+  const lastMs = (b && b.lastSeen) ? new Date(b.lastSeen).getTime() : new Date(o.created_at).getTime();
+  const daysSince = Math.max(0, Math.floor((now - lastMs) / 86400000));
+  const createdDays = Math.max(0, Math.floor((now - new Date(o.created_at).getTime()) / 86400000));
+  const money = ((o.downloads_used || 0) >= 1) ||
+    (b && (b.key.unlockClicks > 0 || b.key.watermark > 0 || b.key.upgradeViews > 0));
+  const activated = money || (b && b.key.transcripts > 0) || o.has_logo || o.custom_solution || o.consultant_contact;
+  const base = money ? "quente" : activated ? "morno" : "frio";
+  if (base === "quente") {
+    if (daysSince <= DECAY.hotToWarm) return { temp: "quente", situation: "ativo", daysSince };
+    if (daysSince <= DECAY.hotToCold) return { temp: "morno", situation: "esfriando", daysSince };
+    return { temp: "frio", situation: "dormente", daysSince };
+  }
+  if (base === "morno") {
+    if (daysSince <= DECAY.warmToCold) return { temp: "morno", situation: "ativo", daysSince };
+    return { temp: "frio", situation: "dormente", daysSince };
+  }
+  if (createdDays <= DECAY.newDays) return { temp: "frio", situation: "novo", daysSince };
+  return { temp: "frio", situation: (b && b.events > 0) ? "espiou" : "sumiu", daysSince };
+}
 
 const leads = rows
   .filter((o) => !INTERNAL.has(String(o.email || "").toLowerCase()))
-  .map((o) => ({
-    id: o.id,
-    email: o.email || null,
-    name: o.name || null,
-    catalogo: o.catalogo || null,
-    plan: o.plan,
-    status: o.status,
-    downloads: Number(o.downloads_used) || 0,
-    source: sourceOf(o),
-    temperature: tempOf(o),
-    whatsapp: o.wa || null,
-    whatsappOptin: !!o.wa_optin, // LGPD: só clicável se true
-    createdAt: toIso(o.created_at),
-    firstDownloadAt: toIso(o.first_download_at),
-    behavior: behavior(byOrg[o.id]),
-  }));
+  .map((o) => {
+    const b = behavior(byOrg[o.id]);
+    const ts = tempSituation(o, b);
+    return {
+      id: o.id,
+      email: o.email || null,
+      name: o.name || null,
+      catalogo: o.catalogo || null,
+      plan: o.plan,
+      status: o.status,
+      downloads: Number(o.downloads_used) || 0,
+      source: sourceOf(o),
+      temperature: ts.temp,
+      situation: ts.situation,
+      daysSince: ts.daysSince,
+      whatsapp: o.wa || null,
+      whatsappOptin: !!o.wa_optin, // LGPD: só clicável se true
+      createdAt: toIso(o.created_at),
+      firstDownloadAt: toIso(o.first_download_at),
+      behavior: b,
+    };
+  });
 
 const count = (fn) => leads.filter(fn).length;
 const withB = leads.filter((l) => l.behavior);
@@ -158,6 +187,9 @@ const totals = {
   avgSessionMin: withB.length ? Math.round(withB.reduce((s, l) => s + l.behavior.avgSessionMin, 0) / withB.length * 10) / 10 : 0,
   avgVisits: withB.length ? Math.round(withB.reduce((s, l) => s + l.behavior.sessions, 0) / withB.length * 10) / 10 : 0,
   voltaram: count((l) => l.behavior && l.behavior.sessions >= 2), // engajamento repetido
+  esfriando: count((l) => l.situation === "esfriando"),
+  dormente: count((l) => l.situation === "dormente"),
+  novos: count((l) => l.situation === "novo"),
 };
 
 const doc = { type: "kronos.leads", version: 2, updatedAt: new Date().toISOString(),
