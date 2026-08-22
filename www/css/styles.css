@@ -2511,3 +2511,27 @@ body.lead-locked { overflow: hidden !important; }
   .lead-kpi { flex: 1 1 72px; min-width: 72px; padding: 10px 8px; }
   .lead-kpi__n { font-size: 21px; }
 }
+
+/* ===== LEADS — propensão a comprar + linha em 2 níveis ===== */
+.lead-row { align-items: center; }
+.lead-prop { flex: 0 0 auto; min-width: 42px; text-align: center; font-size: 11px; letter-spacing: -1px; line-height: 1; }
+.prop--alta { color: #F0916B; }
+.prop--media { color: #E0BB6A; }
+.prop--baixa { color: #C9A227; opacity: .9; }
+.prop--fria { color: var(--areia); opacity: .4; font-size: 15px; }
+.prop--cliente { color: #3ECF8E; font-size: 15px; }
+.lead-kpi.prop--alta .lead-kpi__n { color: #F0916B; }
+.lead-row__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.lead-row__top { display: flex; align-items: center; gap: 8px; }
+.lead-row__top .lead-id { flex: 1 1 auto; }
+.lead-row__top .lead-when { flex: 0 0 auto; }
+.lead-row__tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.lead-mini { font-size: 10.5px; padding: 2px 7px; background: var(--areia-12); color: var(--areia); font-weight: 600; }
+.lead-prop-box { border-radius: 12px; padding: 12px 14px; margin: 4px 0 8px; border: 1px solid var(--areia-22); background: var(--sepia); }
+.lead-prop-box.prop--alta { border-color: rgba(240,145,107,.5); background: rgba(240,145,107,.1); }
+.lead-prop-box.prop--media { border-color: rgba(224,187,106,.4); background: rgba(224,187,106,.08); }
+.lead-prop-box.prop--cliente { border-color: rgba(62,207,142,.5); background: rgba(62,207,142,.1); }
+.lead-prop-box__top { display: flex; align-items: center; gap: 12px; }
+.lead-prop-box__f { font-size: 20px; letter-spacing: -2px; flex: 0 0 auto; }
+.lead-prop-box__l { font-size: 14px; color: var(--creme); }
+.lead-prop-box__why { font-size: 12px; color: var(--areia); margin-top: 3px; }

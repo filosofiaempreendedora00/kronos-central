@@ -2,9 +2,9 @@
    LEADS — a casa do DamIAno (CRO). Clarity 2.0 dos leads da Kronos.
 
    Lê www/contexto/leads.json (CIFRADO) e decifra com a chave do cofre. Cada
-   lead com granularidade de comportamento (sessões, tempo, visitas, downloads,
-   timeline), tags coloridas de temperatura/fonte, e WhatsApp com trava LGPD
-   (só clicável se o contato foi autorizado — whatsappOptin). Mobile-first.
+   lead com comportamento (sessões, tempo, visitas, timeline) + um SCORE DE
+   PROPENSÃO A COMPRAR (heurística de CRO), tags coloridas, e WhatsApp com trava
+   LGPD (só clicável se autorizado). Ordena os mais propensos no topo. Mobile-first.
    Snapshot: `node scripts/ler-leads.mjs` (Supabase só-leitura + funnel_events).
    =========================================================================== */
 const Leads = (() => {
@@ -20,6 +20,28 @@ const Leads = (() => {
     meta: { l: "Meta", c: "lead-s--meta" }, google: { l: "Google", c: "lead-s--google" },
     direto: { l: "Direto", c: "lead-s--direto" }, direct: { l: "Direto", c: "lead-s--direto" },
   }[s] || { l: s ? s[0].toUpperCase() + s.slice(1) : "—", c: "lead-s--direto" });
+
+  // PROPENSÃO A COMPRAR — heurística de CRO (sinais de intenção de pagar).
+  const PROP = {
+    cliente: { l: "Cliente", f: "✓", c: "prop--cliente" }, alta: { l: "Alta", f: "🔥🔥🔥", c: "prop--alta" },
+    media: { l: "Média", f: "🔥🔥", c: "prop--media" }, baixa: { l: "Baixa", f: "🔥", c: "prop--baixa" },
+    fria: { l: "Fria", f: "·", c: "prop--fria" },
+  };
+  function propensity(l) {
+    if (l.status === "active") return { tier: "cliente", score: 999, why: ["já é cliente"] };
+    const b = l.behavior; let s = 0; const why = [];
+    if (l.downloads > 0) { s += l.downloads * 8; why.push(l.downloads + " proposta" + (l.downloads > 1 ? "s" : "") + " baixada" + (l.downloads > 1 ? "s" : "")); }
+    if (b) {
+      if (b.key.unlockClicks) { s += b.key.unlockClicks * 10; why.push(b.key.unlockClicks + "× clicou em desbloquear"); }
+      if (b.key.watermark) { s += b.key.watermark * 6; why.push(b.key.watermark + "× baixou c/ marca d'água"); }
+      if (b.key.upgradeViews) { s += b.key.upgradeViews * 4; why.push("viu a oferta " + b.key.upgradeViews + "×"); }
+      if (b.sessions >= 2) { s += 12; why.push("voltou " + b.sessions + " sessões"); }
+      if (b.key.transcripts) { s += b.key.transcripts * 6; why.push("usou o transcript"); }
+    }
+    if (l.downloads >= 3) { s += 15; why.push("bateu o paywall"); }
+    const tier = s >= 40 ? "alta" : s >= 18 ? "media" : s >= 6 ? "baixa" : "fria";
+    return { tier, score: s, why };
+  }
 
   const EVL = {
     landing_view: "Viu a landing", signup_submitted: "Cadastrou", onboarding_view: "Abriu o onboarding",
@@ -60,13 +82,14 @@ const Leads = (() => {
   function renderKpis() {
     const el = document.getElementById("leadsKpis"); if (!el) return;
     const t = DOC.totals || {};
+    const quentes = (DOC.leads || []).filter((l) => { const p = propensity(l); return p.tier === "alta" || p.tier === "media"; }).length;
     const tile = (n, lbl, cls, sub) =>
       `<div class="lead-kpi ${cls || ""}"><div class="lead-kpi__n">${n ?? 0}</div><div class="lead-kpi__l">${lbl}</div>${sub ? `<div class="lead-kpi__s">${sub}</div>` : ""}</div>`;
     el.innerHTML =
       tile(t.total, "Leads") +
-      tile(t.quente, "Quentes", "lead-t--quente") + tile(t.morno, "Mornos", "lead-t--morno") +
-      tile(t.frio, "Frios", "lead-t--frio") + tile(t.baixaram, "Baixaram") +
-      tile(t.paywall, "No paywall") + tile(t.voltaram, "Voltaram", "", "≥2 sessões") +
+      tile(quentes, "Propensos", "prop--alta", "alta+média") +
+      tile(t.baixaram, "Baixaram") + tile(t.paywall, "No paywall") +
+      tile(t.voltaram, "Voltaram", "", "≥2 sessões") +
       tile((t.avgSessionMin ?? 0) + "min", "Sessão média") +
       tile(t.comWhatsOptin + "/" + t.comWhats, "WhatsApp", "", "opt-in / total");
   }
@@ -84,21 +107,21 @@ const Leads = (() => {
 
   function renderList() {
     const el = document.getElementById("leadsList"); if (!el) return;
-    const list = filtered();
+    const list = filtered().slice().sort((a, b) => propensity(b).score - propensity(a).score);
     if (!list.length) { el.innerHTML = `<p class="lead-empty">Nenhum lead com esse filtro.</p>`; return; }
     el.innerHTML = list.map((l) => {
-      const t = TEMP[l.temperature] || TEMP.frio, s = srcB(l.source);
-      const b = l.behavior;
-      const waDot = l.whatsapp ? `<span class="lead-wadot ${l.whatsappOptin ? "is-ok" : "is-block"}" title="${l.whatsappOptin ? "WhatsApp autorizado" : "WhatsApp sem autorização (LGPD)"}"></span>` : "";
-      const back = b && b.sessions >= 2 ? `<span class="lead-back" title="voltou ${b.sessions}×">↻${b.sessions}</span>` : "";
+      const t = TEMP[l.temperature] || TEMP.frio, s = srcB(l.source), b = l.behavior;
+      const p = propensity(l), P = PROP[p.tier];
+      const wa = l.whatsapp ? `<span class="lead-wadot ${l.whatsappOptin ? "is-ok" : "is-block"}" title="${l.whatsappOptin ? "WhatsApp autorizado" : "WhatsApp sem autorização (LGPD)"}"></span>` : "";
+      const dl = l.downloads > 0 ? `<span class="lead-tag lead-mini">⬇${l.downloads}</span>` : "";
+      const back = b && b.sessions >= 2 ? `<span class="lead-tag lead-mini">↻${b.sessions}</span>` : "";
+      const time = b && b.totalMin ? `<span class="lead-tag lead-mini">⏱${b.totalMin}min</span>` : "";
       return `<button class="lead-row" data-id="${esc(l.id)}" type="button">
-        <span class="lead-badge ${t.c}">${t.l}</span>
-        <span class="lead-id">${esc(l.email || l.name || "—")}</span>
-        ${waDot}
-        <span class="lead-tag ${s.c}">${s.l}</span>
-        <span class="lead-dl">${l.downloads > 0 ? "⬇" + l.downloads : ""}</span>
-        ${back}
-        <span class="lead-when">${since((b && b.lastSeen) || l.createdAt)}</span>
+        <span class="lead-prop ${P.c}" title="Propensão a comprar: ${P.l}">${P.f}</span>
+        <span class="lead-row__main">
+          <span class="lead-row__top"><span class="lead-id">${esc(l.email || l.name || "—")}</span>${wa}<span class="lead-when">${since((b && b.lastSeen) || l.createdAt)}</span></span>
+          <span class="lead-row__tags"><span class="lead-badge ${t.c}">${t.l}</span><span class="lead-tag ${s.c}">${s.l}</span>${dl}${back}${time}</span>
+        </span>
       </button>`;
     }).join("");
     el.querySelectorAll(".lead-row").forEach((r) => r.addEventListener("click", () => openDetail(r.dataset.id)));
@@ -120,7 +143,14 @@ const Leads = (() => {
     const drawer = document.getElementById("leadDrawer"), panel = document.getElementById("leadDrawerPanel");
     if (!drawer || !panel) return;
     const t = TEMP[l.temperature] || TEMP.frio, s = srcB(l.source), b = l.behavior;
+    const p = propensity(l), P = PROP[p.tier];
     const stat = (n, lbl) => `<div class="lead-d-stat"><div class="lead-d-stat__n">${n}</div><div class="lead-d-stat__l">${lbl}</div></div>`;
+    const propBlock = `
+      <div class="lead-prop-box ${P.c}">
+        <div class="lead-prop-box__top"><span class="lead-prop-box__f">${P.f}</span>
+          <div><div class="lead-prop-box__l">Propensão a comprar: <b>${P.l}</b></div>
+          <div class="lead-prop-box__why">${p.why.length ? esc(p.why.join(" · ")) : "sem sinais de intenção ainda"}</div></div></div>
+      </div>`;
     const behaviorHtml = b ? `
       <div class="lead-d-stats">
         ${stat(b.sessions, "Sessões")}${stat(b.visitDays, "Dias distintos")}
@@ -145,6 +175,7 @@ const Leads = (() => {
         </div>
         <button class="lead-d-close" id="leadDClose" type="button" aria-label="Fechar">✕</button>
       </div>
+      ${propBlock}
       ${whatsBlock(l)}
       ${behaviorHtml}`;
     drawer.hidden = false;
