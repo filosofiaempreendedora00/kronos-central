@@ -2535,3 +2535,7 @@ body.lead-locked { overflow: hidden !important; }
 .lead-prop-box__f { font-size: 20px; letter-spacing: -2px; flex: 0 0 auto; }
 .lead-prop-box__l { font-size: 14px; color: var(--creme); }
 .lead-prop-box__why { font-size: 12px; color: var(--areia); margin-top: 3px; }
+
+/* ordenação dos leads */
+.lead-sort { align-items: center; }
+.lead-sort__lbl { font-size: 11px; color: var(--areia); opacity: .75; margin-right: 4px; align-self: center; }

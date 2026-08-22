@@ -10,7 +10,7 @@
 const Leads = (() => {
   const PATH = "www/contexto/leads.json";
   let DOC = null, BYID = {};
-  const state = { temp: "todos", source: "todos" };
+  const state = { temp: "todos", source: "todos", sort: "recente" };
 
   const TEMP = {
     cliente: { l: "Cliente", c: "lead-t--cliente" }, quente: { l: "Quente", c: "lead-t--quente" },
@@ -98,6 +98,7 @@ const Leads = (() => {
     const el = document.getElementById("leadsControls"); if (!el) return;
     const chip = (g, v, l, on) => `<button class="lead-chip${on ? " is-active" : ""}" data-g="${g}" data-v="${v}" type="button">${l}</button>`;
     el.innerHTML =
+      `<div class="lead-chips lead-sort"><span class="lead-sort__lbl">Ordenar:</span>${[["recente", "Recentes"], ["propenso", "Mais propensos"]].map(([v, l]) => chip("sort", v, l, state.sort === v)).join("")}</div>` +
       `<div class="lead-chips">${["todos", "cliente", "quente", "morno", "frio"].map((v) => chip("temp", v, v === "todos" ? "Todas" : TEMP[v].l, state.temp === v)).join("")}</div>` +
       `<div class="lead-chips">${["todos", "meta", "google", "direto"].map((v) => chip("source", v, v === "todos" ? "Toda fonte" : srcB(v).l, state.source === v)).join("")}</div>`;
     el.querySelectorAll(".lead-chip").forEach((b) => b.addEventListener("click", () => {
@@ -107,7 +108,9 @@ const Leads = (() => {
 
   function renderList() {
     const el = document.getElementById("leadsList"); if (!el) return;
-    const list = filtered().slice().sort((a, b) => propensity(b).score - propensity(a).score);
+    const list = filtered().slice();
+    if (state.sort === "propenso") list.sort((a, b) => propensity(b).score - propensity(a).score);
+    else list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     if (!list.length) { el.innerHTML = `<p class="lead-empty">Nenhum lead com esse filtro.</p>`; return; }
     el.innerHTML = list.map((l) => {
       const t = TEMP[l.temperature] || TEMP.frio, s = srcB(l.source), b = l.behavior;
