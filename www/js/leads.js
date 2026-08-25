@@ -160,6 +160,9 @@ const Leads = (() => {
       </div>
       ${whatsBlock(l)}
       ${behaviorHtml}`;
+    // move o drawer pra RAIZ (body) — escapa de qualquer contexto de empilhamento
+    // do #app; só assim o z-index vence a tabbar no mobile.
+    if (drawer.parentElement !== document.body) document.body.appendChild(drawer);
     drawer.hidden = false;
     document.getElementById("app")?.classList.add("is-locked");
     document.body.classList.add("lead-locked");
