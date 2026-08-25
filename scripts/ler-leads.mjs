@@ -119,10 +119,11 @@ const sourceOf = (o) => o.acquisition_fbclid ? "meta" : o.acquisition_gclid ? "g
 // TEMPERATURA DINÂMICA — engajamento (proximidade do dinheiro) DECAÍDO pela recência.
 // Um quente que some vira morno e depois frio sozinho (o cron reavalia de 4/4h).
 const DECAY = { hotToWarm: 7, hotToCold: 21, warmToCold: 14, newDays: 3 }; // dias (ajustáveis)
-function tempSituation(o, b) {
+function tempSituation(o, b, lastEmailClickMs) {
   if (o.status === "active") return { temp: "cliente", situation: "cliente", daysSince: 0 };
   const now = Date.now();
-  const lastMs = (b && b.lastSeen) ? new Date(b.lastSeen).getTime() : new Date(o.created_at).getTime();
+  const prodMs = (b && b.lastSeen) ? new Date(b.lastSeen).getTime() : new Date(o.created_at).getTime();
+  const lastMs = Math.max(prodMs, lastEmailClickMs || 0); // clique em e-mail também é atividade recente
   const daysSince = Math.max(0, Math.floor((now - lastMs) / 86400000));
   const createdDays = Math.max(0, Math.floor((now - new Date(o.created_at).getTime()) / 86400000));
   const money = ((o.downloads_used || 0) >= 1) ||
@@ -142,11 +143,42 @@ function tempSituation(o, b) {
   return { temp: "frio", situation: (b && b.events > 0) ? "espiou" : "sumiu", daysSince };
 }
 
+// ---- Brevo: eventos de e-mail (cliques + aberturas) por contato ----
+const brevoKey = fromEnv("BREVO_API_KEY");
+const emailByAddr = {};
+if (brevoKey) {
+  try {
+    const H = { headers: { "api-key": brevoKey, accept: "application/json" } };
+    for (const ev of ["clicks", "opened"]) {
+      let offset = 0;
+      while (offset < 4000) {
+        const r = await (await fetch(`https://api.brevo.com/v3/smtp/statistics/events?limit=100&offset=${offset}&event=${ev}&sort=desc`, H)).json();
+        const list = r.events || [];
+        for (const e of list) {
+          const addr = String(e.email || "").toLowerCase(); if (!addr) continue;
+          (emailByAddr[addr] = emailByAddr[addr] || []).push({
+            t: e.date, type: ev === "clicks" ? "click" : "open", link: e.link || null, subject: e.subject || null,
+          });
+        }
+        if (list.length < 100) break;
+        offset += 100;
+      }
+    }
+  } catch (e) { console.error("Brevo indisponível (segue sem e-mail):", e.message); }
+}
+const emailTotal = Object.values(emailByAddr).reduce((s, a) => s + a.length, 0);
+
 const leads = rows
   .filter((o) => !INTERNAL.has(String(o.email || "").toLowerCase()))
   .map((o) => {
     const b = behavior(byOrg[o.id]);
-    const ts = tempSituation(o, b);
+    const mails = emailByAddr[String(o.email || "").toLowerCase()] || [];
+    const lastClickMs = mails.filter((m) => m.type === "click").map((m) => new Date(m.t).getTime()).sort((a, c) => c - a)[0] || 0;
+    const ts = tempSituation(o, b, lastClickMs);
+    // histórico combinado (produto + e-mail), ordenado por data, últimos 25
+    const prod = ((b && b.timeline) || []).map((e) => ({ ...e, ch: "product" }));
+    const mail = mails.map((m) => ({ e: m.type === "click" ? "email_click" : "email_open", t: m.t, ch: "email", link: m.link, subject: m.subject }));
+    const timeline = prod.concat(mail).sort((a, c) => new Date(a.t) - new Date(c.t)).slice(-25);
     return {
       id: o.id,
       email: o.email || null,
@@ -163,6 +195,9 @@ const leads = rows
       whatsappOptin: !!o.wa_optin, // LGPD: só clicável se true
       createdAt: toIso(o.created_at),
       firstDownloadAt: toIso(o.first_download_at),
+      emailClicks: mails.filter((m) => m.type === "click").length,
+      emailOpens: mails.filter((m) => m.type === "open").length,
+      timeline,
       behavior: b,
     };
   });
@@ -190,6 +225,7 @@ const totals = {
   esfriando: count((l) => l.situation === "esfriando"),
   dormente: count((l) => l.situation === "dormente"),
   novos: count((l) => l.situation === "novo"),
+  comEmailClick: count((l) => l.emailClicks > 0),
 };
 
 const doc = { type: "kronos.leads", version: 2, updatedAt: new Date().toISOString(),
@@ -199,3 +235,4 @@ console.log(`ok — leads v2 cifrado · ${totals.total} leads · ${withB.length}
 console.log(`  cliente ${totals.cliente} · quente ${totals.quente} · morno ${totals.morno} · frio ${totals.frio}`);
 console.log(`  meta ${totals.meta} · google ${totals.google} · direto ${totals.direto} · baixaram ${totals.baixaram} · paywall ${totals.paywall}`);
 console.log(`  whats ${totals.comWhats} (${totals.comWhatsOptin} opt-in) · sessão média ${totals.avgSessionMin}min · visitas média ${totals.avgVisits} · voltaram ${totals.voltaram}`);
+console.log(`  e-mail (Brevo): ${emailTotal} eventos · ${totals.comEmailClick} leads clicaram em link`);
