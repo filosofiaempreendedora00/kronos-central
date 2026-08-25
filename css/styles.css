@@ -2472,7 +2472,7 @@ body::before {
 
 @keyframes leadSlideR { from { transform: translateX(24px); opacity: .4; } to { transform: none; opacity: 1; } }
 @keyframes leadSlideUp { from { transform: translateY(30px); opacity: .5; } to { transform: none; opacity: 1; } }
-.lead-drawer { position: fixed; inset: 0; z-index: 210; overscroll-behavior: contain; }
+.lead-drawer { position: fixed; inset: 0; z-index: 400; overscroll-behavior: contain; }
 #app.is-locked { overflow: hidden !important; }
 body.lead-locked { overflow: hidden !important; }
 .lead-drawer__backdrop { position: absolute; inset: 0; background: rgba(10,6,3,.6); touch-action: none; }
