@@ -2505,8 +2505,9 @@ body.lead-locked { overflow: hidden !important; }
 .lead-wa-cta { font-weight: 700; font-size: 13px; }
 .lead-wa-note { font-size: 11px; opacity: .9; }
 @media (max-width: 640px) {
-  .lead-drawer__panel { max-width: 100%; top: auto; bottom: 0; height: auto; max-height: 88vh;
-    border-left: none; border-top: 1px solid var(--areia-22); border-radius: 18px 18px 0 0; animation: leadSlideUp .24s ease; }
+  .lead-drawer__panel { max-width: 100%; top: auto; bottom: 0; height: 88dvh; max-height: 88dvh;
+    border-left: none; border-top: 1px solid var(--areia-22); border-radius: 18px 18px 0 0; animation: leadSlideUp .24s ease;
+    padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
   .lead-d-stats { grid-template-columns: repeat(2, 1fr); }
   .lead-kpi { flex: 1 1 72px; min-width: 72px; padding: 10px 8px; }
   .lead-kpi__n { font-size: 21px; }
