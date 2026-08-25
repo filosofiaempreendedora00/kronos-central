@@ -97,7 +97,12 @@ const Leads = (() => {
     if (!list.length) { el.innerHTML = `<p class="lead-empty">Nenhum lead com esse filtro.</p>`; return; }
     el.innerHTML = list.map((l) => {
       const t = TEMP[l.temperature] || TEMP.frio, s = srcB(l.source), b = l.behavior;
-      const wa = l.whatsapp ? `<span class="lead-wadot ${l.whatsappOptin ? "is-ok" : "is-block"}" title="${l.whatsappOptin ? "WhatsApp autorizado" : "WhatsApp sem autorização (LGPD)"}"></span>` : "";
+      const waDigits = l.whatsapp ? String(l.whatsapp).replace(/\D/g, "") : "";
+      const wa = l.whatsapp
+        ? (l.whatsappOptin
+          ? `<span class="lead-wabtn" data-wa="${waDigits}" title="Chamar no WhatsApp (autorizado)">💬</span>`
+          : `<span class="lead-wadot is-block" title="WhatsApp sem autorização (LGPD)"></span>`)
+        : "";
       const dl = l.downloads > 0 ? `<span class="lead-tag lead-mini">⬇${l.downloads}</span>` : "";
       const back = b && b.sessions >= 2 ? `<span class="lead-tag lead-mini">↻${b.sessions}</span>` : "";
       return `<button class="lead-row" data-id="${esc(l.id)}" type="button">
@@ -108,7 +113,11 @@ const Leads = (() => {
         </span>
       </button>`;
     }).join("");
-    el.querySelectorAll(".lead-row").forEach((r) => r.addEventListener("click", () => openDetail(r.dataset.id)));
+    el.querySelectorAll(".lead-row").forEach((r) => r.addEventListener("click", (e) => {
+      const w = e.target.closest("[data-wa]");
+      if (w) { e.stopPropagation(); window.open("https://wa.me/" + w.dataset.wa, "_blank", "noopener"); return; }
+      openDetail(r.dataset.id);
+    }));
   }
 
   function whatsBlock(l) {
