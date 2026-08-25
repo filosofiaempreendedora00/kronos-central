@@ -46,6 +46,10 @@ const Leads = (() => {
     return p(d.getDate()) + "/" + p(d.getMonth() + 1) + " " + p(d.getHours()) + ":" + p(d.getMinutes()); };
   const waUrl = (n) => "https://wa.me/" + String(n).replace(/\D/g, "");
   const lastOf = (l) => (l.behavior && l.behavior.lastSeen) || l.createdAt;
+  const shortLink = (u) => { try { return new URL(u).pathname || u; } catch (_) { return String(u).slice(0, 40); } };
+  const evLabel = (e) => e.ch === "email"
+    ? (e.e === "email_click" ? "📧 Clicou no link" + (e.link ? ": " + shortLink(e.link) : "") : "📧 Abriu o e-mail" + (e.subject ? ": " + e.subject : ""))
+    : evl(e.e);
 
   async function load() {
     if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return null;
@@ -76,9 +80,9 @@ const Leads = (() => {
     const el = document.getElementById("leadsControls"); if (!el) return;
     const chip = (g, v, l, on) => `<button class="lead-chip${on ? " is-active" : ""}" data-g="${g}" data-v="${v}" type="button">${l}</button>`;
     el.innerHTML =
-      `<div class="lead-chips lead-sort"><span class="lead-sort__lbl">Ordenar:</span>${[["recente", "Recentes"], ["quente", "Mais quentes"]].map(([v, l]) => chip("sort", v, l, state.sort === v)).join("")}</div>` +
-      `<div class="lead-chips">${["todos", "cliente", "quente", "morno", "frio"].map((v) => chip("temp", v, v === "todos" ? "Todas" : TEMP[v].l, state.temp === v)).join("")}</div>` +
-      `<div class="lead-chips">${["todos", "meta", "google", "direto"].map((v) => chip("source", v, v === "todos" ? "Toda fonte" : srcB(v).l, state.source === v)).join("")}</div>`;
+      `<div class="lead-cgroup"><span class="lead-cg__lbl">Ordenar</span><div class="lead-chips">${[["recente", "Recentes"], ["quente", "Mais quentes"]].map(([v, l]) => chip("sort", v, l, state.sort === v)).join("")}</div></div>` +
+      `<div class="lead-cgroup"><span class="lead-cg__lbl">Temperatura</span><div class="lead-chips">${["todos", "cliente", "quente", "morno", "frio"].map((v) => chip("temp", v, v === "todos" ? "Todas" : TEMP[v].l, state.temp === v)).join("")}</div></div>` +
+      `<div class="lead-cgroup"><span class="lead-cg__lbl">Fonte</span><div class="lead-chips">${["todos", "meta", "google", "direto"].map((v) => chip("source", v, v === "todos" ? "Todas" : srcB(v).l, state.source === v)).join("")}</div></div>`;
     el.querySelectorAll(".lead-chip").forEach((b) => b.addEventListener("click", () => {
       state[b.dataset.g] = b.dataset.v; renderControls(); renderList();
     }));
@@ -126,20 +130,23 @@ const Leads = (() => {
     const stat = (n, lbl) => `<div class="lead-d-stat"><div class="lead-d-stat__n">${n}</div><div class="lead-d-stat__l">${lbl}</div></div>`;
     const sitTxt = l.situation === "novo" ? `cadastrou há ${l.daysSince}d`
       : (b ? `sem atividade há ${l.daysSince}d` : "sem eventos");
-    const behaviorHtml = b ? `
+    const statsHtml = b ? `
       <div class="lead-d-stats">
         ${stat(b.sessions, "Sessões")}${stat(b.visitDays, "Dias distintos")}
         ${stat(b.avgSessionMin + "min", "Sessão média")}${stat(b.totalMin + "min", "Tempo total")}
       </div>
       <div class="lead-d-stats">
-        ${stat(b.key.downloads, "Baixou")}${stat(b.key.watermark, "C/ marca")}
-        ${stat(b.key.unlockClicks, "Cliques desbloq.")}${stat(b.key.transcripts, "Transcript")}
+        ${stat(b.key.downloads, "Baixou")}${stat(b.key.unlockClicks, "Desbloq.")}
+        ${stat(b.key.transcripts, "Transcript")}${stat(l.emailClicks || 0, "Cliques e-mail")}
       </div>
-      <div class="lead-d-meta">${(b.devices || []).map((d) => `<span class="lead-tag lead-s--direto">${d}</span>`).join(" ")} · visto ${since(b.lastSeen)}</div>
-      <h4 class="lead-d-h">Linha do tempo</h4>
-      <div class="lead-d-timeline">${(b.timeline || []).slice().reverse().map((e) =>
-        `<div class="lead-d-ev"><span class="lead-d-ev__t">${dt(e.t)}</span><span class="lead-d-ev__e">${esc(evl(e.e))}</span></div>`).join("")}</div>
-    ` : `<p class="lead-empty">Sem eventos de comportamento registrados ainda.</p>`;
+      <div class="lead-d-meta">${(b.devices || []).map((d) => `<span class="lead-tag lead-s--direto">${d}</span>`).join(" ")} · visto ${since(b.lastSeen)}${(l.emailOpens || l.emailClicks) ? ` · 📧 ${l.emailOpens || 0} aberturas, ${l.emailClicks || 0} cliques` : ""}</div>` : "";
+    const tl = (l.timeline && l.timeline.length) ? l.timeline : ((b && b.timeline) || []);
+    const timelineHtml = tl.length ? `
+      <h4 class="lead-d-h">Histórico <span class="lead-d-h__sub">produto + e-mail</span></h4>
+      <div class="lead-d-timeline">${tl.slice().reverse().map((e) =>
+        `<div class="lead-d-ev ${e.ch === "email" ? "is-email" : ""}"><span class="lead-d-ev__t">${dt(e.t)}</span><span class="lead-d-ev__e">${esc(evLabel(e))}</span></div>`).join("")}</div>`
+      : `<p class="lead-empty">Sem eventos registrados ainda.</p>`;
+    const behaviorHtml = statsHtml + timelineHtml;
     panel.innerHTML = `
       <div class="lead-d-head">
         <div>
