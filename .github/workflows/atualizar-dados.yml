@@ -35,14 +35,16 @@ jobs:
           GERADOR_DB_URL: ${{ secrets.GERADOR_DB_URL }}
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
         run: node scripts/ler-leads.mjs
+      - name: Gerar financeiro.json (custo unificado, cifrado)
+        continue-on-error: true
+        env:
+          KRONOS_PASS: ${{ secrets.KRONOS_PASS }}
+          GERADOR_DB_URL: ${{ secrets.GERADOR_DB_URL }}
+          GOOGLE_CSV_URL: ${{ secrets.GOOGLE_CSV_URL }}
+          META_TOKEN: ${{ secrets.META_TOKEN }}
+        run: node scripts/ler-financeiro.mjs
       - name: Commitar se mudou
         run: |
           git config user.name "kronos-bot"
           git config user.email "bot@kronos-ias.com.br"
-          git add www/contexto/funil.json www/contexto/leads.json
-          if git diff --cached --quiet; then
-            echo "Nada mudou — sem commit."
-          else
-            git commit -m "chore(dados): atualiza funil + leads (cron)"
-            git push
-          fi
+          git add www/contexto/funil.json www/contexto/leads.json www/contexto/finan
