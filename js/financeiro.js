@@ -97,13 +97,16 @@ const Financeiro = (() => {
         <div class="fin-brk">
           ${bar(a.midia, maxCat, "c-midia", `Mídia (Google ${brl(a.google)}${a.googleParcial ? "*" : ""} + Meta ${brl(a.meta)})`, brl(a.midia))}
           ${bar(a.fixos, maxCat, "c-fixos", `Fixos / mensalidades`, brl(a.fixos))}
-          ${bar(a.api, maxCat, "c-api", `Anthropic API (produção)`, brl2(a.api))}
+          ${bar(a.api, maxCat, "c-api", `Anthropic API (produção de IA)`, brl2(a.api))}
+          <div class="fin-brk__cap">Custo de IA por <b>geração</b> (tokens do Haiku, não é custo por download):
+            ${a.apiCatN ? `${brl2(a.apiCat / a.apiCatN)}/catálogo <span>(${a.apiCatN} gerados)</span>` : "—"}
+            · ${a.apiTrN ? `${brl2(a.apiTr / a.apiTrN)}/proposta <span>(${a.apiTrN} geradas)</span>` : "sem proposta gerada no período"}</div>
         </div>
       </div>
       <div class="fin-kpis">
-        ${tile(brl2(custoCad), "Custo total / cadastro", `${a.cad} cadastros`)}
-        ${tile(a.apiCatN ? brl2(a.apiCat / a.apiCatN) : "—", "Custo / catálogo", `${a.apiCatN} gerados`)}
-        ${tile(a.apiTrN ? brl2(a.apiTr / a.apiTrN) : "—", "Custo / proposta", `${a.apiTrN} do transcript`)}
+        ${tile(brl2(custoCad), "Custo por cadastro", `tudo ÷ ${a.cad} cadastros`)}
+        ${tile(a.cad, "Cadastros", "no período")}
+        ${tile(brl(a.midia), "Investido em mídia", "Google + Meta")}
       </div>`;
 
     // ---- 3) fixos detalhado ----
