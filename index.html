@@ -80,6 +80,10 @@
           <svg class="navitem__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c0-3.4 3-6 6.5-6s6.5 2.6 6.5 6"/></svg>
           <span class="navitem__label">Leads</span>
         </button>
+        <button class="navitem" data-nav="financeiro" type="button" title="Financeiro — casa da FabIAna">
+          <svg class="navitem__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M3 20h18"/></svg>
+          <span class="navitem__label">Financeiro</span>
+        </button>
       </nav>
 
       <div class="sidebar__foot">
@@ -298,6 +302,29 @@
         <div class="lead-drawer" id="leadDrawer" hidden>
           <div class="lead-drawer__backdrop" id="leadDrawerBackdrop"></div>
           <div class="lead-drawer__panel" id="leadDrawerPanel"></div>
+        </div>
+      </div>
+
+      <!-- FINANCEIRO — a casa da FabIAna (CFO) -->
+      <div id="financeiroView" class="view" hidden>
+        <div class="view__inner">
+          <div class="kanban__head">
+            <div class="kanban__owner">
+              <span class="kanban__avatar avatar--zoomable" id="finOwnerAvatar" role="button" tabindex="0" title="Ampliar foto"><img src="assets/agents/fabiana.jpg" alt="FabIAna" /></span>
+              <div>
+                <h2 class="kanban__title">Financeiro</h2>
+                <p class="kanban__sub"><b>FabIAna</b> · CFO — o dinheiro entra e sai por aqui. Orçamento e custo de mídia sob controle.</p>
+              </div>
+            </div>
+            <div class="kanban__headright">
+              <span class="block__hint" id="finMeta"></span>
+              <button class="btn-ghost btn-ghost--sm" id="finSyncBtn" type="button" title="Atualizar — puxar o custo real">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-3"/><polyline points="4,4 4,8.5 8.5,8.5"/><path d="M4 13a8 8 0 0 0 14.9 3"/><polyline points="20,20 20,15.5 15.5,15.5"/></svg>
+                <span>Atualizar</span>
+              </button>
+            </div>
+          </div>
+          <div id="finBody"></div>
         </div>
       </div>
 
@@ -633,6 +660,10 @@
         <span class="tabbar__ico"><svg class="tabbar__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c0-3.4 3-6 6.5-6s6.5 2.6 6.5 6"/></svg></span>
         <span class="tabbar__label">Leads</span>
       </button>
+      <button class="navitem tabbar__btn" data-nav="financeiro" type="button">
+        <span class="tabbar__ico"><svg class="tabbar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M3 20h18"/></svg></span>
+        <span class="tabbar__label">Financeiro</span>
+      </button>
       <button class="navitem tabbar__btn" data-nav="config" type="button">
         <span class="tabbar__ico"><svg class="tabbar__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
         <span class="tabbar__label">Config</span>
@@ -677,6 +708,7 @@
   <script src="js/costs-view.js"></script>
   <script src="js/funil.js"></script>
   <script src="js/leads.js"></script>
+  <script src="js/financeiro.js"></script>
   <script src="js/kanban.js"></script>
   <script src="js/nucleo-view.js"></script>
   <script src="js/settings.js"></script>

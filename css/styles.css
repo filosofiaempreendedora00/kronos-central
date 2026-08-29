@@ -2583,3 +2583,35 @@ body.lead-locked { overflow: hidden !important; }
 .lead-d-setup { font-size: 12px; color: var(--areia); margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .lead-d-setup .lead-setup.is-on { background: rgba(62,207,142,.16); color: #3ECF8E; }
 .lead-d-setup .lead-setup.is-off { background: transparent; border: 1px dashed var(--areia-22); color: var(--areia); opacity: .5; text-decoration: line-through; }
+
+/* ===== FINANCEIRO — casa da FabIAna (CFO): orçamento & custo de mídia ===== */
+.fin-gauge { background: var(--sepia); border: 1px solid var(--areia-22); border-radius: 14px; padding: 18px 20px; margin-bottom: 18px; }
+.fin-gauge__head { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; color: var(--areia); letter-spacing: .02em; margin-bottom: 12px; }
+.fin-gauge__pct { font-family: var(--font-title); font-size: 22px; line-height: 1; }
+.fin-gauge.is-ok   .fin-gauge__pct { color: #3ECF8E; }
+.fin-gauge.is-warn .fin-gauge__pct { color: #E0BB6A; }
+.fin-gauge.is-over .fin-gauge__pct { color: #F0916B; }
+.fin-gauge__bar { height: 12px; border-radius: 999px; background: var(--areia-12); overflow: hidden; }
+.fin-gauge__fill { height: 100%; border-radius: 999px; transition: width .5s ease; }
+.fin-gauge.is-ok   .fin-gauge__fill { background: linear-gradient(90deg, #2f9d6d, #3ECF8E); }
+.fin-gauge.is-warn .fin-gauge__fill { background: linear-gradient(90deg, #c79a3f, #E0BB6A); }
+.fin-gauge.is-over .fin-gauge__fill { background: linear-gradient(90deg, #d06a44, #F0916B); }
+.fin-gauge__nums { margin-top: 12px; font-size: 13px; color: var(--creme); }
+.fin-gauge__nums b { font-family: var(--font-title); font-size: 20px; }
+.fin-gauge__of { color: var(--areia); }
+.fin-gauge__proj { color: var(--areia); opacity: .85; }
+.fin-kpis { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.fin-kpi { flex: 1 1 96px; min-width: 96px; background: var(--sepia); border: 1px solid var(--areia-22); border-radius: 12px; padding: 12px 14px; text-align: center; }
+.fin-kpi__n { font-family: var(--font-title); font-size: 22px; line-height: 1; color: var(--creme); }
+.fin-kpi__l { font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--areia); margin-top: 6px; }
+.fin-kpi__s { font-size: 9.5px; color: var(--areia); opacity: .8; margin-top: 3px; }
+.fin-note { background: rgba(224,187,106,.10); border: 1px solid rgba(224,187,106,.28); border-radius: 12px; padding: 12px 15px; font-size: 12.5px; line-height: 1.5; color: var(--creme); margin-bottom: 16px; }
+.fin-second { background: var(--sepia); border: 1px solid var(--areia-12); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+.fin-second__t { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--areia); margin-bottom: 8px; }
+.fin-second__row { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--creme); }
+.fin-foot { font-size: 11px; color: var(--areia); opacity: .8; line-height: 1.5; margin-top: 4px; }
+@media (max-width: 640px) {
+  .fin-gauge { padding: 15px 16px; }
+  .fin-kpi { flex: 1 1 44%; min-width: 0; }
+  .fin-kpi__n { font-size: 19px; }
+}
