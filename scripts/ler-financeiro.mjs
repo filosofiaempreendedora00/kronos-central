@@ -34,6 +34,20 @@ try { decryptDoc(JSON.parse(fs.readFileSync("www/vault.enc", "utf8"))); }
 catch (_) { console.error("✗ senha não abre o cofre. Nada gravado."); process.exit(1); }
 
 const BUDGET_GOOGLE = Number(fromEnv("BUDGET_GOOGLE") || 1500); // teto mensal R$
+const USD_BRL = Number(fromEnv("USD_BRL") || 5.5); // câmbio p/ converter API Anthropic
+// preços Anthropic USD por 1M tokens (por modelo) — p/ custo real por geração
+const PRICE = { "claude-haiku-4-5": { in: 1, out: 5 }, "claude-3-5-haiku": { in: 0.8, out: 4 },
+  "claude-sonnet-4-6": { in: 3, out: 15 }, "claude-opus-4-8": { in: 5, out: 25 } };
+const priceOf = (m) => PRICE[m] || { in: 1, out: 5 };
+// custos fixos mensais (mensalidades). Fonte: scripts/custos-fixos.json (local, gitignored, você edita)
+// ou secret CUSTOS_FIXOS_B64 (base64 do JSON) p/ o cron. Ex: [{"nome":"Claude","valorMes":500}]
+let fixos = [];
+try {
+  if (fs.existsSync("scripts/custos-fixos.json")) fixos = JSON.parse(fs.readFileSync("scripts/custos-fixos.json", "utf8"));
+  else if (fromEnv("CUSTOS_FIXOS_B64")) fixos = JSON.parse(Buffer.from(fromEnv("CUSTOS_FIXOS_B64"), "base64").toString("utf8"));
+} catch (e) { console.error("custos-fixos inválido:", e.message); fixos = []; }
+if (!Array.isArray(fixos)) fixos = [];
+const fixosTotalMes = fixos.reduce((s, f) => s + (Number(f.valorMes) || 0), 0);
 const now = new Date();
 const mStart = new Date(now.getFullYear(), now.getMonth(), 1);
 const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -80,18 +94,49 @@ if (metaTok) {
   } catch (e) { console.error("Meta indisponível:", e.message); }
 }
 
-// ---- Supabase: cadastros do mês ----
+// ---- Meta: série mensal (últimos 6 meses) ----
+let metaSeries = {}; // "YYYY-MM" -> spend
+if (metaTok) {
+  try {
+    const sixStart = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString().slice(0, 10);
+    const tr = encodeURIComponent(JSON.stringify({ since: sixStart, until: today }));
+    const j = await (await fetch(`https://graph.facebook.com/v20.0/act_1322770809264094/insights?fields=spend&time_range=${tr}&time_increment=monthly&access_token=${metaTok}`)).json();
+    for (const d of (j.data || [])) { const mk = (d.date_start || "").slice(0, 7); if (mk) metaSeries[mk] = (metaSeries[mk] || 0) + Number(d.spend || 0); }
+  } catch (e) { console.error("Meta série indisponível:", e.message); }
+}
+
+// ---- Supabase: cadastros + custo Anthropic (ai_generations) ----
 const cli = new pg.Client({ connectionString: fromEnv("GERADOR_DB_URL"), ssl: { rejectUnauthorized: false } });
 await cli.connect();
 const one = async (s, p) => (await cli.query(s, p)).rows[0].n;
 const cadMes = await one(`select count(*)::int n from organizations where created_at::date>=$1`, [mStartStr]);
 const cadGoogleMes = await one(`select count(*)::int n from organizations where created_at::date>=$1 and acquisition_gclid is not null`, [mStartStr]);
 const cadMetaMes = await one(`select count(*)::int n from organizations where created_at::date>=$1 and acquisition_fbclid is not null`, [mStartStr]);
+const apiRows = (await cli.query(`select to_char(date_trunc('month',created_at),'YYYY-MM') mes, kind, model, count(*)::int n, sum(input_tokens)::bigint tin, sum(output_tokens)::bigint tout from ai_generations group by 1,2,3`)).rows;
+const cadRows = (await cli.query(`select to_char(date_trunc('month',created_at),'YYYY-MM') mes, count(*)::int total, count(*) filter (where acquisition_gclid is not null)::int g, count(*) filter (where acquisition_fbclid is not null)::int f from organizations group by 1`)).rows;
 await cli.end();
 
+// custo Anthropic em R$ por linha
+const brlOf = (model, tin, tout) => { const p = priceOf(model); return ((Number(tin) / 1e6) * p.in + (Number(tout) / 1e6) * p.out) * USD_BRL; };
+// unit (histórico): custo médio por catálogo / por proposta
+const unit = {};
+for (const r of apiRows) { const b = brlOf(r.model, r.tin, r.tout); const u = unit[r.kind] || (unit[r.kind] = { n: 0, brl: 0 }); u.n += r.n; u.brl += b; }
+for (const k of Object.keys(unit)) unit[k].brlEach = unit[k].n ? unit[k].brl / unit[k].n : 0;
+const apiTotalBrl = Object.values(unit).reduce((s, u) => s + u.brl, 0);
+// série mensal combinada (últimos 6 meses)
 const gSpend = google ? google.spend : 0;
+const curMonth = today.slice(0, 7);
+const monthsSet = new Set([...apiRows.map((r) => r.mes), ...cadRows.map((r) => r.mes), ...Object.keys(metaSeries)]);
+const series = [...monthsSet].sort().reverse().slice(0, 6).map((mes) => {
+  const api = { catalogN: 0, catalogBrl: 0, transcriptN: 0, transcriptBrl: 0 };
+  for (const r of apiRows.filter((x) => x.mes === mes)) { const b = brlOf(r.model, r.tin, r.tout);
+    if (r.kind === "catalog") { api.catalogN += r.n; api.catalogBrl += b; } else { api.transcriptN += r.n; api.transcriptBrl += b; } }
+  const c = cadRows.find((x) => x.mes === mes) || { total: 0, g: 0, f: 0 };
+  return { mes, api, metaSpend: metaSeries[mes] || 0, googleSpend: (mes === curMonth ? gSpend : null), cad: { total: c.total, google: c.g, meta: c.f } };
+});
+
 const doc = {
-  type: "kronos.financeiro", version: 1, updatedAt: now.toISOString(),
+  type: "kronos.financeiro", version: 2, updatedAt: now.toISOString(), usdBrl: USD_BRL,
   month: { start: mStartStr, today, daysElapsed, daysInMonth },
   budget: { google: BUDGET_GOOGLE },
   google: google ? {
@@ -102,7 +147,11 @@ const doc = {
     cadMes: cadGoogleMes,
   } : null,
   meta: meta ? { ...meta, cadMes: cadMetaMes, custoPorCadastro: cadMetaMes ? meta.spend / cadMetaMes : 0 } : null,
+  fixos, fixosTotalMes,
+  api: { unit, totalBrl: apiTotalBrl },
+  series,
   cadastros: { total: cadMes, google: cadGoogleMes, meta: cadMetaMes },
 };
 fs.writeFileSync(OUT, JSON.stringify(encryptDoc(doc)));
-console.log(`ok — financeiro cifrado · Google R$${Math.round(gSpend)} de R$${BUDGET_GOOGLE} (${Math.round((gSpend/BUDGET_GOOGLE)*100)}%) · ${cadGoogleMes} cad · R$${cadGoogleMes?Math.round(gSpend/cadGoogleMes):0}/cad · Meta R$${meta?Math.round(meta.spend):0}`);
+const cat = unit.catalog || { n: 0, brlEach: 0 };
+console.log(`ok — financeiro cifrado v2 · Google R$${Math.round(gSpend)}/R$${BUDGET_GOOGLE} (${Math.round((gSpend/BUDGET_GOOGLE)*100)}%) · Meta R$${meta?Math.round(meta.spend):0} · Fixos R$${Math.round(fixosTotalMes)}/mês · API R$${apiTotalBrl.toFixed(2)} (catálogo R$${cat.brlEach.toFixed(3)}/un) · ${series.length} meses de série`);
