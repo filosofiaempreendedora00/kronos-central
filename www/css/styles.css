@@ -2574,5 +2574,6 @@ body.lead-locked { overflow: hidden !important; }
 .lead-d-h__sub { font-size: 11px; color: var(--areia); opacity: .6; font-weight: 400; font-family: var(--font-body); }
 
 /* WhatsApp clicável na lista (só opt-in) */
-.lead-wabtn { flex: 0 0 auto; font-size: 14px; line-height: 1; cursor: pointer; padding: 3px 5px; border-radius: 7px; }
-.lead-wabtn:hover { background: rgba(62,207,142,.16); }
+.lead-wabtn { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; color: #3ECF8E; background: rgba(62,207,142,.14); border-radius: 8px; cursor: pointer; transition: background .15s; }
+.lead-wabtn:hover { background: rgba(62,207,142,.28); }
+.lead-walock { flex: 0 0 auto; font-size: 11px; opacity: .5; }

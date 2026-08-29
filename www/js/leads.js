@@ -45,6 +45,7 @@ const Leads = (() => {
     const p = (n) => String(n).padStart(2, "0");
     return p(d.getDate()) + "/" + p(d.getMonth() + 1) + " " + p(d.getHours()) + ":" + p(d.getMinutes()); };
   const waUrl = (n) => "https://wa.me/" + String(n).replace(/\D/g, "");
+  const WA_SVG = `<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.4A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-2.9.8.8-2.8-.2-.3A8.2 8.2 0 1 1 12 20.2zm5.5-5.8c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.7.9-.8 1-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.4-.8-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5l-.8-2c-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.4.5.6.2 1.2.2 1.6.1.5-.1 1.6-.7 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.2-.3-.2-.5-.3z"/></svg>`;
   const lastOf = (l) => (l.behavior && l.behavior.lastSeen) || l.createdAt;
   const shortLink = (u) => { try { return new URL(u).pathname || u; } catch (_) { return String(u).slice(0, 40); } };
   const evLabel = (e) => e.ch === "email"
@@ -100,8 +101,8 @@ const Leads = (() => {
       const waDigits = l.whatsapp ? String(l.whatsapp).replace(/\D/g, "") : "";
       const wa = l.whatsapp
         ? (l.whatsappOptin
-          ? `<span class="lead-wabtn" data-wa="${waDigits}" title="Chamar no WhatsApp (autorizado)">💬</span>`
-          : `<span class="lead-wadot is-block" title="WhatsApp sem autorização (LGPD)"></span>`)
+          ? `<span class="lead-wabtn" data-wa="${waDigits}" role="button" title="Chamar no WhatsApp — ${esc(l.whatsapp)}">${WA_SVG}</span>`
+          : `<span class="lead-walock" title="WhatsApp sem autorização de contato (LGPD)">🔒</span>`)
         : "";
       const dl = l.downloads > 0 ? `<span class="lead-tag lead-mini">⬇${l.downloads}</span>` : "";
       const back = b && b.sessions >= 2 ? `<span class="lead-tag lead-mini">↻${b.sessions}</span>` : "";
