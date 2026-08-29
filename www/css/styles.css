@@ -2656,3 +2656,54 @@ body.lead-locked { overflow: hidden !important; }
   .fin-srow { grid-template-columns: 1.1fr 1fr .9fr 1fr; gap: 6px; font-size: 11px; }
   .fin-fixrow { font-size: 12.5px; }
 }
+
+/* ===== AUTOMAÇÕES WhatsApp — casa do LucIAno ===== */
+.auto-avatar { display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(145deg, #25D366, #0f9f52); color: #fff; }
+.auto-intro { font-size: 12.5px; line-height: 1.55; color: var(--areia); background: var(--sepia); border: 1px solid var(--areia-12); border-radius: 12px; padding: 12px 15px; margin-bottom: 16px; }
+.auto-intro b { color: var(--creme); }
+.auto-cards { display: flex; flex-direction: column; gap: 14px; }
+.auto-card { background: var(--sepia); border: 1px solid var(--areia-22); border-radius: 14px; padding: 16px 18px; transition: opacity .2s; }
+.auto-card.is-off { opacity: .5; }
+.auto-card__head { display: flex; align-items: flex-start; gap: 12px; }
+.auto-badge { flex: 0 0 auto; font-size: 10.5px; font-weight: 700; padding: 4px 9px; border-radius: 999px; letter-spacing: .02em; }
+.auto-s1 { background: rgba(138,160,184,.16); color: #A8BAD0; }
+.auto-s2 { background: rgba(224,187,106,.16); color: #E0BB6A; }
+.auto-s3 { background: rgba(240,145,107,.16); color: #F0916B; }
+.auto-s4 { background: rgba(62,207,142,.16); color: #3ECF8E; }
+.auto-card__ttl { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.auto-card__ttl b { color: var(--creme); font-size: 14.5px; }
+.auto-card__ttl span { color: var(--areia); font-size: 12px; }
+.auto-switch { flex: 0 0 auto; position: relative; width: 42px; height: 24px; cursor: pointer; }
+.auto-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.auto-switch span { position: absolute; inset: 0; background: var(--areia-22); border-radius: 999px; transition: .2s; }
+.auto-switch span::before { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+.auto-switch input:checked + span { background: #25D366; }
+.auto-switch input:checked + span::before { transform: translateX(18px); }
+.auto-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin: 14px 0 10px; }
+.auto-step { font-size: 11.5px; color: var(--creme); background: var(--onix); border: 1px solid var(--areia-12); border-radius: 8px; padding: 5px 9px; display: inline-flex; align-items: center; gap: 4px; }
+.auto-arrow { color: var(--areia); opacity: .6; }
+.auto-h { width: 42px; background: transparent; border: none; border-bottom: 1px solid var(--areia); color: #25D366; font-weight: 700; text-align: center; font-size: 12.5px; margin: 0 1px; }
+.auto-h::-webkit-inner-spin-button { opacity: .4; }
+.auto-msg { width: 100%; background: var(--onix); border: 1px solid var(--areia-22); border-radius: 10px; color: var(--creme); font: inherit; font-size: 13px; padding: 10px 12px; resize: vertical; line-height: 1.5; }
+.auto-msg:focus { outline: none; border-color: #25D366; }
+.auto-prev { margin-top: 8px; font-size: 12px; line-height: 1.5; color: var(--creme); background: rgba(37,211,102,.07); border: 1px solid rgba(37,211,102,.2); border-radius: 9px; padding: 8px 11px; }
+.auto-prev span { color: #25D366; font-weight: 600; }
+.auto-queue { margin-top: 14px; border-top: 1px solid var(--areia-12); padding-top: 12px; }
+.auto-queue__h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.auto-queue__h b { color: var(--creme); font-size: 13px; }
+.auto-nozap { font-size: 11px; color: var(--areia); opacity: .75; }
+.auto-list { display: flex; flex-direction: column; gap: 6px; }
+.auto-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--onix); border: 1px solid var(--areia-12); border-radius: 10px; }
+.auto-row__i { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.auto-row__i b { color: var(--creme); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auto-row__i span { color: var(--areia); font-size: 11px; }
+.auto-wa { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #fff; background: #25D366; border-radius: 8px; padding: 7px 13px; text-decoration: none; }
+.auto-wa:hover { background: #1fbb5a; }
+.auto-done { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--areia-22); background: transparent; color: var(--areia); cursor: pointer; font-size: 14px; }
+.auto-done:hover { color: #25D366; border-color: #25D366; }
+.auto-empty { font-size: 12px; color: var(--areia); opacity: .7; padding: 6px 0; }
+@media (max-width: 640px) {
+  .auto-card { padding: 14px 15px; }
+  .auto-flow { gap: 6px; }
+  .auto-wa { padding: 8px 12px; }
+}

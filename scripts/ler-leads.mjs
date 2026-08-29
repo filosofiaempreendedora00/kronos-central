@@ -58,6 +58,8 @@ const rows = await q(`
     (select c.phone from consultants c where c.org_id=o.id and c.phone ~ '[1-9]' and c.phone not like '%00000%' order by c.whatsapp_optin desc, c.sort_order, c.created_at limit 1) as wa,
     (select coalesce(c.whatsapp_optin,false) from consultants c where c.org_id=o.id and c.phone ~ '[1-9]' and c.phone not like '%00000%' order by c.whatsapp_optin desc, c.sort_order, c.created_at limit 1) as wa_optin,
     exists(select 1 from company_settings cs where cs.org_id=o.id and ((cs.logo is not null and length(cs.logo)>100) or (cs.logo_dark is not null and length(cs.logo_dark)>100))) as has_logo,
+    (exists(select 1 from ai_generations g where g.org_id=o.id and g.kind='catalog') or exists(select 1 from funnel_events e where e.org_id=o.id and e.event='catalog_generated')) as has_catalog,
+    (exists(select 1 from ai_generations g where g.org_id=o.id and g.kind='transcript') or exists(select 1 from funnel_events e where e.org_id=o.id and e.event in ('transcript_uploaded','transcript_generated'))) as has_transcript,
     exists(select 1 from consultants c where c.org_id=o.id and ((c.email ~ '@' and c.email <> 'consultor@suaempresa.com') or (c.phone ~ '[1-9]' and c.phone not like '%00000%'))) as consultant_contact,
     exists(select 1 from solutions s where s.org_id=o.id and (s.name !~ '^Solução [0-9]+$' or (s.tagline <> '' and s.tagline not in ('Resumo de uma linha do que esta solução entrega.','Outra frente de trabalho, totalmente preenchível.')))) as custom_solution,
     exists(select 1 from solution_plans p where p.org_id=o.id and (p.name !~ '^Plano [0-9]+$' or p.price not in ('R$ 2.997','R$ 4.997','R$ 14.997'))) as custom_plan,
@@ -117,6 +119,21 @@ function behavior(list) {
 
 const toIso = (d) => (d == null ? null : d instanceof Date ? d.toISOString() : String(d));
 const sourceOf = (o) => o.acquisition_fbclid ? "meta" : o.acquisition_gclid ? "google" : (o.acquisition_source || "direto");
+// telefone → dígitos wa.me (Brasil: prefixa 55 se vier sem DDI)
+function waDigits(raw) { let d = String(raw || "").replace(/\D/g, ""); if (!d) return null; if (d.length <= 11 && !d.startsWith("55")) d = "55" + d; return d; }
+// ESTÁGIO no funil (automações WhatsApp). Mesmos sinais do coletor _wa3 validado.
+// 1 chegou/nada · 2 catálogo/parou · 3 +transcript/não baixou · 4 baixou marca-d'água/não pagou · 0 cliente/fora
+function funnelStage(o, b) {
+  if (o.status === "active") return 0; // já é cliente
+  const hasCat = !!o.has_catalog;
+  const hasTr = !!o.has_transcript || (b && b.key.transcripts > 0);
+  const baixou = (Number(o.downloads_used) || 0) > 0 || (b && b.key.watermark > 0);
+  if (!hasCat) return 1;
+  if (hasCat && !hasTr && !baixou) return 2;
+  if (hasTr && !baixou) return 3;
+  if (baixou) return 4;
+  return 0;
+}
 // TEMPERATURA DINÂMICA — engajamento (proximidade do dinheiro) DECAÍDO pela recência.
 // Um quente que some vira morno e depois frio sozinho (o cron reavalia de 4/4h).
 const DECAY = { hotToWarm: 7, hotToCold: 21, warmToCold: 14, newDays: 3 }; // dias (ajustáveis)
@@ -195,6 +212,9 @@ const leads = rows
       daysSince: ts.daysSince,
       whatsapp: o.wa || null,
       whatsappOptin: !!o.wa_optin, // LGPD: só clicável se true
+      waDigits: (o.wa_optin ? waDigits(o.wa) : null), // só compõe wa.me se opt-in (LGPD)
+      stage: funnelStage(o, b), // 1..4 no funil (0 = cliente/fora) — pras automações WhatsApp
+      horasInativo: Math.floor((Date.now() - ((b && b.lastSeen) ? new Date(b.lastSeen).getTime() : new Date(o.created_at).getTime())) / 3600000),
       createdAt: toIso(o.created_at),
       firstDownloadAt: toIso(o.first_download_at),
       emailClicks: mails.filter((m) => m.type === "click").length,

@@ -244,14 +244,14 @@ function fitViewportToKeyboard() {
 
 /* --------------------- Navegação central (troca de telas) ----------------- */
 const VIEW_IDS = [
-  "dashboardView", "agentesView", "kanbanView", "leadsView", "financeiroView", "chatView", "delfosView",
+  "dashboardView", "agentesView", "kanbanView", "leadsView", "financeiroView", "automacoesView", "chatView", "delfosView",
   "costsView", "settingsView", "nucleoView", "nucleoDocView", "delfosHistoryView",
 ];
 const SUB_VIEWS = ["chatView", "delfosView", "nucleoDocView", "delfosHistoryView"];
 // Qual item da sidebar fica ativo para cada tela (sub-telas herdam a seção pai).
 const VIEW_NAV = {
   dashboardView: "dash", agentesView: "agentes", chatView: "agentes",
-  kanbanView: "kanban", leadsView: "leads", financeiroView: "financeiro",
+  kanbanView: "kanban", leadsView: "leads", financeiroView: "financeiro", automacoesView: "automacoes",
   delfosView: "dash", delfosHistoryView: "dash", costsView: "custos",
   settingsView: "config", nucleoView: "contextos", nucleoDocView: "contextos",
 };
@@ -278,6 +278,7 @@ function navGo(key) {
   else if (key === "kanban") Kanban.open();
   else if (key === "leads") Leads.open();
   else if (key === "financeiro") Financeiro.open();
+  else if (key === "automacoes") Automacoes.open();
   else if (key === "config") Settings.open();
   closeDrawer();
 }
@@ -297,6 +298,7 @@ async function syncNow(btn) {
   try { if (typeof Funil !== "undefined" && Funil.render) Funil.render(); } catch (_) {}
   try { if (typeof Leads !== "undefined" && Leads.render) Leads.render(); } catch (_) {}
   try { if (typeof Financeiro !== "undefined" && Financeiro.render) Financeiro.render(); } catch (_) {}
+  try { if (typeof Automacoes !== "undefined" && Automacoes.render) Automacoes.render(); } catch (_) {}
   closeDrawer();
   if (btn) { btn.classList.remove("is-spinning"); btn.disabled = false; }
   try { toast("✓ Dados atualizados"); } catch (_) {}
@@ -553,6 +555,7 @@ function init() {
   document.getElementById("funilSyncBtn")?.addEventListener("click", (e) => syncNow(e.currentTarget));
   document.getElementById("leadsSyncBtn")?.addEventListener("click", (e) => syncNow(e.currentTarget));
   document.getElementById("finSyncBtn")?.addEventListener("click", (e) => syncNow(e.currentTarget));
+  document.getElementById("autoSyncBtn")?.addEventListener("click", (e) => syncNow(e.currentTarget));
   if (localStorage.getItem("kronos.sidebarCollapsed") === "1") {
     document.getElementById("shell").classList.add("sidebar-collapsed");
   }

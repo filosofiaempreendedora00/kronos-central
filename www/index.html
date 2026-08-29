@@ -84,6 +84,10 @@
           <svg class="navitem__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M3 20h18"/></svg>
           <span class="navitem__label">Financeiro</span>
         </button>
+        <button class="navitem" data-nav="automacoes" type="button" title="Automações WhatsApp — casa do LucIAno">
+          <svg class="navitem__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H7l-3 3V4z"/></svg>
+          <span class="navitem__label">WhatsApp</span>
+        </button>
       </nav>
 
       <div class="sidebar__foot">
@@ -325,6 +329,29 @@
             </div>
           </div>
           <div id="finBody"></div>
+        </div>
+      </div>
+
+      <!-- AUTOMAÇÕES WhatsApp — a casa do LucIAno (CRM) -->
+      <div id="automacoesView" class="view" hidden>
+        <div class="view__inner">
+          <div class="kanban__head">
+            <div class="kanban__owner">
+              <span class="kanban__avatar auto-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2m5.8 14.03c-.24.68-1.42 1.3-1.95 1.34-.5.05-.5.42-3.16-.66-2.66-1.08-4.34-3.8-4.47-3.97-.13-.18-1.07-1.42-1.07-2.71 0-1.29.68-1.92.92-2.19.24-.26.52-.33.7-.33.18 0 .35 0 .5.01.16.01.38-.06.59.45.24.58.79 2 .86 2.14.07.14.12.31.02.5-.09.18-.14.29-.28.45-.14.16-.29.36-.42.48-.14.13-.28.28-.12.55.16.27.72 1.18 1.54 1.92 1.06.94 1.95 1.24 2.22 1.38.27.14.43.12.59-.07.16-.18.68-.79.86-1.07.18-.27.36-.22.61-.13.24.09 1.55.73 1.82.86.27.14.45.2.51.31.07.12.07.66-.17 1.34"/></svg></span>
+              <div>
+                <h2 class="kanban__title">Automações WhatsApp</h2>
+                <p class="kanban__sub"><b>LucIAno</b> · CRM — fala com quem travou, no ponto exato em que travou.</p>
+              </div>
+            </div>
+            <div class="kanban__headright">
+              <span class="block__hint" id="autoMeta"></span>
+              <button class="btn-ghost btn-ghost--sm" id="autoSyncBtn" type="button" title="Atualizar — puxar a fila do robô">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-3"/><polyline points="4,4 4,8.5 8.5,8.5"/><path d="M4 13a8 8 0 0 0 14.9 3"/><polyline points="20,20 20,15.5 15.5,15.5"/></svg>
+                <span>Atualizar</span>
+              </button>
+            </div>
+          </div>
+          <div id="autoBody"></div>
         </div>
       </div>
 
@@ -664,6 +691,10 @@
         <span class="tabbar__ico"><svg class="tabbar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M3 20h18"/></svg></span>
         <span class="tabbar__label">Financeiro</span>
       </button>
+      <button class="navitem tabbar__btn" data-nav="automacoes" type="button">
+        <span class="tabbar__ico"><svg class="tabbar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H7l-3 3V4z"/></svg></span>
+        <span class="tabbar__label">WhatsApp</span>
+      </button>
       <button class="navitem tabbar__btn" data-nav="config" type="button">
         <span class="tabbar__ico"><svg class="tabbar__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
         <span class="tabbar__label">Config</span>
@@ -709,6 +740,7 @@
   <script src="js/funil.js"></script>
   <script src="js/leads.js"></script>
   <script src="js/financeiro.js"></script>
+  <script src="js/automacoes.js"></script>
   <script src="js/kanban.js"></script>
   <script src="js/nucleo-view.js"></script>
   <script src="js/settings.js"></script>
