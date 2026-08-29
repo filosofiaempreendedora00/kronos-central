@@ -41,11 +41,15 @@ const PRICE = { "claude-haiku-4-5": { in: 1, out: 5 }, "claude-3-5-haiku": { in:
 const priceOf = (m) => PRICE[m] || { in: 1, out: 5 };
 // custos fixos mensais (mensalidades). Fonte: scripts/custos-fixos.json (local, gitignored, você edita)
 // ou secret CUSTOS_FIXOS_B64 (base64 do JSON) p/ o cron. Ex: [{"nome":"Claude","valorMes":500}]
-let fixos = [];
+// ordem: (1) arquivo local editável → (2) secret base64 → (3) preserva o que já está no financeiro.json (cron)
+let fixos = null;
 try {
   if (fs.existsSync("scripts/custos-fixos.json")) fixos = JSON.parse(fs.readFileSync("scripts/custos-fixos.json", "utf8"));
   else if (fromEnv("CUSTOS_FIXOS_B64")) fixos = JSON.parse(Buffer.from(fromEnv("CUSTOS_FIXOS_B64"), "base64").toString("utf8"));
-} catch (e) { console.error("custos-fixos inválido:", e.message); fixos = []; }
+} catch (e) { console.error("custos-fixos inválido:", e.message); fixos = null; }
+if (fixos == null && fs.existsSync(OUT)) { // cron: reaproveita os fixos já cifrados
+  try { const prev = decryptDoc(JSON.parse(fs.readFileSync(OUT, "utf8"))); if (Array.isArray(prev.fixos)) fixos = prev.fixos; } catch (_) {}
+}
 if (!Array.isArray(fixos)) fixos = [];
 const fixosTotalMes = fixos.reduce((s, f) => s + (Number(f.valorMes) || 0), 0);
 const now = new Date();
