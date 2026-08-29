@@ -119,11 +119,12 @@ const sourceOf = (o) => o.acquisition_fbclid ? "meta" : o.acquisition_gclid ? "g
 // TEMPERATURA DINÂMICA — engajamento (proximidade do dinheiro) DECAÍDO pela recência.
 // Um quente que some vira morno e depois frio sozinho (o cron reavalia de 4/4h).
 const DECAY = { hotToWarm: 7, hotToCold: 21, warmToCold: 14, newDays: 3 }; // dias (ajustáveis)
-function tempSituation(o, b, lastEmailClickMs) {
+// Recência = atividade de PRODUTO (funnel_events). O gerador também tem essa tabela,
+// então o critério é 100% replicável lá (e-mail fica só no histórico, não na temperatura).
+function tempSituation(o, b) {
   if (o.status === "active") return { temp: "cliente", situation: "cliente", daysSince: 0 };
   const now = Date.now();
-  const prodMs = (b && b.lastSeen) ? new Date(b.lastSeen).getTime() : new Date(o.created_at).getTime();
-  const lastMs = Math.max(prodMs, lastEmailClickMs || 0); // clique em e-mail também é atividade recente
+  const lastMs = (b && b.lastSeen) ? new Date(b.lastSeen).getTime() : new Date(o.created_at).getTime();
   const daysSince = Math.max(0, Math.floor((now - lastMs) / 86400000));
   const createdDays = Math.max(0, Math.floor((now - new Date(o.created_at).getTime()) / 86400000));
   const money = ((o.downloads_used || 0) >= 1) ||
@@ -173,8 +174,7 @@ const leads = rows
   .map((o) => {
     const b = behavior(byOrg[o.id]);
     const mails = emailByAddr[String(o.email || "").toLowerCase()] || [];
-    const lastClickMs = mails.filter((m) => m.type === "click").map((m) => new Date(m.t).getTime()).sort((a, c) => c - a)[0] || 0;
-    const ts = tempSituation(o, b, lastClickMs);
+    const ts = tempSituation(o, b);
     // histórico combinado (produto + e-mail), ordenado por data, últimos 25
     const prod = ((b && b.timeline) || []).map((e) => ({ ...e, ch: "product" }));
     const mail = mails.map((m) => ({ e: m.type === "click" ? "email_click" : "email_open", t: m.t, ch: "email", link: m.link, subject: m.subject }));
