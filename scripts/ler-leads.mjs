@@ -60,6 +60,7 @@ const rows = await q(`
     exists(select 1 from company_settings cs where cs.org_id=o.id and ((cs.logo is not null and length(cs.logo)>100) or (cs.logo_dark is not null and length(cs.logo_dark)>100))) as has_logo,
     exists(select 1 from consultants c where c.org_id=o.id and ((c.email ~ '@' and c.email <> 'consultor@suaempresa.com') or (c.phone ~ '[1-9]' and c.phone not like '%00000%'))) as consultant_contact,
     exists(select 1 from solutions s where s.org_id=o.id and (s.name !~ '^Solução [0-9]+$' or (s.tagline <> '' and s.tagline not in ('Resumo de uma linha do que esta solução entrega.','Outra frente de trabalho, totalmente preenchível.')))) as custom_solution,
+    exists(select 1 from solution_plans p where p.org_id=o.id and (p.name !~ '^Plano [0-9]+$' or p.price not in ('R$ 2.997','R$ 4.997','R$ 14.997'))) as custom_plan,
     (select string_agg(name,' · ') from (select name from solutions s where s.org_id=o.id and s.name !~ '^Solução [0-9]+$' order by created_at limit 3) x) as catalogo
   from organizations o
   order by o.created_at desc
@@ -184,6 +185,7 @@ const leads = rows
       email: o.email || null,
       name: o.name || null,
       catalogo: o.catalogo || null,
+      setup: { logo: !!o.has_logo, solucao: !!o.custom_solution, contato: !!o.consultant_contact, plano: !!o.custom_plan },
       plan: o.plan,
       status: o.status,
       downloads: Number(o.downloads_used) || 0,

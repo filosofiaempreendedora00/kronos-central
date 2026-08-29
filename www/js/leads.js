@@ -16,6 +16,9 @@ const Leads = (() => {
     morno: { l: "Morno", c: "lead-t--morno" }, frio: { l: "Frio", c: "lead-t--frio" },
   };
   const TRANK = { cliente: 4, quente: 3, morno: 2, frio: 1 };
+  // Setup que o lead configurou (espelha o painel do gerador): logo · solução · contato · plano
+  const SETUP = [["logo", "logo"], ["solucao", "solução"], ["contato", "contato"], ["plano", "plano"]];
+  const setupTags = (l) => l.setup ? SETUP.filter(([k]) => l.setup[k]).map(([, lbl]) => `<span class="lead-setup">${lbl}</span>`).join("") : "";
   const SITL = { esfriando: "esfriando", dormente: "dormente", novo: "novo", ativo: "ativo", espiou: "só espiou", sumiu: "sumiu", cliente: "cliente" };
   const srcB = (s) => ({
     meta: { l: "Meta", c: "lead-s--meta" }, google: { l: "Google", c: "lead-s--google" },
@@ -110,7 +113,7 @@ const Leads = (() => {
         <span class="lead-lead"><span class="lead-badge ${t.c}">${t.l}</span></span>
         <span class="lead-row__main">
           <span class="lead-row__top"><span class="lead-id">${esc(l.email || l.name || "—")}</span>${wa}<span class="lead-when">${since(lastOf(l))}</span></span>
-          <span class="lead-row__tags"><span class="lead-tag ${s.c}">${s.l}</span>${dl}${back}</span>
+          <span class="lead-row__tags"><span class="lead-tag ${s.c}">${s.l}</span>${dl}${back}${setupTags(l)}</span>
         </span>
       </button>`;
     }).join("");
@@ -165,6 +168,7 @@ const Leads = (() => {
           ${l.catalogo ? `<p class="lead-d-cat">${esc(l.catalogo)}</p>` : ""}
           <p class="lead-d-sub">Cadastrou ${since(l.createdAt)} · plano ${esc(l.plan || "—")} · ${l.status === "active" ? "PAGANTE" : "grátis"}</p>
           <p class="lead-d-sit ${SITL[l.situation] ? "sit-txt--" + l.situation : ""}">${(SITL[l.situation] || l.situation)} · ${sitTxt}</p>
+          ${l.setup ? `<p class="lead-d-setup">Configurou: ${SETUP.map(([k, lbl]) => `<span class="lead-setup ${l.setup[k] ? "is-on" : "is-off"}">${lbl}</span>`).join("")}</p>` : ""}
         </div>
         <button class="lead-d-close" id="leadDClose" type="button" aria-label="Fechar">✕</button>
       </div>
