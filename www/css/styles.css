@@ -2641,3 +2641,18 @@ body.lead-locked { overflow: hidden !important; }
 .fin-srow--h { font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: var(--areia); border-bottom: 1px solid var(--areia-22); }
 .fin-srow__m { font-weight: 600; }
 .fin-srow span:not(.fin-srow__m) { text-align: right; }
+
+/* legenda do custo de IA por geração + responsivo mobile (FabIAna) */
+.fin-brk__cap { margin-top: 4px; font-size: 11.5px; line-height: 1.5; color: var(--areia); background: rgba(62,207,142,.06); border: 1px solid var(--areia-12); border-radius: 9px; padding: 8px 11px; }
+.fin-brk__cap b { color: var(--creme); }
+.fin-brk__cap span { opacity: .7; }
+@media (max-width: 640px) {
+  .fin-total { font-size: 27px; }
+  .fin-total__sub { display: block; margin-top: 4px; }
+  .fin-sec { padding: 14px 15px; }
+  .fin-sec__head { flex-direction: column; align-items: flex-start; }
+  .fin-perchips { width: 100%; }
+  .fin-brk__top { font-size: 12px; }
+  .fin-srow { grid-template-columns: 1.1fr 1fr .9fr 1fr; gap: 6px; font-size: 11px; }
+  .fin-fixrow { font-size: 12.5px; }
+}
