@@ -2707,3 +2707,24 @@ body.lead-locked { overflow: hidden !important; }
   .auto-flow { gap: 6px; }
   .auto-wa { padding: 8px 12px; }
 }
+
+/* ===== Automações WhatsApp — ajustes (barra atualizar, enviados, campo maior) ===== */
+.auto-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.auto-refresh { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: #fff; background: #25D366; border: none; border-radius: 10px; padding: 9px 15px; cursor: pointer; }
+.auto-refresh:hover { background: #1fbb5a; }
+.auto-refresh:disabled { opacity: .6; cursor: default; }
+.auto-refresh.is-loading svg { animation: auto-spin 1s linear infinite; }
+@keyframes auto-spin { to { transform: rotate(360deg); } }
+.auto-msg { min-height: 104px; font-size: 14px; }
+.auto-sent { margin-top: 12px; border-top: 1px solid var(--areia-12); padding-top: 10px; }
+.auto-sent summary { cursor: pointer; font-size: 12.5px; color: var(--areia); list-style: none; user-select: none; padding: 2px 0; }
+.auto-sent summary::-webkit-details-marker { display: none; }
+.auto-sent summary::before { content: "▸ "; color: #25D366; }
+.auto-sent[open] summary::before { content: "▾ "; }
+.auto-sent .auto-list { margin-top: 8px; }
+.auto-row.is-sent { opacity: .72; }
+.auto-row.is-sent .auto-row__i b { text-decoration: none; }
+.auto-wa--ghost { background: transparent; color: #25D366; border: 1px solid #25D366; padding: 6px 11px; }
+.auto-wa--ghost:hover { background: rgba(37,211,102,.12); }
+.auto-undo { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--areia-22); background: transparent; color: var(--areia); cursor: pointer; font-size: 13px; }
+.auto-undo:hover { color: var(--creme); border-color: var(--areia); }
