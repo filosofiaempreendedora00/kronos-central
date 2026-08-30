@@ -135,8 +135,9 @@ const Leads = (() => {
       <span class="lead-wa-note">⚠ Sem autorização de contato (LGPD). Não abrir — o lead não consentiu.</span></div>`;
   }
 
-  function openDetail(id) {
-    const l = BYID[id]; if (!l) return;
+  function openDetail(id) { const l = BYID[id]; if (l) drawLead(l); }
+  function drawLead(l) {
+    if (!l) return;
     const drawer = document.getElementById("leadDrawer"), panel = document.getElementById("leadDrawerPanel");
     if (!drawer || !panel) return;
     const t = TEMP[l.temperature] || TEMP.frio, s = srcB(l.source), b = l.behavior;
@@ -182,6 +183,8 @@ const Leads = (() => {
     document.body.classList.add("lead-locked");
     panel.scrollTop = 0;
     document.getElementById("leadDClose").addEventListener("click", closeDetail);
+    const bd = document.getElementById("leadDrawerBackdrop");
+    if (bd && !bd.dataset.wired) { bd.dataset.wired = "1"; bd.addEventListener("click", closeDetail); }
   }
   function closeDetail() {
     const d = document.getElementById("leadDrawer"); if (d) d.hidden = true;
@@ -202,5 +205,5 @@ const Leads = (() => {
 
   async function open() { if (typeof showView === "function") showView("leadsView"); await render(); }
 
-  return { open, render };
+  return { open, render, openDrawer: drawLead };
 })();
