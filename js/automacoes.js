@@ -7,7 +7,7 @@
 const Automacoes = (() => {
   const PATH = "www/contexto/leads.json";
   const LINK = "https://gerador.kronos-ias.com.br"; // {link} nas mensagens
-  const K_FLOWS = "kronos.wa.flows.v2";
+  const K_FLOWS = "kronos.wa.flows.v3";
   const K_SENT = "kronos.wa.sent.v1";
   let LEADS = [];
   let byId = {};
@@ -15,13 +15,13 @@ const Automacoes = (() => {
   // ---- definição dos 4 estágios (defaults editáveis) ----
   const STAGES = [
     { id: 1, nome: "Chegou e não fez nada", desc: "Criou conta mas não gerou nem o catálogo.", esperaH: 24,
-      msg: "Oi {nome}, aqui é o Roberto, da Kronos Propostas. Sua conta já está pronta, mas você ainda não gerou nenhuma proposta. Em uns 2 minutos dá pra montar uma proposta profissional aqui: {link}. Salva meu contato como \"Roberto - Propostas Kronos\" que eu te dou uma força no que precisar." },
+      msg: "Oi! Aqui é o Roberto, da Kronos Propostas. Sua conta já está pronta, mas você ainda não gerou nenhuma proposta. Em uns 2 minutos dá pra montar uma proposta profissional aqui: {link}. Salva meu contato como \"Roberto - Propostas Kronos\" que eu te dou uma força no que precisar." },
     { id: 2, nome: "Gerou o catálogo e parou", desc: "Montou o catálogo do negócio, mas não virou proposta.", esperaH: 24,
-      msg: "Oi {nome}, aqui é o Roberto, da Kronos Propostas. Vi que você já montou o catálogo do {negocio} — ficou bom. Falta só o passo final: virar uma proposta pronta pra enviar ao seu cliente. É rápido, é só voltar aqui: {link}. Salva meu contato como \"Roberto - Propostas Kronos\" que, se travar em algo, eu te ajudo." },
+      msg: "Oi! Aqui é o Roberto, da Kronos Propostas. Vi que você já montou o catálogo do seu negócio — ficou bom. Falta só o passo final: virar isso numa proposta pronta pra enviar ao seu cliente. É rápido, é só voltar aqui: {link}. Salva meu contato como \"Roberto - Propostas Kronos\" que, se travar em algo, eu te ajudo." },
     { id: 3, nome: "Subiu transcript, não baixou", desc: "Catálogo + transcript, mas não chegou na proposta final.", esperaH: 12,
-      msg: "Oi {nome}, aqui é o Roberto, da Kronos Propostas. Sua proposta do {negocio} está quase pronta — você já subiu o transcript, falta só finalizar e baixar. Vale terminar hoje pra já mandar pro seu cliente: {link}. Salva meu contato como \"Roberto - Propostas Kronos\" que eu finalizo junto com você se precisar." },
+      msg: "Oi! Aqui é o Roberto, da Kronos Propostas. Sua proposta está quase pronta — você já subiu o transcript, falta só finalizar e baixar. Vale terminar hoje pra já mandar pro seu cliente: {link}. Salva meu contato como \"Roberto - Propostas Kronos\" que eu finalizo junto com você se precisar." },
     { id: 4, nome: "Baixou marca-d'água, não pagou", desc: "Viu o resultado (proposta com marca-d'água) e não converteu.", esperaH: 6,
-      msg: "Oi {nome}, aqui é o Roberto, da Kronos Propostas. Vi que você gerou sua proposta e baixou com a marca-d'água. Se curtiu o resultado, consigo te liberar a versão limpa com uma condição especial — quer que eu te passe? Salva meu contato como \"Roberto - Propostas Kronos\" e me chama que a gente resolve por aqui: {link}" },
+      msg: "Oi! Aqui é o Roberto, da Kronos Propostas. Vi que você gerou sua proposta e baixou com a marca-d'água. Se curtiu o resultado, consigo te liberar a versão limpa com uma condição especial — quer que eu te passe? Salva meu contato como \"Roberto - Propostas Kronos\" e me chama que a gente resolve por aqui: {link}" },
   ];
 
   // ---- estado persistido ----
@@ -113,7 +113,7 @@ const Automacoes = (() => {
           <span class="auto-step">⏱ Espera <input class="auto-h" type="number" min="0" data-act="esperaH" value="${f.esperaH}">h</span>
           <span class="auto-arrow">→</span><span class="auto-step">💬 Mensagem</span>
         </div>
-        <textarea class="auto-msg" data-act="msg" rows="5" placeholder="Mensagem… use {nome}, {negocio}, {link}">${f.msg.replace(/</g, "&lt;")}</textarea>
+        <textarea class="auto-msg" data-act="msg" rows="5" placeholder="Mensagem… use {link} (e {nome}/{negocio} quando os nomes forem confiáveis)">${f.msg.replace(/</g, "&lt;")}</textarea>
         ${prev ? `<div class="auto-prev"><span>Prévia (${firstName(prev.name) || prev.name}):</span> ${compose(f.msg, prev).replace(/</g, "&lt;")}</div>` : ""}
         <div class="auto-queue">
           <div class="auto-queue__h"><b>Fila agora: ${q.length}</b>${sZ ? `<span class="auto-nozap">${sZ} no estágio sem WhatsApp</span>` : ""}</div>
