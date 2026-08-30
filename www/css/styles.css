@@ -2728,3 +2728,8 @@ body.lead-locked { overflow: hidden !important; }
 .auto-wa--ghost:hover { background: rgba(37,211,102,.12); }
 .auto-undo { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--areia-22); background: transparent; color: var(--areia); cursor: pointer; font-size: 13px; }
 .auto-undo:hover { color: var(--creme); border-color: var(--areia); }
+
+/* nome do lead clicável (abre histórico) nas automações */
+.auto-row__i { background: transparent; border: 0; padding: 0; text-align: left; font: inherit; cursor: pointer; }
+.auto-row__i:hover b { color: #25D366; }
+.auto-row__i:hover span { color: var(--creme); }

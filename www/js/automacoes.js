@@ -125,7 +125,7 @@ const Automacoes = (() => {
   }
   function rowHTML(l, id) {
     return `<div class="auto-row" data-org="${l.id}">
-      <div class="auto-row__i"><b>${(l.name || "—").replace(/</g, "&lt;")}</b><span>parado há ${hDur(l.horasInativo)} · ${l.source}</span></div>
+      <button class="auto-row__i" data-detail title="Ver histórico deste lead"><b>${(l.name || "—").replace(/</g, "&lt;")}</b><span>parado há ${hDur(l.horasInativo)} · ${l.source} · ver histórico ›</span></button>
       <a class="auto-wa" href="${waLink(l, flows[id].msg)}" target="_blank" rel="noopener">WhatsApp</a>
       <button class="auto-done" data-done="${id}" title="Marcar como enviado (move pra Enviados)">✓</button>
     </div>`;
@@ -133,7 +133,7 @@ const Automacoes = (() => {
   function sentRowHTML(e, id) {
     const l = e.l;
     return `<div class="auto-row is-sent" data-org="${l.id}">
-      <div class="auto-row__i"><b>${(l.name || "—").replace(/</g, "&lt;")}</b><span>enviado há ${hAgo(e.at)}${l.stage !== id ? " · já avançou" : ""}</span></div>
+      <button class="auto-row__i" data-detail title="Ver histórico deste lead"><b>${(l.name || "—").replace(/</g, "&lt;")}</b><span>enviado há ${hAgo(e.at)}${l.stage !== id ? " · já avançou" : ""} · ver histórico ›</span></button>
       <a class="auto-wa auto-wa--ghost" href="${waLink(l, flows[id].msg)}" target="_blank" rel="noopener">reabrir</a>
       <button class="auto-undo" data-undo="${id}" title="Desmarcar (volta pra fila)">↩</button>
     </div>`;
@@ -161,6 +161,10 @@ const Automacoes = (() => {
       card.querySelectorAll("[data-undo]").forEach((btn) => btn.addEventListener("click", () => {
         const org = btn.closest("[data-org]").getAttribute("data-org");
         delete sent[sentKey(org, id)]; saveSent(); render();
+      }));
+      card.querySelectorAll("[data-detail]").forEach((btn) => btn.addEventListener("click", () => {
+        const org = btn.closest("[data-org]").getAttribute("data-org");
+        if (typeof Leads !== "undefined" && Leads.openDrawer) Leads.openDrawer(byId[org]);
       }));
     });
   }
