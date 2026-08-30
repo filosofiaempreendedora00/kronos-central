@@ -7,7 +7,7 @@
 const Automacoes = (() => {
   const PATH = "www/contexto/leads.json";
   const LINK = "https://gerador.kronos-ias.com.br"; // {link} nas mensagens
-  const K_FLOWS = "kronos.wa.flows.v1";
+  const K_FLOWS = "kronos.wa.flows.v2";
   const K_SENT = "kronos.wa.sent.v1";
   let LEADS = [];
   let byId = {};
@@ -15,13 +15,13 @@ const Automacoes = (() => {
   // ---- definição dos 4 estágios (defaults editáveis) ----
   const STAGES = [
     { id: 1, nome: "Chegou e não fez nada", desc: "Criou conta mas não gerou nem o catálogo.", esperaH: 24,
-      msg: "Oi {nome}! Vi que você criou conta na Kronos mas ainda não gerou sua primeira proposta. Quer que eu te mande um exemplo pronto do seu segmento pra ver como fica? Leva 2 min 🙂" },
+      msg: "Oi {nome}, aqui é o Roberto, da Kronos Propostas. Sua conta já está pronta, mas você ainda não gerou nenhuma proposta. Em uns 2 minutos dá pra montar uma proposta profissional aqui: {link}. Salva meu contato como \"Roberto - Propostas Kronos\" que eu te dou uma força no que precisar." },
     { id: 2, nome: "Gerou o catálogo e parou", desc: "Montou o catálogo do negócio, mas não virou proposta.", esperaH: 24,
-      msg: "Oi {nome}! Você já montou o catálogo do {negocio} aqui na Kronos 👏 Faltou só transformar isso numa proposta. Quer que eu te mostre como fechar em 1 clique?" },
+      msg: "Oi {nome}, aqui é o Roberto, da Kronos Propostas. Vi que você já montou o catálogo do {negocio} — ficou bom. Falta só o passo final: virar uma proposta pronta pra enviar ao seu cliente. É rápido, é só voltar aqui: {link}. Salva meu contato como \"Roberto - Propostas Kronos\" que, se travar em algo, eu te ajudo." },
     { id: 3, nome: "Subiu transcript, não baixou", desc: "Catálogo + transcript, mas não chegou na proposta final.", esperaH: 12,
-      msg: "Oi {nome}! Sua proposta do {negocio} está praticamente pronta — vi que você já subiu o transcript. Quer ajuda pra finalizar e enviar pro seu cliente ainda hoje?" },
+      msg: "Oi {nome}, aqui é o Roberto, da Kronos Propostas. Sua proposta do {negocio} está quase pronta — você já subiu o transcript, falta só finalizar e baixar. Vale terminar hoje pra já mandar pro seu cliente: {link}. Salva meu contato como \"Roberto - Propostas Kronos\" que eu finalizo junto com você se precisar." },
     { id: 4, nome: "Baixou marca-d'água, não pagou", desc: "Viu o resultado (proposta com marca-d'água) e não converteu.", esperaH: 6,
-      msg: "Oi {nome}! Vi que você gerou uma proposta no Kronos 🚀 Curtiu o resultado? Posso te liberar a versão sem marca-d'água com uma condição especial. Topa uma conversa rápida?" },
+      msg: "Oi {nome}, aqui é o Roberto, da Kronos Propostas. Vi que você gerou sua proposta e baixou com a marca-d'água. Se curtiu o resultado, consigo te liberar a versão limpa com uma condição especial — quer que eu te passe? Salva meu contato como \"Roberto - Propostas Kronos\" e me chama que a gente resolve por aqui: {link}" },
   ];
 
   // ---- estado persistido ----
