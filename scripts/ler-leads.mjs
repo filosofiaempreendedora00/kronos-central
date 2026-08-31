@@ -145,10 +145,12 @@ function tempSituation(o, b) {
   const lastMs = (b && b.lastSeen) ? new Date(b.lastSeen).getTime() : new Date(o.created_at).getTime();
   const daysSince = Math.max(0, Math.floor((now - lastMs) / 86400000));
   const createdDays = Math.max(0, Math.floor((now - new Date(o.created_at).getTime()) / 86400000));
-  const money = ((o.downloads_used || 0) >= 1) ||
-    (b && (b.key.unlockClicks > 0 || b.key.watermark > 0 || b.key.upgradeViews > 0));
-  const activated = money || (b && b.key.transcripts > 0) || o.has_logo || o.custom_solution || o.consultant_contact;
-  const base = money ? "quente" : activated ? "morno" : "frio";
+  // QUENTE exige BAIXAR uma proposta (download) — critério mínimo. Só ver o paywall,
+  // clicar em desbloquear ou preencher NÃO é quente; é intenção/engajamento = MORNO.
+  const baixou = ((o.downloads_used || 0) >= 1) || (b && b.key.watermark > 0);
+  const engajou = baixou || (b && (b.key.unlockClicks > 0 || b.key.upgradeViews > 0 || b.key.transcripts > 0))
+    || o.has_logo || o.custom_solution || o.consultant_contact;
+  const base = baixou ? "quente" : engajou ? "morno" : "frio";
   if (base === "quente") {
     if (daysSince <= DECAY.hotToWarm) return { temp: "quente", situation: "ativo", daysSince };
     if (daysSince <= DECAY.hotToCold) return { temp: "morno", situation: "esfriando", daysSince };
