@@ -1,7 +1,7 @@
 name: Atualizar dados
 on:
   schedule:
-    - cron: "0 */4 * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 permissions:
   contents: write
@@ -43,8 +43,25 @@ jobs:
           GOOGLE_CSV_URL: ${{ secrets.GOOGLE_CSV_URL }}
           META_TOKEN: ${{ secrets.META_TOKEN }}
         run: node scripts/ler-financeiro.mjs
-      - name: Commitar se mudou
+      - name: Commitar se mudou (aguenta corrida de push)
         run: |
           git config user.name "kronos-bot"
           git config user.email "bot@kronos-ias.com.br"
-          git add www/contexto/funil.json www/contexto/leads.json www/contexto/finan
+          git add www/contexto/funil.json www/contexto/leads.json www/contexto/financeiro.json
+          if git diff --cached --quiet; then
+            echo "Nada mudou — sem commit."
+            exit 0
+          fi
+          git commit -m "chore(dados): atualiza funil + leads + financeiro (cron)"
+          for i in 1 2 3 4 5; do
+            git fetch origin main
+            if git rebase -X theirs origin/main && git push origin HEAD:main; then
+              echo "push ok na tentativa $i"
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            echo "corrida de push — tentativa $i falhou, re-tentando em 6s..."
+            sleep 6
+          done
+          echo "push falhou apos 5 tentativas"
+          exit 1
