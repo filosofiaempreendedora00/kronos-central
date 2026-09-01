@@ -75,6 +75,12 @@ const Automacoes = (() => {
     }
     return out.sort((a, b) => new Date(b.at) - new Date(a.at));
   }
+  // no estágio + com WhatsApp, mas ainda dentro do tempo de espera (não "saiu" ainda)
+  function aguardando(id) {
+    const f = flows[id];
+    return LEADS.filter((l) => l.stage === id && l.waDigits && l.horasInativo < f.esperaH && !isSent(l, id))
+      .sort((a, b) => (f.esperaH - a.horasInativo) - (f.esperaH - b.horasInativo));
+  }
   const semZap = (id) => LEADS.filter((l) => l.stage === id && !l.waDigits).length;
   const hDur = (h) => h < 24 ? h + "h" : Math.floor(h / 24) + "d";
   const hAgo = (iso) => { const h = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 3600000)); return hDur(h); };
@@ -101,7 +107,7 @@ const Automacoes = (() => {
   }
 
   function cardHTML(s) {
-    const f = flows[s.id]; const q = fila(s.id); const env = enviados(s.id); const sZ = semZap(s.id); const prev = q[0] || env[0] && env[0].l;
+    const f = flows[s.id]; const q = fila(s.id); const ag = aguardando(s.id); const env = enviados(s.id); const sZ = semZap(s.id); const prev = q[0] || ag[0] || (env[0] && env[0].l);
     return `
       <div class="auto-card" data-stage="${s.id}">
         <div class="auto-card__head">
@@ -119,9 +125,19 @@ const Automacoes = (() => {
           <div class="auto-queue__h"><b>Fila agora: ${q.length}</b>${sZ ? `<span class="auto-nozap">${sZ} no estágio sem WhatsApp</span>` : ""}</div>
           ${q.length ? `<div class="auto-list">${q.slice(0, 30).map((l) => rowHTML(l, s.id)).join("")}</div>` : `<div class="auto-empty">Ninguém elegível agora.</div>`}
         </div>
+        ${ag.length ? `<details class="auto-wait"><summary>Aguardando o tempo de espera: ${ag.length}</summary>
+          <div class="auto-list">${ag.slice(0, 30).map((l) => waitRowHTML(l, s.id, f.esperaH)).join("")}</div></details>` : ""}
         ${env.length ? `<details class="auto-sent"><summary>Enviados: ${env.length}</summary>
           <div class="auto-list">${env.slice(0, 50).map((e) => sentRowHTML(e, s.id)).join("")}</div></details>` : ""}
       </div>`;
+  }
+  function waitRowHTML(l, id, esperaH) {
+    const falta = Math.max(0, Math.round(esperaH - l.horasInativo));
+    return `<div class="auto-row is-wait" data-org="${l.id}">
+      <button class="auto-row__i" data-detail title="Ver histórico deste lead"><b>${(l.name || "—").replace(/</g, "&lt;")}</b><span>pronto em ~${falta}h · ${l.source} · ver histórico ›</span></button>
+      <a class="auto-wa auto-wa--ghost" href="${waLink(l, flows[id].msg)}" target="_blank" rel="noopener">enviar já</a>
+      <button class="auto-done" data-done="${id}" title="Marcar como enviado">✓</button>
+    </div>`;
   }
   function rowHTML(l, id) {
     return `<div class="auto-row" data-org="${l.id}">
