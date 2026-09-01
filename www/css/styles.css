@@ -2742,3 +2742,18 @@ body.lead-locked { overflow: hidden !important; }
 .auto-wait[open] summary::before { content: "▾ "; }
 .auto-wait .auto-list { margin-top: 8px; }
 .auto-row.is-wait { opacity: .85; border-style: dashed; }
+
+/* Automações — visão desktop (opere pelo celular + panorama) */
+.auto-desktop { display: flex; gap: 16px; align-items: flex-start; background: var(--sepia); border: 1px solid var(--areia-22); border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; }
+.auto-desktop__ico { font-size: 30px; line-height: 1; }
+.auto-desktop__txt h3 { color: var(--creme); font-size: 16px; margin: 0 0 6px; }
+.auto-desktop__txt p { color: var(--areia); font-size: 13px; line-height: 1.55; margin: 0; }
+.auto-desktop__txt b { color: var(--creme); }
+.auto-pano { background: var(--sepia); border: 1px solid var(--areia-12); border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; }
+.auto-pano__h { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--areia); margin-bottom: 10px; }
+.auto-pano__h span { text-transform: none; letter-spacing: 0; opacity: .7; }
+.auto-pano__row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--areia-12); }
+.auto-pano__row:last-child { border-bottom: 0; }
+.auto-pano__n { flex: 1 1 auto; color: var(--creme); font-size: 13px; }
+.auto-pano__tot { font-family: var(--font-title); font-size: 20px; color: var(--creme); }
+.auto-pano__wa { color: var(--areia); font-size: 12px; min-width: 108px; text-align: right; }
