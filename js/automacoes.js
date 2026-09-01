@@ -85,10 +85,15 @@ const Automacoes = (() => {
   const hDur = (h) => h < 24 ? h + "h" : Math.floor(h / 24) + "d";
   const hAgo = (iso) => { const h = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 3600000)); return hDur(h); };
 
+  const isMobile = () => { try { return window.matchMedia("(max-width: 768px)").matches; } catch (_) { return true; } };
+
   function render() {
     const body = document.getElementById("autoBody"); const meta = document.getElementById("autoMeta");
     if (!body) return;
     if (!LEADS.length) { body.innerHTML = `<p class="lead-empty">Sem dados (rode ler-leads.mjs / cron).</p>`; return; }
+    // WhatsApp é operado no CELULAR (envios + "enviados" ficam no localStorage do telefone).
+    // No desktop NÃO mostramos fila/enviados pra não exibir estado defasado — só o panorama do snapshot.
+    if (!isMobile()) { renderDesktop(body, meta); return; }
     const totalFila = STAGES.reduce((s, st) => s + fila(st.id).length, 0);
     if (meta) meta.textContent = totalFila ? `${totalFila} na fila agora` : "fila vazia";
 
@@ -104,6 +109,33 @@ const Automacoes = (() => {
       <p class="fin-foot">Envio 1-toque do seu número. "Automático de verdade" (API) é fase 2 e pluga nesta mesma fila. Config, "já enviei" e estágios refletem o último sync (o robô reavalia de 4/4h; toque em Atualizar pra puxar agora).</p>`;
 
     wire();
+  }
+
+  function renderDesktop(body, meta) {
+    if (meta) meta.textContent = "opere pelo celular";
+    const inStage = (id) => LEADS.filter((l) => l.stage === id).length;
+    const withWa = (id) => LEADS.filter((l) => l.stage === id && l.waDigits).length;
+    body.innerHTML = `
+      <div class="auto-bar">
+        <button class="auto-refresh" id="autoRefreshStages" type="button" title="Puxar o snapshot mais recente">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3"/><polyline points="4,4 4,8.5 8.5,8.5"/><path d="M4 13a8 8 0 0 0 14.9 3"/><polyline points="20,20 20,15.5 15.5,15.5"/></svg>
+          <span>Atualizar</span>
+        </button>
+      </div>
+      <div class="auto-desktop">
+        <div class="auto-desktop__ico">📱</div>
+        <div class="auto-desktop__txt">
+          <h3>Opere as automações pelo celular</h3>
+          <p>Você envia as mensagens e marca os "enviados" pelo WhatsApp do celular — é lá que fica o controle. Aqui no desktop <b>não mostramos a fila nem os enviados</b> pra não te confundir com um estado que não está neste aparelho.</p>
+        </div>
+      </div>
+      <div class="auto-pano">
+        <div class="auto-pano__h">Panorama de agora <span>(do último sync)</span></div>
+        ${STAGES.map((s) => `<div class="auto-pano__row"><span class="auto-badge auto-s${s.id}">E${s.id}</span><span class="auto-pano__n">${s.nome}</span><b class="auto-pano__tot">${inStage(s.id)}</b><span class="auto-pano__wa">${withWa(s.id)} c/ WhatsApp</span></div>`).join("")}
+      </div>
+      <p class="fin-foot">Abra a Central no celular para ver a fila, os "aguardando" e enviar as mensagens. Os "enviados" ficam salvos no seu telefone — persistem ao fechar/reabrir o app; só somem se você limpar os dados do navegador/app.</p>`;
+    const rb = document.getElementById("autoRefreshStages");
+    if (rb) rb.addEventListener("click", async () => { rb.disabled = true; const sp = rb.querySelector("span"); if (sp) sp.textContent = "Atualizando…"; LEADS = await load(); byId = {}; for (const l of LEADS) byId[l.id] = l; render(); });
   }
 
   function cardHTML(s) {
