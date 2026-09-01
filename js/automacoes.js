@@ -157,7 +157,7 @@ const Automacoes = (() => {
           <div class="auto-queue__h"><b>Fila agora: ${q.length}</b>${sZ ? `<span class="auto-nozap">${sZ} no estágio sem WhatsApp</span>` : ""}</div>
           ${q.length ? `<div class="auto-list">${q.slice(0, 30).map((l) => rowHTML(l, s.id)).join("")}</div>` : `<div class="auto-empty">Ninguém elegível agora.</div>`}
         </div>
-        ${ag.length ? `<details class="auto-wait"><summary>Aguardando o tempo de espera: ${ag.length}</summary>
+        ${ag.length ? `<details class="auto-wait" open><summary>Aguardando o tempo de espera: ${ag.length}</summary>
           <div class="auto-list">${ag.slice(0, 30).map((l) => waitRowHTML(l, s.id, f.esperaH)).join("")}</div></details>` : ""}
         ${env.length ? `<details class="auto-sent"><summary>Enviados: ${env.length}</summary>
           <div class="auto-list">${env.slice(0, 50).map((e) => sentRowHTML(e, s.id)).join("")}</div></details>` : ""}
