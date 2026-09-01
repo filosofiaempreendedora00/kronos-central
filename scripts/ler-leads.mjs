@@ -68,6 +68,17 @@ const rows = await q(`
   order by o.created_at desc
 `);
 
+// ---- WhatsApp do CADASTRO (auth.users) via view pública `org_owner_whatsapp` ----
+// A Central (kronos_ro) NÃO acessa o schema auth direto; a view (owner=postgres) expõe o
+// número do cadastro/WhatsappGate p/ leads que não configuraram consultor. Resiliente:
+// se a view ainda não existe, segue só com consultants (rode o SQL no Supabase p/ ligar).
+const ownerWa = {};
+try {
+  const wr = await q(`select org_id, owner_whatsapp from public.org_owner_whatsapp where owner_whatsapp is not null`);
+  for (const r of wr) ownerWa[r.org_id] = r.owner_whatsapp;
+  console.log(`  WhatsApp do cadastro (view): ${Object.keys(ownerWa).length} orgs`);
+} catch (e) { console.error("  view org_owner_whatsapp indisponível (rode o SQL p/ ligar):", (e.message || "").split("\n")[0]); }
+
 // ---- comportamento: todos os eventos com org_id (pequeno, cabe em memória) ----
 const evs = await q(`
   select org_id, event, device, created_at
@@ -119,8 +130,14 @@ function behavior(list) {
 
 const toIso = (d) => (d == null ? null : d instanceof Date ? d.toISOString() : String(d));
 const sourceOf = (o) => o.acquisition_fbclid ? "meta" : o.acquisition_gclid ? "google" : (o.acquisition_source || "direto");
-// telefone → dígitos wa.me (Brasil: prefixa 55 se vier sem DDI)
-function waDigits(raw) { let d = String(raw || "").replace(/\D/g, ""); if (!d) return null; if (d.length <= 11 && !d.startsWith("55")) d = "55" + d; return d; }
+// telefone → dígitos wa.me (Brasil). 10-11 díg = DDD+número sem DDI → prefixa 55.
+// 12-13 díg = já tem DDI. (o startsWith('55') ingênuo quebrava DDDs 55/DDI ambíguos)
+function waDigits(raw) {
+  let d = String(raw || "").replace(/\D/g, ""); if (!d) return null;
+  if (d.length === 10 || d.length === 11) d = "55" + d;
+  else if (d.length < 10) return null; // curto demais / inválido
+  return d;
+}
 // ESTÁGIO no funil (automações WhatsApp). Mesmos sinais do coletor _wa3 validado.
 // 1 chegou/nada · 2 catálogo/parou · 3 +transcript/não baixou · 4 baixou marca-d'água/não pagou · 0 cliente/fora
 function funnelStage(o, b) {
@@ -199,6 +216,9 @@ const leads = rows
     const prod = ((b && b.timeline) || []).map((e) => ({ ...e, ch: "product" }));
     const mail = mails.map((m) => ({ e: m.type === "click" ? "email_click" : "email_open", t: m.t, ch: "email", link: m.link, subject: m.subject }));
     const timeline = prod.concat(mail).sort((a, c) => new Date(a.t) - new Date(c.t)).slice(-25);
+    // WhatsApp: consultor real (com opt-in) OU, na falta, o número do cadastro (auth via view = opt-in por definição)
+    const waRaw = o.wa || ownerWa[o.id] || null;
+    const waOptin = o.wa ? !!o.wa_optin : !!ownerWa[o.id];
     return {
       id: o.id,
       email: o.email || null,
@@ -212,9 +232,9 @@ const leads = rows
       temperature: ts.temp,
       situation: ts.situation,
       daysSince: ts.daysSince,
-      whatsapp: o.wa || null,
-      whatsappOptin: !!o.wa_optin, // LGPD: só clicável se true
-      waDigits: (o.wa_optin ? waDigits(o.wa) : null), // só compõe wa.me se opt-in (LGPD)
+      whatsapp: waRaw,
+      whatsappOptin: waOptin, // LGPD: só clicável se true
+      waDigits: (waOptin && waRaw ? waDigits(waRaw) : null), // só compõe wa.me se opt-in (LGPD)
       stage: funnelStage(o, b), // 1..4 no funil (0 = cliente/fora) — pras automações WhatsApp
       horasInativo: Math.floor((Date.now() - ((b && b.lastSeen) ? new Date(b.lastSeen).getTime() : new Date(o.created_at).getTime())) / 3600000),
       createdAt: toIso(o.created_at),
