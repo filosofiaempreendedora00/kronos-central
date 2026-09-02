@@ -113,7 +113,7 @@ const Leads = (() => {
         <span class="lead-lead"><span class="lead-badge ${t.c}">${t.l}</span></span>
         <span class="lead-row__main">
           <span class="lead-row__top"><span class="lead-id">${esc(l.email || l.name || "—")}</span>${wa}<span class="lead-when">${since(lastOf(l))}</span></span>
-          <span class="lead-row__tags"><span class="lead-tag ${s.c}">${s.l}</span>${dl}${back}${setupTags(l)}</span>
+          <span class="lead-row__tags"><span class="lead-tag ${s.c}">${s.l}</span>${l.adGroup ? `<span class="lead-tag lead-adgroup">🎯 ${esc(l.adGroup)}</span>` : ""}${dl}${back}${setupTags(l)}</span>
         </span>
       </button>`;
     }).join("");
@@ -164,7 +164,7 @@ const Leads = (() => {
     panel.innerHTML = `
       <div class="lead-d-head">
         <div>
-          <span class="lead-badge ${t.c}">${t.l}</span> <span class="lead-tag ${s.c}">${s.l}</span>
+          <span class="lead-badge ${t.c}">${t.l}</span> <span class="lead-tag ${s.c}">${s.l}</span>${l.adGroup ? ` <span class="lead-tag lead-adgroup">🎯 ${esc(l.adGroup)}</span>` : ""}${l.adKw ? ` <span class="lead-tag lead-adkw">🔑 ${esc(l.adKw)}</span>` : ""}
           <h3 class="lead-d-name">${esc(l.email || l.name || "—")}</h3>
           ${l.catalogo ? `<p class="lead-d-cat">${esc(l.catalogo)}</p>` : ""}
           <p class="lead-d-sub">Cadastrou ${since(l.createdAt)} · plano ${esc(l.plan || "—")} · ${l.status === "active" ? "PAGANTE" : "grátis"}</p>

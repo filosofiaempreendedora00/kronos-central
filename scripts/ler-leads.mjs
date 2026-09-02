@@ -130,6 +130,12 @@ function behavior(list) {
 
 const toIso = (d) => (d == null ? null : d instanceof Date ? d.toISOString() : String(d));
 const sourceOf = (o) => o.acquisition_fbclid ? "meta" : o.acquisition_gclid ? "google" : (o.acquisition_source || "direto");
+// grupo de anúncio / campanha / termo — dos UTMs na 1ª URL de entrada (Google Ads carimba)
+function adTagOf(url) {
+  try { const u = new URL(url); const g = (k) => { const v = u.searchParams.get(k); return v ? v.trim() : null; };
+    return { grupo: g("utm_content"), campanha: g("utm_campaign"), termo: g("utm_term") };
+  } catch (_) { return { grupo: null, campanha: null, termo: null }; }
+}
 // telefone → dígitos wa.me (Brasil). 10-11 díg = DDD+número sem DDI → prefixa 55.
 // 12-13 díg = já tem DDI. (o startsWith('55') ingênuo quebrava DDDs 55/DDI ambíguos)
 function waDigits(raw) {
@@ -229,6 +235,8 @@ const leads = rows
       status: o.status,
       downloads: Number(o.downloads_used) || 0,
       source: sourceOf(o),
+      adGroup: adTagOf(o.acquisition_first_url).grupo, // grupo de anúncio (utm_content)
+      adKw: adTagOf(o.acquisition_first_url).termo,     // palavra-chave (utm_term)
       temperature: ts.temp,
       situation: ts.situation,
       daysSince: ts.daysSince,
