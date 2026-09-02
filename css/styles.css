@@ -2757,3 +2757,7 @@ body.lead-locked { overflow: hidden !important; }
 .auto-pano__n { flex: 1 1 auto; color: var(--creme); font-size: 13px; }
 .auto-pano__tot { font-family: var(--font-title); font-size: 20px; color: var(--creme); }
 .auto-pano__wa { color: var(--areia); font-size: 12px; min-width: 108px; text-align: right; }
+
+/* tag de grupo de anúncio / palavra-chave (Google Ads) */
+.lead-tag.lead-adgroup { background: rgba(139,124,246,.16); color: #b3a9f5; }
+.lead-tag.lead-adkw { background: rgba(168,186,208,.12); color: #A8BAD0; }
