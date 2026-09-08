@@ -42,12 +42,22 @@ const Automacoes = (() => {
   const sentKey = (id, stage) => id + "|" + stage;
   const isSent = (l, stage) => !!sent[sentKey(l.id, stage)];
 
-  // ---- dados ----
+  // ---- dados (com cache do último bom — resiliente a blip de rede) ----
+  const CACHE_KEY = "kronos.leadsdoc.v1"; // doc inteiro (compartilhado com a aba Leads)
+  let usingCache = false;
+  const fromCache = () => { try { const v = localStorage.getItem(CACHE_KEY); if (v) { const doc = JSON.parse(v); const a = (doc && doc.leads) || []; if (a.length) { usingCache = true; return a; } } } catch (_) {} return []; };
+  const warmCache = (doc) => { try { if (doc && doc.leads && doc.leads.length) localStorage.setItem(CACHE_KEY, JSON.stringify(doc)); } catch (_) {} };
   async function load() {
-    if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return [];
-    let res; try { res = await Sync.readJson(PATH); } catch (_) { return []; }
-    const env = res && res.json; if (!env) return [];
-    try { const doc = (env.v && env.ct) ? await Auth.decryptJSON(env) : env; return (doc && doc.leads) || []; } catch (_) { return []; }
+    usingCache = false;
+    if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return fromCache();
+    let res; try { res = await Sync.readJson(PATH); } catch (_) { return fromCache(); }
+    const env = res && res.json; if (!env) return fromCache();
+    try {
+      const doc = (env.v && env.ct) ? await Auth.decryptJSON(env) : env;
+      const leads = (doc && doc.leads) || [];
+      if (leads.length) { warmCache(doc); return leads; }
+      return fromCache();
+    } catch (_) { return fromCache(); }
   }
 
   const firstName = (s) => String(s || "").trim().split(/\s+/)[0] || "";
@@ -104,6 +114,7 @@ const Automacoes = (() => {
           <span>Atualizar estágios do funil</span>
         </button>
       </div>
+      ${usingCache ? `<div class="auto-note-cache">⚠ Sem conexão com o dado ao vivo agora — mostrando o último que salvei neste aparelho. Toque <b>Atualizar</b> pra tentar de novo.</div>` : ""}
       <div class="auto-intro">Cada card fala com quem <b>travou naquele estágio</b> e ficou parado tempo suficiente pra ter "saído" (você define a espera). Toque em <b>WhatsApp</b> → a mensagem abre pronta no seu celular; abrir <b>não</b> tira da fila. Só o <b>✓</b> move o contato pra "Enviados". Se um lead avança no funil, ele sai da fila fria sozinho ao <b>Atualizar estágios</b>. Só aparece quem <b>autorizou WhatsApp</b> (LGPD).</div>
       <div class="auto-cards">${STAGES.map(cardHTML).join("")}</div>
       <p class="fin-foot">Envio 1-toque do seu número. "Automático de verdade" (API) é fase 2 e pluga nesta mesma fila. Config, "já enviei" e estágios refletem o último sync (o robô reavalia de 4/4h; toque em Atualizar pra puxar agora).</p>`;
