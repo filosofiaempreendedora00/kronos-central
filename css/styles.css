@@ -2761,3 +2761,7 @@ body.lead-locked { overflow: hidden !important; }
 /* tag de grupo de anúncio / palavra-chave (Google Ads) */
 .lead-tag.lead-adgroup { background: rgba(139,124,246,.16); color: #b3a9f5; }
 .lead-tag.lead-adkw { background: rgba(168,186,208,.12); color: #A8BAD0; }
+
+/* aviso de cache (sem conexão com o dado ao vivo) — automações */
+.auto-note-cache { font-size: 12.5px; line-height: 1.5; color: #E0BB6A; background: rgba(224,187,106,.10); border: 1px solid rgba(224,187,106,.28); border-radius: 10px; padding: 10px 13px; margin-bottom: 12px; }
+.auto-note-cache b { color: var(--creme); }

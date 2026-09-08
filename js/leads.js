@@ -55,12 +55,15 @@ const Leads = (() => {
     ? (e.e === "email_click" ? "📧 Clicou no link" + (e.link ? ": " + shortLink(e.link) : "") : "📧 Abriu o e-mail" + (e.subject ? ": " + e.subject : ""))
     : evl(e.e);
 
+  const CACHE_KEY = "kronos.leadsdoc.v1"; // doc inteiro (compartilhado com a aba WhatsApp)
+  const cachedDoc = () => { try { const v = localStorage.getItem(CACHE_KEY); if (v) { const doc = JSON.parse(v); if (doc && Array.isArray(doc.leads) && doc.leads.length) return doc; } } catch (_) {} return null; };
   async function load() {
-    if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return null;
-    let res; try { res = await Sync.readJson(PATH); } catch (_) { return null; }
-    const env = res && res.json; if (!env) return null;
+    if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return cachedDoc();
+    let res; try { res = await Sync.readJson(PATH); } catch (_) { return cachedDoc(); }
+    const env = res && res.json; if (!env) return cachedDoc();
     try { const doc = (env.v && env.ct) ? await Auth.decryptJSON(env) : env;
-      return (doc && Array.isArray(doc.leads)) ? doc : null; } catch (_) { return null; }
+      if (doc && Array.isArray(doc.leads) && doc.leads.length) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(doc)); } catch (_) {} return doc; }
+      return cachedDoc(); } catch (_) { return cachedDoc(); }
   }
 
   const filtered = () => (DOC.leads || []).filter((l) =>
