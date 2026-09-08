@@ -44,20 +44,20 @@ const Automacoes = (() => {
 
   // ---- dados (com cache do último bom — resiliente a blip de rede) ----
   const CACHE_KEY = "kronos.leadsdoc.v1"; // doc inteiro (compartilhado com a aba Leads)
-  let usingCache = false;
+  let usingCache = false, loadErr = null;
   const fromCache = () => { try { const v = localStorage.getItem(CACHE_KEY); if (v) { const doc = JSON.parse(v); const a = (doc && doc.leads) || []; if (a.length) { usingCache = true; return a; } } } catch (_) {} return []; };
   const warmCache = (doc) => { try { if (doc && doc.leads && doc.leads.length) localStorage.setItem(CACHE_KEY, JSON.stringify(doc)); } catch (_) {} };
   async function load() {
-    usingCache = false;
-    if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) return fromCache();
-    let res; try { res = await Sync.readJson(PATH); } catch (_) { return fromCache(); }
-    const env = res && res.json; if (!env) return fromCache();
+    usingCache = false; loadErr = null;
+    if (typeof Sync === "undefined" || typeof Auth === "undefined" || !Auth.decryptJSON) { loadErr = "app não pronto (recarregue)"; return fromCache(); }
+    let res; try { res = await Sync.readJson(PATH); } catch (e) { loadErr = "download: " + (e && e.message || e); return fromCache(); }
+    const env = res && res.json; if (!env) { loadErr = "sem resposta do arquivo"; return fromCache(); }
     try {
       const doc = (env.v && env.ct) ? await Auth.decryptJSON(env) : env;
       const leads = (doc && doc.leads) || [];
       if (leads.length) { warmCache(doc); return leads; }
-      return fromCache();
-    } catch (_) { return fromCache(); }
+      loadErr = "decifrou mas veio vazio"; return fromCache();
+    } catch (e) { loadErr = "decifrar: " + (e && e.message || e); return fromCache(); }
   }
 
   const firstName = (s) => String(s || "").trim().split(/\s+/)[0] || "";
@@ -100,7 +100,13 @@ const Automacoes = (() => {
   function render() {
     const body = document.getElementById("autoBody"); const meta = document.getElementById("autoMeta");
     if (!body) return;
-    if (!LEADS.length) { body.innerHTML = `<p class="lead-empty">Sem dados (rode ler-leads.mjs / cron).</p>`; return; }
+    if (!LEADS.length) {
+      const rb = `<div class="auto-bar"><button class="auto-refresh" id="autoRefreshStages" type="button"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3"/><polyline points="4,4 4,8.5 8.5,8.5"/><path d="M4 13a8 8 0 0 0 14.9 3"/><polyline points="20,20 20,15.5 15.5,15.5"/></svg><span>Atualizar</span></button></div>`;
+      body.innerHTML = rb + `<div class="auto-note-cache">Não consegui carregar os leads neste aparelho.${loadErr ? `<br><b>Motivo:</b> ${String(loadErr).replace(/</g, "&lt;")}` : ""}<br>Toque <b>Atualizar</b>. Se persistir, tire um print disto pro Roberto.</div>`;
+      const b = document.getElementById("autoRefreshStages");
+      if (b) b.addEventListener("click", async () => { b.disabled = true; LEADS = await load(); byId = {}; for (const l of LEADS) byId[l.id] = l; render(); });
+      return;
+    }
     // WhatsApp é operado no CELULAR (envios + "enviados" ficam no localStorage do telefone).
     // No desktop NÃO mostramos fila/enviados pra não exibir estado defasado — só o panorama do snapshot.
     if (!isMobile()) { renderDesktop(body, meta); return; }

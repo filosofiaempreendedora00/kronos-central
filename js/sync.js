@@ -194,21 +194,33 @@ const Sync = (() => {
   async function readJson(path) {
     const tk = token();
     if (tk) {
-      const r = await fetch(apiUrlFor(path) + "?ref=" + REPO.branch, {
-        headers: { Authorization: "Bearer " + tk, Accept: "application/vnd.github+json" },
-        cache: "no-store",
-      });
-      if (r.status === 404) return { json: null, sha: null };
-      if (!r.ok) throw new Error("GitHub " + r.status);
-      const j = await r.json();
-      let parsed = null; try { parsed = JSON.parse(b64decode(j.content || "")); } catch (_) {}
-      return { json: parsed, sha: j.sha || null };
+      // com token: lê pela API. Se falhar (token expirado/revogado/rate limit),
+      // NÃO trava — cai pro raw público abaixo (o repo é público, sempre lê).
+      try {
+        const r = await fetch(apiUrlFor(path) + "?ref=" + REPO.branch, {
+          headers: { Authorization: "Bearer " + tk, Accept: "application/vnd.github+json" },
+          cache: "no-store",
+        });
+        if (r.status === 404) return { json: null, sha: null };
+        if (r.ok) {
+          const j = await r.json();
+          let parsed = null; try { parsed = JSON.parse(b64decode(j.content || "")); } catch (_) {}
+          return { json: parsed, sha: j.sha || null };
+        }
+        // 401/403/etc → segue pro raw público
+      } catch (_) { /* rede/CORS no API → segue pro raw público */ }
     }
-    const r = await fetch(rawUrlFor(path) + "?t=" + Date.now(), { cache: "no-store" });
-    if (r.status === 404) return { json: null, sha: null };
-    if (!r.ok) throw new Error("raw " + r.status);
-    let parsed = null; try { parsed = JSON.parse(await r.text()); } catch (_) {}
-    return { json: parsed, sha: null };
+    let r = null; try { r = await fetch(rawUrlFor(path) + "?t=" + Date.now(), { cache: "no-store" }); } catch (_) {}
+    if (r && r.status === 404) return { json: null, sha: null };
+    if (r && r.ok) { let parsed = null; try { parsed = JSON.parse(await r.text()); } catch (_) {} return { json: parsed, sha: null }; }
+    // último recurso: cópia same-origin (gh-pages). Pode estar um pouco atrasada,
+    // mas evita "Sem dados" quando o raw.githubusercontent está bloqueado na rede do aparelho.
+    try {
+      const so = String(path).replace(/^www\//, "");
+      const r2 = await fetch(new URL(so, location.href).href + "?t=" + Date.now(), { cache: "no-store" });
+      if (r2.ok) { let parsed = null; try { parsed = JSON.parse(await r2.text()); } catch (_) {} return { json: parsed, sha: null }; }
+    } catch (_) {}
+    throw new Error("raw " + (r ? r.status : "sem rede") + " + same-origin indisponível");
   }
 
   async function writeJson(path, obj, sha, message) {
